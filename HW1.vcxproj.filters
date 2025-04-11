@@ -15,55 +15,55 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HW1.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="board.h">
+    <ClInclude Include="includes\algorithm.h">
       <Filter>includes</Filter>
-    </ClCompile>
-    <ClCompile Include="wall.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="movableObject.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="shell.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="tank.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
+    </ClInclude>
+    <ClInclude Include="includes\board.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\cell.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\gameManager.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\gameObject.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\mine.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\movableObject.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\player.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\shell.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\tank.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\wall.h">
+      <Filter>includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gameObject.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="player.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="gameManager.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="wall.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="shell.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="tank.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="mine.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="algorithm.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="cell.h">
-      <Filter>includes</Filter>
-    </ClInclude>
-    <ClInclude Include="movableObject.h">
-      <Filter>includes</Filter>
-    </ClInclude>
+    <ClCompile Include="src\HW1.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\movableObject.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shell.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\wall.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -127,24 +127,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="board.h" />
-    <ClCompile Include="HW1.cpp" />
-    <ClCompile Include="movableObject.cpp" />
-    <ClCompile Include="shell.cpp" />
-    <ClCompile Include="tank.cpp" />
-    <ClCompile Include="wall.cpp" />
+    <ClInclude Include="includes\algorithm.h" />
+    <ClInclude Include="includes\board.h" />
+    <ClInclude Include="includes\cell.h" />
+    <ClInclude Include="includes\gameManager.h" />
+    <ClInclude Include="includes\gameObject.h" />
+    <ClInclude Include="includes\mine.h" />
+    <ClInclude Include="includes\movableObject.h" />
+    <ClInclude Include="includes\player.h" />
+    <ClInclude Include="includes\shell.h" />
+    <ClInclude Include="includes\tank.h" />
+    <ClInclude Include="includes\wall.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="algorithm.h" />
-    <ClInclude Include="cell.h" />
-    <ClInclude Include="gameObject.h" />
-    <ClInclude Include="gameManager.h" />
-    <ClInclude Include="mine.h" />
-    <ClInclude Include="movableObject.h" />
-    <ClInclude Include="player.h" />
-    <ClInclude Include="shell.h" />
-    <ClInclude Include="tank.h" />
-    <ClInclude Include="wall.h" />
+    <ClCompile Include="src\HW1.cpp" />
+    <ClCompile Include="src\movableObject.cpp" />
+    <ClCompile Include="src\shell.cpp" />
+    <ClCompile Include="src\tank.cpp" />
+    <ClCompile Include="src\wall.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

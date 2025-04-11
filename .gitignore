@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# VS Code project build + user config
+.vscode/settings.json
+
+# Ignore the build output folder for the project
+build/

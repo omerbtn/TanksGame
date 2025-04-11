@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{68140d0c-9b7f-4482-a45b-a2000817352d}</ProjectGuid>
-    <RootNamespace>HW1</RootNamespace>
+    <RootNamespace>TanksGame</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -140,7 +140,7 @@
     <ClInclude Include="includes\wall.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\HW1.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\movableObject.cpp" />
     <ClCompile Include="src\shell.cpp" />
     <ClCompile Include="src\tank.cpp" />

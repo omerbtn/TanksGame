@@ -50,9 +50,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\HW1.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\movableObject.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -63,6 +60,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\wall.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

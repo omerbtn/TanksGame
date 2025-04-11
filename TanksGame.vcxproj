@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)includes\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,26 +127,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="includes\algorithm.h" />
-    <ClInclude Include="includes\board.h" />
-    <ClInclude Include="includes\cell.h" />
-    <ClInclude Include="includes\gameManager.h" />
-    <ClInclude Include="includes\gameObject.h" />
-    <ClInclude Include="includes\mine.h" />
-    <ClInclude Include="includes\movableObject.h" />
-    <ClInclude Include="includes\player.h" />
-    <ClInclude Include="includes\shell.h" />
-    <ClInclude Include="includes\tank.h" />
-    <ClInclude Include="includes\wall.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\movableObject.cpp" />
-    <ClCompile Include="src\shell.cpp" />
-    <ClCompile Include="src\tank.cpp" />
-    <ClCompile Include="src\wall.cpp" />
-  </ItemGroup>
+<ItemGroup>
+  <ClCompile Include="src\**\*.cpp" />
+  <ClInclude Include="includes\**\*.h" />
+</ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -2,10 +2,15 @@
 
 MovableObject::MovableObject(int x, int y, ObjectType type, Direction direction, Board* board) : GameObject(x, y, type), direction(direction), board(board) {}
 
-void MovableObject::move(Direction move_direction) {
+void MovableObject::move(bool is_forward = true) {
 	Cell* next_cell = nullptr;
+	Direction move_dircetion = direction;
+	
+	if (!is_forward) {
+		move_dircetion = (Direction)(((int)direction + 180 + 360) % 360);
+	}
 
-	switch (move_direction)
+	switch (move_dircetion)
 	{
 	case Direction::U:
 		next_cell = board->getCell(x, y - 1);

@@ -22,5 +22,5 @@ public:
     MovableObject(int x, int y,ObjectType type,Direction direction, Board* board);
     virtual void move_forward();
 private:
-    void move(Direction move_drection);
+    void move(bool is_forward);
 };

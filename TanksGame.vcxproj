@@ -127,10 +127,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-<ItemGroup>
-  <ClCompile Include="src\**\*.cpp" />
-  <ClInclude Include="includes\**\*.h" />
-</ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+      <ClCompile Include="src\**\*.cpp">
+    <Filter>Source Files</Filter>
+  </ClCompile>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

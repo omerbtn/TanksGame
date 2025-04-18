@@ -1,17 +1,7 @@
 #pragma once
 #include "board.h"
 #include "gameObject.h"
-
-enum class Direction {
-    U = 90,   // Up
-    UR = 45,  // Up-Right (Diagonal)
-    R =0,   // Right
-    DR = 315,  // Down-Right (Diagonal)
-    D = 270,   // Down
-    DL = 225,  // Down-Left (Diagonal)
-    L = 180,   // Left
-    UL  = 135  // Up-Left (Diagonal)
-};
+#include "direction.h"
 
 class MovableObject : public GameObject {
 protected:
@@ -19,8 +9,8 @@ protected:
     Board* board;
 
 public:
-    MovableObject(int x, int y,ObjectType type,Direction direction, Board* board);
+    MovableObject(Position position, ObjectType type, Direction direction, Board* board);
     virtual void move_forward();
+    void move(bool is_forward = true);  // TODO: Probably should be private
 private:
-    void move(bool is_forward);
 };

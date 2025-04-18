@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "position.h"
 
 enum class ObjectType {
     Tank,
@@ -9,20 +10,19 @@ enum class ObjectType {
 };
 
 
-
 class GameObject {
 protected:
-    int x; 
-    int y; 
+    Position position; // Position of the object on the board
     ObjectType objType; 
 
 public:
-    GameObject(int x, int y, ObjectType type) : x(x), y(y), objType(type) {}
+    GameObject(Position position, ObjectType type) : position(position), objType(type) {}
 
     virtual ObjectType getType() const { return objType; }
 
-    int getX() const { return x; }
-    int getY() const { return y; }
+    Position getPosition() const { return position; }
+    int getX() const { return position.x; }  // Probably not needed, should remove these two functions
+    int getY() const { return position.y; }
 
     virtual ~GameObject() {}
 };

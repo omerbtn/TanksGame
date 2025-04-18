@@ -15,54 +15,60 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="includes\algorithm.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\board.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\cell.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\gameManager.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\gameObject.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\mine.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\movableObject.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\player.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\shell.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\tank.h">
+    <ClInclude Include="includes\**\*.h">
       <Filter>includes</Filter>
     </ClInclude>
-    <ClInclude Include="includes\wall.h">
+    <ClInclude Include="includes\**\*.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="direction.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="tankAction.h">
       <Filter>includes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\movableObject.cpp">
+    <ClCompile Include="src\**\*.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\shell.cpp">
+    <ClCompile Include="src\**\*.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\tank.cpp">
+    <ClCompile Include="src\**\*.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\wall.cpp">
+    <ClCompile Include="src\**\*.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\**\*.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

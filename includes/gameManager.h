@@ -3,8 +3,8 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include "Board.h"
-#include "Player.h"
+#include "board.h"
+#include "player.h"
 
 
 
@@ -15,8 +15,8 @@ private:
     int rounds_left;
 
 public:
-    GameManager(int boardWidth, int boardHeight);
-    Board* createBoard(const std::string& filename);
-    Player* runGame();
+    GameManager(int boardWidth, int boardHeight);  // TODO: Should get the filename, we don't know the dimesions of the board yet
+    void createBoard(const std::string& filename); // Then we can just pass the filename to the Board constructor and remove this function
+    Player* runGame();  // Run the game and return the winner
     ~GameManager();
 };

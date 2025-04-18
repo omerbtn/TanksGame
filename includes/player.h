@@ -1,7 +1,9 @@
 #pragma once
-#include "Tank.h"
 #include <string>
 #include <vector>
+#include "tank.h"
+#include "tankAction.h"
+
 
 class Player {
 private:
@@ -10,5 +12,5 @@ private:
     Board* board;
 public:
     Player(std::vector<Tank*> tanks, int playerNumber);
-    step();
+    TankAction get_next_step();
 };

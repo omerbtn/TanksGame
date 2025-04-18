@@ -1,14 +1,17 @@
 #include "movableObject.h"
 
-MovableObject::MovableObject(int x, int y, ObjectType type, Direction direction, Board* board) : GameObject(x, y, type), direction(direction), board(board) {}
+MovableObject::MovableObject(Position position, ObjectType type, Direction direction, Board* board) : GameObject(position, type), direction(direction), board(board) {}
 
-void MovableObject::move(bool is_forward = true) {
+void MovableObject::move(bool is_forward) {
 	Cell* next_cell = nullptr;
 	Direction move_dircetion = direction;
 	
 	if (!is_forward) {
-		move_dircetion = (Direction)(((int)direction + 180 + 360) % 360);
+		move_dircetion = (Direction)(((int)direction + (int)Direction::D) % 360);
 	}
+
+	int x = position.x;
+	int y = position.y;
 
 	switch (move_dircetion)
 	{
@@ -39,7 +42,9 @@ void MovableObject::move(bool is_forward = true) {
 	default:
 		break;
 	}
-	next_cell->add_obj(this);
-	x = next_cell->getX();
-	y = next_cell->getY();
+
+	next_cell->add_object(this);
+	//x = next_cell->getX();
+	//y = next_cell->getY();
+	position = next_cell->getPosition();
 }

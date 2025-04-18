@@ -1,11 +1,11 @@
 #pragma once
 #include <vector>
 #include <iostream>
-#include "Cell.h"
-#include "Tank.h"
-#include "Wall.h"
-#include "Mine.h"
-#include "Shell.h"
+#include "cell.h"
+#include "tank.h"
+#include "wall.h"
+#include "mine.h"
+#include "shell.h"
 
 class Board {
 private:
@@ -15,7 +15,7 @@ private:
     std::vector<Shell*> shells;
 
 public:
-    Board(int width, int height) : width(width), height(height);
+    Board(int width, int height) : width(width), height(height) {}  //TODO: Should get the filename, we don't know the dimesions of the board yet
     ~Board();
     int getHeight() const { return height; }
     int getWidth() const { return width; }

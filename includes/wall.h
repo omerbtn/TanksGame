@@ -6,6 +6,6 @@ protected:
     int durability;
 
 public:
-    Wall(int x, int y);
+    Wall(Position position);
     bool hit();
 };

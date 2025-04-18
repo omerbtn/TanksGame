@@ -3,27 +3,35 @@
 #include "movableObject.h"
 #include "board.h"
 
-enum class RotateDirection {
-    Left_1_8 = 45,     // Rotate 1/8 of a circle to the left (45 degrees)
-    Right_1_8 = -45,    // Rotate 1/8 of a circle to the right (45 degrees)
-    Left_1_4 = 90,     // Rotate 1/4 of a circle to the left (90 degrees)
-    Right_1_4 = -90     // Rotate 1/4 of a circle to the right (90 degrees)
+enum class BackwardState {
+    None,         // No backward movement
+    Waiting1,     // 1st step waiting
+    Waiting2,     // 2nd step waiting
+    ReadyToMove,  // Ready to move backward
 };
 
 class Tank : public MovableObject {
 private:
-    int artilleryShells;
-    int shoot_counter;
-    bool in_reverse;
-    int reverse_counter;
+    int artillery_shells;
+    int shoot_cooldown;
+	//bool in_reverse;      // Should be true if the tank is in reverse, i.e. he can move backward freely  
+    //int reverse_counter;  // Should be decreased every turn
+    BackwardState backward_state; // State of the tank when moving backward, should be updated every turn
 
 public:
-    Tank(int x, int y, Direction dir, Board* board);
+    Tank(Position position, Direction direction, Board* board);
 
     void shoot();
+    void move_forward();
     void move_backward();
-    void rotate(RotateDirection rotateDirection);
+    void rotate(Direction rotate_direction);
+    void do_nothing();
 
+private:
+    void cancel_backward() { backward_state = BackwardState::None; };
+    void update_backward_state();
+    void reduce_shoot_cooldown() { if (shoot_cooldown > 0) shoot_cooldown--; };
+    bool is_waiting_for_reverse() const { return backward_state == BackwardState::Waiting1 || backward_state == BackwardState::Waiting2; };
 };
 
 

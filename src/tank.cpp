@@ -17,7 +17,7 @@ void Tank::move_backward()
 
 	if (in_reverse)
 	{
-		// do reverse step
+		move()
 	}
 	else
 		reverse_counter = 3;
@@ -27,5 +27,5 @@ void Tank::move_backward()
 }
 
 void Tank::rotate(RotateDirection rotateDirection) {
-	direction = (Direction)(((int)direction + (int)rotateDirection) % 360);
+	direction = (Direction)(((int)direction + (int)rotateDirection + 360) % 360);
 }

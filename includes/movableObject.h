@@ -10,7 +10,7 @@ protected:
 
 public:
     MovableObject(Position position, ObjectType type, Direction direction, Board* board);
-    virtual void move_forward();
+    virtual void move_forward() = 0;
     void move(bool is_forward = true);  // TODO: Probably should be private
 private:
 };

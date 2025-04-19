@@ -1,9 +1,12 @@
 #pragma once
-#include "gameObject.h"
-#include "tank.h"
-#include "wall.h"
-#include "mine.h"
-#include "shell.h"
+
+#include "Position.h"
+
+class GameObject;
+class Shell;
+class Mine;
+class Tank;
+class Wall;
 
 class Cell {
 protected:
@@ -14,19 +17,19 @@ protected:
     Wall* wall = nullptr;
 
 public:
-    Cell(Position position, GameObject* object = nullptr); // Can know the exact type by object->getType(), no need for overloading constructors
+    explicit Cell(Position position, GameObject* object = nullptr); // Can know the exact type by object->getType(), no need for overloading constructors
     //Cell(int x, int y, Mine* mine);
     //Cell(int x, int y, Tank* tank);
     //Cell(int x, int y, Wall* wall);
-    Position getPosition() const { return position; }
-    int getX() const { return position.x; }
-    int getY() const { return position.y; }
+    Position getPosition() const;
+    int getX() const;
+    int getY() const;
     bool add_object(GameObject* obj);
-    bool is_tank() const { return tank == nullptr; }
-    bool is_wall() const { return wall == nullptr; }
-    bool is_shell() const { return shell == nullptr; }
-    bool is_mine() const { return mine == nullptr; }
-    ~Cell();
+    bool is_tank() const;
+    bool is_wall() const;
+    bool is_shell() const;
+    bool is_mine() const;
+    ~Cell() = default;
 
 private:
     void resolve_collisions();

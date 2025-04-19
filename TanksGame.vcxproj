@@ -131,9 +131,11 @@
     <ClInclude Include="includes\**\*.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-      <ClCompile Include="src\**\*.cpp">
-    <Filter>Source Files</Filter>
-  </ClCompile>
+    <ClCompile Include="board.cpp" />
+    <ClCompile Include="cell.cpp" />
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,7 +1,10 @@
 #pragma once
 
 #include "movableObject.h"
-#include "board.h"
+#include "direction.h"
+
+// forward declaration
+class Board;
 
 enum class BackwardState {
     None,         // No backward movement

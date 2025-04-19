@@ -1,4 +1,5 @@
 #include "tank.h"
+#include "shell.h"
 
 Tank::Tank(Position position, Direction direction, Board* board) : MovableObject(position, ObjectType::Tank, direction, board),
 															  artillery_shells(16), shoot_cooldown (0), backward_state(BackwardState::None) {}

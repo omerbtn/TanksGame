@@ -1,5 +1,7 @@
 #include "movableObject.h"
 
+#include "cell.h"
+
 MovableObject::MovableObject(Position position, ObjectType type, Direction direction, Board* board) : GameObject(position, type), direction(direction), board(board) {}
 
 void MovableObject::move(bool is_forward) {

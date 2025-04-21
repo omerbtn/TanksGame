@@ -1,11 +1,14 @@
 #pragma once
 
-#include "movableObject.h"
+#include "game_object_interface.h"
+#include "types/direction.h"
 
-class Shell : public MovableObject 
+class Shell : public GameObjectInterface
 {
 public:
-    Shell(Position position, Direction direction, Board* board);
-    virtual void move_forward() override;
-};
+    Direction dir;
+    Shell(Direction dir) : dir(dir) {}
 
+private:
+    virtual ObjectType type() const override { return ObjectType::Shell; }
+};

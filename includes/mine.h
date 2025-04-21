@@ -1,8 +1,9 @@
 #pragma once
-#include "gameObject.h"
 
-class Mine : public GameObject 
+#include "game_object_interface.h"
+
+class Mine : public GameObjectInterface
 {
-public:
-	Mine(Position position) : GameObject(position, ObjectType::Mine) {}
+private:
+    virtual ObjectType type() const override { return ObjectType::Mine; }
 };

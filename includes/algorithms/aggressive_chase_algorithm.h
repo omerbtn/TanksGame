@@ -25,8 +25,9 @@ public:
         if (currentDir == targetDir && std::abs(sx - ex) <= 1 && std::abs(sy - ey) <= 1)
             return TankAction::Shoot;
 
-        if (currentDir == targetDir)
-            return TankAction::MoveForward;
+        if (currentDir == targetDir) {
+            return TankAction::Shoot;  // TankAction::MoveForward; // TODO change back
+        }
 
         return TankAction::RotateRight_1_8;
     }

@@ -11,6 +11,7 @@ class SmartAlgorithm : public AlgorithmInterface
 public:
     TankAction decideAction(const Tank &self, const Board &board) override
     {
+        // return TankAction::Shoot;  // TODO: RM !!!!!!
         int sx = self.pos.first, sy = self.pos.second;
 
         Tank *opponent = board.getPlayerTank(self.id() == 1 ? 2 : 1);

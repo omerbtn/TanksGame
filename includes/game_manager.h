@@ -33,6 +33,8 @@ private:
 
     void step(OutputLogger &logger)
     {
+        board_->update();
+
         TankAction action1 = algo1_->decideAction(*tank1_, *board_);
         TankAction action2 = algo2_->decideAction(*tank2_, *board_);
 
@@ -42,9 +44,8 @@ private:
         logger.logAction(1, step_count_, action1, valid1);
         logger.logAction(2, step_count_, action2, valid2);
 
-        board_->update();
-
         ++step_count_;
+        // TODO: add countdown for tie and and another general one to avoid infinite loop
         if (tie_countdown_ > 0)
             --tie_countdown_;
     }

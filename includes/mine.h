@@ -5,5 +5,5 @@
 class Mine : public GameObjectInterface
 {
 private:
-    virtual ObjectType type() const override { return ObjectType::Mine; }
+    virtual ObjectType type() const override;
 };

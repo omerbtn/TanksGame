@@ -18,11 +18,11 @@ public:
     }
     void logResult(const Tank &t1, const Tank &t2, int step)
     {
-        if (!t1.isAlive() && !t2.isAlive())
+        if (!t1.is_alive() && !t2.is_alive())
             out_ << "Result: Tie - Both tanks destroyed at step " << step << "\n";
-        else if (!t1.isAlive())
+        else if (!t1.is_alive())
             out_ << "Result: Player 2 wins - Tank 1 destroyed\n";
-        else if (!t2.isAlive())
+        else if (!t2.is_alive())
             out_ << "Result: Player 1 wins - Tank 2 destroyed\n";
         else
             out_ << "Result: Tie - Time expired\n";

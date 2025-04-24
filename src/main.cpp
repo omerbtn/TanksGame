@@ -1,8 +1,7 @@
+#include <iostream>
+
 #include "game_manager.h"
 #include "board.h"
-
-#include "algorithms/aggressive_chase_algorithm.h"
-#include "algorithms/smart_algorithm.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,14 +14,14 @@ int main(int argc, char *argv[])
     std::string file_path = argv[1];*/
     Board board;
 
-    if (!board.loadFromFile("resources/game_map.txt"))
+    if (!board.load_from_file("resources/game_map.txt"))
     {
         std::cout << "Failed to load game board.\n";
         return 1;
     }
 
-    Tank *tank1 = board.getPlayerTank(1);
-    Tank *tank2 = board.getPlayerTank(2);
+    Tank *tank1 = board.get_player_tank(1);
+    Tank *tank2 = board.get_player_tank(2);
 
     if (!tank1 || !tank2)
     {
@@ -30,13 +29,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    AlgorithmInterface *algo1 = new SmartAlgorithm();
-    AlgorithmInterface *algo2 = new AggressiveChaseAlgorithm();
-
-    GameManager manager(&board, tank1, tank2, algo1, algo2);
+    GameManager manager(&board);
     manager.run();
 
-    delete algo1;
-    delete algo2;
     return 0;
 }

@@ -11,16 +11,26 @@ class SmartAlgorithm : public AlgorithmInterface
 public:
     TankAction decideAction(const Tank &self, const Board &board) override
     {
-        // return TankAction::Shoot;  // TODO: RM !!!!!!
-        int sx = self.pos.first, sy = self.pos.second;
+        static int i = 0;
+        if (i != 1) {
+            i++;
+            return TankAction::MoveBackward;
+        }
+        else {
+            i++;
+            return TankAction::Shoot;
+        }
 
-        Tank *opponent = board.getPlayerTank(self.id() == 1 ? 2 : 1);
-        if (!opponent || !opponent->isAlive())
+        return TankAction::Shoot;  // TODO: RM !!!!!!
+        int sx = self.position().first, sy = self.position().second;
+
+        const Tank *opponent = board.get_player_tank(self.id() == 1 ? 2 : 1);
+        if (!opponent || !opponent->is_alive())
             return TankAction::Idle;
 
-        int ex = opponent->pos.first, ey = opponent->pos.second;
+        int ex = opponent->position().first, ey = opponent->position().second;
 
-        Direction currentDir = self.dir;
+        Direction currentDir = self.direction();
         Direction targetDir = getDirectionTo(sx, sy, ex, ey);
 
         bool alignedHorizontally = sy == ey && ((sx < ex && currentDir == Direction::R) ||

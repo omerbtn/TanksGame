@@ -9,17 +9,17 @@
 class AggressiveChaseAlgorithm : public AlgorithmInterface
 {
 public:
-    TankAction decideAction(const Tank &self, const Board &board) override
+    TankAction decideAction(const Tank &self, const Board& board) override
     {
-        int sx = self.pos.first, sy = self.pos.second;
+        int sx = self.position().first, sy = self.position().second;
 
-        Tank *opponent = board.getPlayerTank(self.id() == 1 ? 2 : 1);
-        if (!opponent || !opponent->isAlive())
+        const Tank *opponent = board.get_player_tank(self.id() == 1 ? 2 : 1);
+        if (!opponent || !opponent->is_alive())
             return TankAction::Idle;
 
-        int ex = opponent->pos.first, ey = opponent->pos.second;
+        int ex = opponent->position().first, ey = opponent->position().second;
 
-        Direction currentDir = self.dir;
+        Direction currentDir = self.direction();
         Direction targetDir = getDirectionTo(sx, sy, ex, ey);
 
         if (currentDir == targetDir && std::abs(sx - ex) <= 1 && std::abs(sy - ey) <= 1)

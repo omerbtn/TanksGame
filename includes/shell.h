@@ -6,9 +6,13 @@
 class Shell : public GameObjectInterface
 {
 public:
-    Direction dir;
-    Shell(Direction dir) : dir(dir) {}
+    Shell(Direction direction);
+
+    Direction& direction();
+    const Direction& direction() const;
 
 private:
-    virtual ObjectType type() const override { return ObjectType::Shell; }
+    virtual ObjectType type() const override;
+
+    Direction direction_;
 };

@@ -4,7 +4,12 @@
 #include <unordered_map>
 
 #include "game_object_interface.h"
+#include "tank.h"
+#include "shell.h"
+#include "wall.h"
+#include "mine.h"
 #include "types/position.h"
+
 class Cell
 {
 public:

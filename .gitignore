@@ -367,3 +367,11 @@ FodyWeavers.xsd
 
 # Ignore the build output folder for the project
 build/
+
+# Ignore the CMakeFiles folder for the project
+CMakeFiles/
+.ninja_deps
+CMakeCache.txt
+.ninja_log
+build.ninja
+*.cmake

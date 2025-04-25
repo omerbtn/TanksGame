@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <optional>
 
 #include "types/position.h"
 #include "types/direction.h"
@@ -21,13 +22,16 @@ public:
     bool load_from_file(const std::string& filename);
 
     void print() const;
-    Tank* get_player_tank(size_t id);
-    const Tank* get_player_tank(size_t id) const;
+    std::shared_ptr<Tank> get_player_tank(size_t id);
+    const std::shared_ptr<Tank> get_player_tank(size_t id) const;
     std::map<size_t, Player>& players();
-    bool execute_tank_action(Tank* tank, TankAction action);
+    bool execute_tank_action(std::shared_ptr<Tank> tank, TankAction action);
     void update_shells();
     void update();
     Position forward_position(const Position& pos, Direction dir) const;
+    const Cell& getCell(Position position) const;
+    int getHeight() const;
+    int getWidth() const;
 
 private:
     size_t width_, height_;

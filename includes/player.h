@@ -14,10 +14,10 @@ public:
     Player(Player&& other) = default;
     Player& operator=(Player&& other) = default;
 
-    Tank* tank();
-    const Tank* tank() const;
-    AlgorithmInterface* algorithm();
-    const AlgorithmInterface* algorithm() const;
+    std::shared_ptr<Tank> tank();
+    const std::shared_ptr<Tank> tank() const;
+    std::shared_ptr<AlgorithmInterface> algorithm();
+    const std::shared_ptr<AlgorithmInterface> algorithm() const;
 
 private:
     std::shared_ptr<Tank> tank_;

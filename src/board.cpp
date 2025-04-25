@@ -13,9 +13,10 @@
 #include "shell.h"
 #include "player.h"
 
-#include "algorithms/aggressive_chase_algorithm.h"
+#include "algorithms/simple_algorithm.h"
 #include "algorithms/smart_algorithm.h"
 #include "algorithms/seed_algorithm.h"
+#include "algorithms/algorithm_utils.h"
 
 std::map<size_t, Player>& Board::players() {
     return players_;
@@ -47,8 +48,9 @@ bool Board::load_from_file(const std::string& filename) {
                 }
                 case '1': {
                     // TODO: move the algorithms to the static config, read it based on name
-                    auto algo = std::make_shared<SeedAlgorithm>(std::initializer_list<TankAction>{
-                        TankAction::MoveBackward, TankAction::Shoot, TankAction::Idle, TankAction::Shoot, TankAction::MoveBackward});
+                    /*auto algo = std::make_shared<SeedAlgorithm>(std::initializer_list<TankAction>{
+                        TankAction::MoveBackward, TankAction::Shoot, TankAction::Idle, TankAction::Shoot, TankAction::MoveBackward});*/
+                    auto algo = std::make_shared<SmartAlgorithm>();
                     auto tank = std::make_shared<Tank>(1, pos, Direction::L);
                     auto player = Player(tank, algo);
                     players_[1] = player;
@@ -58,7 +60,7 @@ bool Board::load_from_file(const std::string& filename) {
                 case '2': {
                     // TODO: make better...
                     auto tank = std::make_shared<Tank>(2, pos, Direction::R);
-                    auto algo = std::make_shared<AggressiveChaseAlgorithm>();
+                    auto algo = std::make_shared<SimpleAlgorithm>();
                     auto player = Player(tank, algo);
                     players_[2] = player;
                     grid_[x][y] = Cell(pos, tank);
@@ -78,50 +80,58 @@ void Board::print() const {
     // TODO: change back to std::cout
     // TODO: add general try catch
 
-    std::cerr << "Game Board:\n";
+    std::cout << "Game Board:\n";
 
     for (int y = 0; y < height_; ++y) {
         for (int x = 0; x < width_; ++x) {
             Position p(x, y);
-            if (!grid_[x][y].objects().empty()) {
-                auto &[type, object] = *grid_[x][y].objects().begin();
-                switch (type) {
-                    case ObjectType::Wall:
-                        std::cerr << '#';
-                        break;
-                    case ObjectType::Mine:
-                        std::cerr << '@';
-                        break;
-                    case ObjectType::Tank: {
-                        auto* t = static_cast<Tank *>(object.get());
-                        std::cerr << (t->id() == 1 ? '1' : '2');
-                        break;
+            std::string to_print = "[";
+            if (!grid_[x][y].objects().empty()) 
+            {
+                for (auto &[type, object] : grid_[x][y].objects()) 
+                {
+                    switch (type) {
+                        case ObjectType::Wall:
+                            to_print += '#';
+                            break;
+                        case ObjectType::Mine:
+                            to_print += '@';
+                            break;
+                        case ObjectType::Tank: {
+                            auto tank = std::dynamic_pointer_cast<Tank>(object);
+                            to_print += (tank->id() == 1 ? '1' : '2');
+                            to_print += directionToArrow(tank->direction());
+                            break;
+                        }
+                        case ObjectType::Shell:
+                            to_print += '*';
+                            break;
                     }
-                    case ObjectType::Shell:
-                        std::cerr << '*';
-                        break;
                 }
-            } else {
-                std::cerr << ' ';
+            } 
+            for (int i = to_print.size(); i < 4; ++i) {
+                to_print += " ";
             }
+            to_print += "]";
+            std::cout << to_print;
         }
-        std::cerr << "\n";
+        std::cout << "\n";
     }
 }
 
-Tank* Board::get_player_tank(size_t id) {
+std::shared_ptr<Tank> Board::get_player_tank(size_t id) {
     assert(players_.contains(id));
     auto players_it = players_.find(id);
     return players_it->second.tank();
 }
 
-const Tank* Board::get_player_tank(size_t id) const {
+const std::shared_ptr<Tank> Board::get_player_tank(size_t id) const {
     assert(players_.contains(id));
     const auto players_it = players_.find(id);
     return players_it->second.tank();
 }
 
-bool Board::execute_tank_action(Tank *tank, TankAction action) {
+bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action) {
     if (!tank || !tank->is_alive()) return false;
 
     tank->decrease_cooldown();
@@ -129,6 +139,7 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
     Position newPos;
     switch (action) {
         case TankAction::MoveForward:
+            std::cout << "[Board] Executing MoveForward for Tank " << tank->id() << std::endl;
             if (tank->is_backing()) {
                 // Only move forward action is able to reset the back movement
                 tank->reset_backwait();
@@ -137,9 +148,19 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
             newPos = forward_position(tank->position(), tank->direction());
 
             if (grid_[newPos.first][newPos.second].empty()) {
+                if (VERBOSE_DEBUG)
+                {
+                    std::cout << "[Board] Moving Tank " << tank->id() << " to empty cell" << std::endl;
+                    std::cout << "[Board] Adding Tank " << tank->id() << " to position (" 
+                    << newPos.first << "," << newPos.second << ")" << std::endl;
+                }
+                grid_[newPos.first][newPos.second].add_object(std::shared_ptr<Tank>(players_[tank->id()].tank()));
+                if (VERBOSE_DEBUG)
+                    std::cout << "[Board] Removing Tank " << tank->id() << " from position (" << tank->position().first << "," << tank->position().second << ")" << std::endl;
                 grid_[tank->position().first][tank->position().second].remove_object(ObjectType::Tank);
                 tank->position() = newPos;
-                grid_[newPos.first][newPos.second].add_object(std::shared_ptr<Tank>(players_[tank->id()].tank()));
+                if (VERBOSE_DEBUG)
+                    std::cout << "[Board] Tank " << tank->id() << " moved to (" << newPos.first << "," << newPos.second << ")" << std::endl;
                 return true;
             } else if (grid_[newPos.first][newPos.second].has(ObjectType::Mine)) {
                 grid_[newPos.first][newPos.second].remove_object(ObjectType::Mine);
@@ -157,6 +178,7 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
             return false;
 
         case TankAction::MoveBackward:
+            std::cout << "[Board] Executing MoveBackward for Tank " << tank->id() << std::endl;
             if (!tank->is_backing()) {
                 tank->start_backwait();
                 return true;
@@ -166,9 +188,9 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
                     tank->continue_backing();
                     newPos = forward_position(tank->position(), static_cast<Direction>((static_cast<int>(tank->direction()) + 4) % 8));
                     if (grid_[newPos.first][newPos.second].empty()) {
+                        grid_[newPos.first][newPos.second].add_object(std::shared_ptr<Tank>(players_[tank->id()].tank()));
                         grid_[tank->position().first][tank->position().second].remove_object(ObjectType::Tank);
                         tank->position() = newPos;
-                        grid_[newPos.first][newPos.second].add_object(std::shared_ptr<Tank>(players_[tank->id()].tank()));
                         return true;
                     } else if (grid_[newPos.first][newPos.second].has(ObjectType::Mine)) {
                         grid_[newPos.first][newPos.second].remove_object(ObjectType::Mine);
@@ -190,26 +212,31 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
             return true;  // still waiting
 
         case TankAction::RotateLeft_1_8:  // TODO: fallthrough magic
-            if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 1) % 8);
-            tank->tick_backwait();
-            return true;
-
-        case TankAction::RotateRight_1_8:
+            std::cout << "[Board] Executing RotateLeft_1_8 for Tank " << tank->id() << std::endl;
             if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 7) % 8);
             tank->tick_backwait();
             return true;
 
-        case TankAction::RotateLeft_1_4:
-            if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 2) % 8);
+        case TankAction::RotateRight_1_8:
+            std::cout << "[Board] Executing RotateRight_1_8 for Tank " << tank->id() << std::endl;
+            if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 1) % 8);
             tank->tick_backwait();
             return true;
 
-        case TankAction::RotateRight_1_4:
+        case TankAction::RotateLeft_1_4:
+            std::cout << "[Board] Executing RotateLeft_1_4 for Tank " << tank->id() << std::endl;
             if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 6) % 8);
             tank->tick_backwait();
             return true;
 
+        case TankAction::RotateRight_1_4:
+            std::cout << "[Board] Executing RotateRight_1_4 for Tank " << tank->id() << std::endl;
+            if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 2) % 8);
+            tank->tick_backwait();
+            return true;
+
         case TankAction::Shoot:
+            std::cout << "[Board] Executing Shoot for Tank " << tank->id() << std::endl;
             tank->tick_backwait();
             if (tank->can_shoot()) {
                 Position shellPos = forward_position(tank->position(), tank->direction());
@@ -239,6 +266,7 @@ bool Board::execute_tank_action(Tank *tank, TankAction action) {
             return false;
 
         case TankAction::Idle:
+            std::cout << "[Board] Executing Idle for Tank " << tank->id() << std::endl;
             tank->tick_backwait();
             return true;
 
@@ -307,4 +335,21 @@ Position Board::forward_position(const Position &pos, Direction dir) const {
     int new_y = (pos.second + dy + height_) % height_;
 
     return Position(new_x, new_y);
+}
+
+const Cell& Board::getCell(Position position) const 
+{ 
+    int x = position.first, y = position.second;
+    assert(x >= 0 && x < width_ && y >= 0 && y < height_);
+    return grid_[x][y];
+}
+
+int Board::getHeight() const 
+{
+    return height_;
+}
+
+int Board::getWidth() const 
+{
+    return width_;
 }

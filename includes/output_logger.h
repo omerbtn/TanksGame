@@ -13,18 +13,43 @@ public:
     OutputLogger(const std::string &filename) : out_(filename) {}
     void logAction(int player, int step, TankAction action, bool valid)
     {
-        out_ << "Step " << step << " | Player " << player << " | Action: " << static_cast<int>(action)
-             << (valid ? " OK" : " BAD") << "\n";
+        out_ << "Step " << step << " | Player " << player << " | Action: " << actionToString(action) << " | "
+             << (valid ? " OK" : " BAD") << std::endl;
     }
     void logResult(const Tank &t1, const Tank &t2, int step)
     {
         if (!t1.is_alive() && !t2.is_alive())
-            out_ << "Result: Tie - Both tanks destroyed at step " << step << "\n";
+            out_ << "Result: Tie - Both tanks destroyed at step " << step << std::endl;
         else if (!t1.is_alive())
-            out_ << "Result: Player 2 wins - Tank 1 destroyed\n";
+            out_ << "Result: Player 2 wins - Tank 1 destroyed" << std::endl;
         else if (!t2.is_alive())
-            out_ << "Result: Player 1 wins - Tank 2 destroyed\n";
+            out_ << "Result: Player 1 wins - Tank 2 destroyed" << std::endl;
         else
-            out_ << "Result: Tie - Time expired\n";
+            out_ << "Result: Tie - Time expired" << std::endl;
+    }
+
+    std::string actionToString(TankAction action) const
+    {
+        switch (action)
+        {
+        case TankAction::MoveForward:
+            return "MoveForward";
+        case TankAction::MoveBackward:
+            return "MoveBackward";
+        case TankAction::RotateLeft_1_8:
+            return "RotateLeft_1_8";
+        case TankAction::RotateRight_1_8:
+            return "RotateRight_1_8";
+        case TankAction::RotateLeft_1_4:
+            return "RotateLeft_1_4";
+        case TankAction::RotateRight_1_4:
+            return "RotateRight_1_4";
+        case TankAction::Shoot:
+            return "Shoot";
+        case TankAction::Idle:
+            return "Idle";
+        default:
+            return "Unknown Action";
+        }
     }
 };

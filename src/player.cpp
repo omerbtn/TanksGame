@@ -4,18 +4,18 @@ Player::Player(std::shared_ptr<Tank> tank, std::shared_ptr<AlgorithmInterface> a
     : tank_{tank}, algorithm_{algorithm} {
 }
 
-Tank* Player::tank() {
-    return tank_.get();
+std::shared_ptr<Tank> Player::tank() {
+    return tank_;
 }
 
-const Tank* Player::tank() const {
-    return tank_.get();
+const std::shared_ptr<Tank> Player::tank() const {
+    return tank_;
 }
 
-AlgorithmInterface* Player::algorithm() {
-    return algorithm_.get();
+std::shared_ptr<AlgorithmInterface> Player::algorithm() {
+    return algorithm_;
 }
 
-const AlgorithmInterface* Player::algorithm() const {
-    return algorithm_.get();
+const std::shared_ptr<AlgorithmInterface> Player::algorithm() const {
+    return algorithm_;
 }

@@ -1,18 +1,12 @@
 #pragma once
 
-#include "game_object_interface.h"
+#include "movable_object.h"
 #include "types/direction.h"
 
-class Shell : public GameObjectInterface
-{
+class Shell : public MovableObject {
 public:
-    Shell(Direction direction);
-
-    Direction& direction();
-    const Direction& direction() const;
+    using MovableObject::MovableObject;
 
 private:
     virtual ObjectType type() const override;
-
-    Direction direction_;
 };

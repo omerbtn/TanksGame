@@ -17,9 +17,14 @@
 #include "algorithms/smart_algorithm.h"
 #include "algorithms/seed_algorithm.h"
 #include "algorithms/algorithm_utils.h"
+#include "global_config.h"
 
 std::map<size_t, Player>& Board::players() {
     return players_;
+}
+
+std::vector<std::vector<Cell>>& Board::grid() {
+    return grid_;
 }
 
 bool Board::load_from_file(const std::string& filename) {
@@ -32,10 +37,10 @@ bool Board::load_from_file(const std::string& filename) {
     grid_.resize(height_, std::vector<Cell>(width_));
 
     std::string line;
-    for (size_t y = 0; y < height_; ++y) {
+    for (size_t x = 0; x < height_; ++x) {
         std::getline(file, line);
-        for (size_t x = 0; x < width_ && x < line.size(); ++x) {
-            char ch = line[x];
+        for (size_t y = 0; y < width_ && x < line.size(); ++y) {
+            char ch = line[y];
             Position pos(x, y);
             switch (ch) {
                 case '#': {
@@ -47,9 +52,6 @@ bool Board::load_from_file(const std::string& filename) {
                     break;
                 }
                 case '1': {
-                    // TODO: move the algorithms to the static config, read it based on name
-                    /*auto algo = std::make_shared<SeedAlgorithm>(std::initializer_list<TankAction>{
-                        TankAction::MoveBackward, TankAction::Shoot, TankAction::Idle, TankAction::Shoot, TankAction::MoveBackward});*/
                     auto algo = std::make_shared<SmartAlgorithm>();
                     auto tank = std::make_shared<Tank>(1, pos, Direction::L);
                     auto player = Player(tank, algo);
@@ -58,9 +60,8 @@ bool Board::load_from_file(const std::string& filename) {
                     break;
                 }
                 case '2': {
-                    // TODO: make better...
-                    auto tank = std::make_shared<Tank>(2, pos, Direction::R);
                     auto algo = std::make_shared<SimpleAlgorithm>();
+                    auto tank = std::make_shared<Tank>(2, pos, Direction::R);
                     auto player = Player(tank, algo);
                     players_[2] = player;
                     grid_[x][y] = Cell(pos, tank);
@@ -77,18 +78,15 @@ bool Board::load_from_file(const std::string& filename) {
 }
 
 void Board::print() const {
-    // TODO: change back to std::cout
-    // TODO: add general try catch
-
     std::cout << "Game Board:\n";
 
     for (int y = 0; y < height_; ++y) {
         for (int x = 0; x < width_; ++x) {
             Position p(x, y);
             std::string to_print = "[";
-            if (!grid_[x][y].objects().empty()) 
+            if (!grid_[x][y].objects().empty())
             {
-                for (auto &[type, object] : grid_[x][y].objects()) 
+                for (auto &[type, object] : grid_[x][y].objects())
                 {
                     switch (type) {
                         case ObjectType::Wall:
@@ -98,7 +96,7 @@ void Board::print() const {
                             to_print += '@';
                             break;
                         case ObjectType::Tank: {
-                            auto tank = std::dynamic_pointer_cast<Tank>(object);
+                            auto tank = std::static_pointer_cast<Tank>(object);
                             to_print += (tank->id() == 1 ? '1' : '2');
                             to_print += directionToArrow(tank->direction());
                             break;
@@ -108,7 +106,7 @@ void Board::print() const {
                             break;
                     }
                 }
-            } 
+            }
             for (int i = to_print.size(); i < 4; ++i) {
                 to_print += " ";
             }
@@ -148,27 +146,27 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action) {
             newPos = forward_position(tank->position(), tank->direction());
 
             if (grid_[newPos.first][newPos.second].empty()) {
-                if (VERBOSE_DEBUG)
-                {
+                if constexpr (config::get<bool>("verbose_debug")) {
                     std::cout << "[Board] Moving Tank " << tank->id() << " to empty cell" << std::endl;
-                    std::cout << "[Board] Adding Tank " << tank->id() << " to position (" 
+                    std::cout << "[Board] Adding Tank " << tank->id() << " to position ("
                     << newPos.first << "," << newPos.second << ")" << std::endl;
                 }
                 grid_[newPos.first][newPos.second].add_object(std::shared_ptr<Tank>(players_[tank->id()].tank()));
-                if (VERBOSE_DEBUG)
+                if constexpr (config::get<bool>("verbose_debug")) {
                     std::cout << "[Board] Removing Tank " << tank->id() << " from position (" << tank->position().first << "," << tank->position().second << ")" << std::endl;
+                }
                 grid_[tank->position().first][tank->position().second].remove_object(ObjectType::Tank);
                 tank->position() = newPos;
-                if (VERBOSE_DEBUG)
+                if constexpr (config::get<bool>("verbose_debug")) {
                     std::cout << "[Board] Tank " << tank->id() << " moved to (" << newPos.first << "," << newPos.second << ")" << std::endl;
+                }
                 return true;
             } else if (grid_[newPos.first][newPos.second].has(ObjectType::Mine)) {
                 grid_[newPos.first][newPos.second].remove_object(ObjectType::Mine);
                 tank->destroy();
                 return true;
             } else if (grid_[newPos.first][newPos.second].has(ObjectType::Tank)) {
-                // TODO change to static_pointer_cast
-                auto targetTank = std::dynamic_pointer_cast<Tank>(grid_[newPos.first][newPos.second].get_object(ObjectType::Tank));
+                auto targetTank = std::static_pointer_cast<Tank>(grid_[newPos.first][newPos.second].get_object(ObjectType::Tank));
                 targetTank->destroy();
                 grid_[newPos.first][newPos.second].remove_object(ObjectType::Tank);
                 tank->destroy();
@@ -197,8 +195,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action) {
                         tank->destroy();
                         return true;
                     } else if (grid_[newPos.first][newPos.second].has(ObjectType::Tank)) {
-                        // TODO change to static_pointer_cast
-                        auto targetTank = std::dynamic_pointer_cast<Tank>(grid_[newPos.first][newPos.second].get_object(ObjectType::Tank));
+                        auto targetTank = std::static_pointer_cast<Tank>(grid_[newPos.first][newPos.second].get_object(ObjectType::Tank));
                         targetTank->destroy();
                         grid_[newPos.first][newPos.second].remove_object(ObjectType::Tank);
                         tank->destroy();
@@ -211,7 +208,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action) {
 
             return true;  // still waiting
 
-        case TankAction::RotateLeft_1_8:  // TODO: fallthrough magic
+        case TankAction::RotateLeft_1_8:
             std::cout << "[Board] Executing RotateLeft_1_8 for Tank " << tank->id() << std::endl;
             if (!tank->is_backing()) tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 7) % 8);
             tank->tick_backwait();
@@ -239,29 +236,10 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action) {
             std::cout << "[Board] Executing Shoot for Tank " << tank->id() << std::endl;
             tank->tick_backwait();
             if (tank->can_shoot()) {
-                Position shellPos = forward_position(tank->position(), tank->direction());
-                auto &cell = grid_[shellPos.first][shellPos.second];
-                if (cell.empty()) {
-                    tank->shoot();
-                    cell.add_object(std::make_shared<Shell>(tank->direction()));
-                    return true;
-                } else if (cell.has(ObjectType::Wall)) {
-                    auto wall = std::dynamic_pointer_cast<Wall>(cell.get_object(ObjectType::Wall));
-                    wall->weaken();
-                    tank->shoot();
-                    if (wall->is_destroyed()) {
-                        cell.remove_object(ObjectType::Wall);
-                    }
-
-                    return true;
-                } else if (cell.has(ObjectType::Tank)) {
-                    auto targetTank = std::dynamic_pointer_cast<Tank>(cell.get_object(ObjectType::Tank));
-                    targetTank->destroy();
-                    cell.remove_object(ObjectType::Tank);
-                    tank->shoot();
-                    return true;
-                }
-                // ignore shell hitting mine
+                auto &cell = grid_[tank->position().first][tank->position().second];
+                tank->shoot();
+                cell.add_object(std::make_shared<Shell>(tank->direction()));
+                return true;
             }
             return false;
 
@@ -282,7 +260,7 @@ void Board::update_shells() {
         for (size_t j = 0; j < grid_[i].size(); ++j) {
             auto &cell = grid_[i][j];
             if (cell.has(ObjectType::Shell)) {
-                auto shell = std::dynamic_pointer_cast<Shell>(cell.get_object(ObjectType::Shell));
+                auto shell = std::static_pointer_cast<Shell>(cell.get_object(ObjectType::Shell));
                 Position mid_pos = forward_position(Position(i, j), shell->direction());
                 Position end_pos = forward_position(mid_pos, shell->direction());
 
@@ -298,13 +276,13 @@ void Board::update_shells() {
                         }
                     } else {
                         if (new_cell.has(ObjectType::Wall)) {
-                            auto wall = std::dynamic_pointer_cast<Wall>(new_cell.get_object(ObjectType::Wall));
+                            auto wall = std::static_pointer_cast<Wall>(new_cell.get_object(ObjectType::Wall));
                             wall->weaken();
                             if (wall->is_destroyed()) {
                                 new_cell.remove_object(ObjectType::Wall);
                             }
                         } else if (new_cell.has(ObjectType::Tank)) {
-                            auto tank = std::dynamic_pointer_cast<Tank>(new_cell.get_object(ObjectType::Tank));
+                            auto tank = std::static_pointer_cast<Tank>(new_cell.get_object(ObjectType::Tank));
                             tank->destroy();
                             new_cell.remove_object(ObjectType::Tank);
                         } else if (new_cell.has(ObjectType::Shell)) {
@@ -328,8 +306,8 @@ void Board::update() {
 
 Position Board::forward_position(const Position &pos, Direction dir) const {
     static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
-        {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
-        {Direction::D, {0, 1}},  {Direction::DL, {-1, 1}}, {Direction::L, {-1, 0}}, {Direction::UL, {-1, -1}}};
+        {Direction::U, {-1, 0}}, {Direction::UR, {-1, 1}}, {Direction::R, {0, 1}},  {Direction::DR, {1, 1}},
+        {Direction::D, {1, 0}},  {Direction::DL, {1, -1}}, {Direction::L, {0, -1}}, {Direction::UL, {-1, -1}}};
     auto [dx, dy] = deltas.at(dir);
     int new_x = (pos.first + dx + width_) % width_;
     int new_y = (pos.second + dy + height_) % height_;
@@ -337,19 +315,19 @@ Position Board::forward_position(const Position &pos, Direction dir) const {
     return Position(new_x, new_y);
 }
 
-const Cell& Board::getCell(Position position) const 
-{ 
+const Cell& Board::getCell(Position position) const
+{
     int x = position.first, y = position.second;
     assert(x >= 0 && x < width_ && y >= 0 && y < height_);
     return grid_[x][y];
 }
 
-int Board::getHeight() const 
+int Board::getHeight() const
 {
     return height_;
 }
 
-int Board::getWidth() const 
+int Board::getWidth() const
 {
     return width_;
 }

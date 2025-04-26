@@ -1,6 +1,9 @@
 #include "tank.h"
 
-Tank::Tank(size_t id, Position position, Direction direction) : id_{id}, position_{position}, direction_{direction} {
+#include "global_config.h"
+
+Tank::Tank(size_t id, Position position, Direction direction)
+    : MovableObject{direction}, id_{id}, position_{position}, shells_{config::get<size_t>("shell_per_tank")} {
 }
 
 ObjectType Tank::type() const {
@@ -13,14 +16,6 @@ Position& Tank::position() {
 
 const Position& Tank::position() const {
     return position_;
-}
-
-Direction& Tank::direction() {
-    return direction_;
-}
-
-const Direction& Tank::direction() const {
-    return direction_;
 }
 
 size_t Tank::id() const {

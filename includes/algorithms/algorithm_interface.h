@@ -4,9 +4,6 @@
 
 #include "types/tank_action.h"
 
-#define VERBOSE_DEBUG 0
-
-
 class Tank;
 class Board;
 

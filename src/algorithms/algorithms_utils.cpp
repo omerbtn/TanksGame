@@ -30,15 +30,15 @@ bool hasLineOfSight(const Position& from, const Position& to, Direction dir, con
     Position current = board.forward_position(from, dir);
 
     //while (current != from)
-    for (int steps = 0; steps < board.getWidth(); ++steps)
+    for (int steps = 0; steps < board.get_width(); ++steps)
     {
         if (current == to)
             return true;
 
-        const Cell& cell = board.getCell(current);
+        const Cell& cell = board.get_cell(current);
         if (cell.has(ObjectType::Wall))
             return false;
-            
+
         current = board.forward_position(current, dir);
     }
 
@@ -58,7 +58,7 @@ Direction getOppositeDirection(Direction dir)
 Direction getDirectionAfterRotation(Direction dir, TankAction action)
 {
     int offset = 0;
-    
+
     switch (action)
     {
         case TankAction::RotateLeft_1_8:
@@ -96,7 +96,7 @@ std::string directionToString(Direction dir)
     }
 }
 
-std::string tankActionToString(TankAction action)
+std::string tank_action_to_string(TankAction action)
 {
     switch (action)
     {

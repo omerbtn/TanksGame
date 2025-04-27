@@ -46,7 +46,6 @@ add_dependencies(tanks_game_lib generate_config)
 # Include the generated header
 target_include_directories(tanks_game_lib PUBLIC ${CMAKE_BINARY_DIR})
 
-# Create the executable
 add_executable(tanks_game src/main.cpp)
 
 target_link_libraries(tanks_game PRIVATE tanks_game_lib)

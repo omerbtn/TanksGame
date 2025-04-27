@@ -13,8 +13,23 @@
 GameManager::GameManager(Board* board) : board_{board}, total_max_steps_(config::get<int>("total_max_steps")) {
 }
 
+static std::pair<std::string, std::string> split_filename(const std::string& filename) {
+    size_t dot_pos = filename.rfind('.');
+
+    if (dot_pos == std::string::npos) {
+        return std::make_pair(filename, "");
+    }
+
+    std::string name = filename.substr(0, dot_pos);
+    std::string extension = filename.substr(dot_pos + 1);
+
+    return std::make_pair(name, extension);
+}
+
 void GameManager::run() {
-    OutputLogger logger(static_cast<std::string>(config::get<std::string_view>("output_file")));
+    auto [filename, ext] = split_filename(board_->input_file_name());
+    auto output_file = filename + static_cast<std::string>(config::get<std::string_view>("output_file_suffix")) + ext;
+    OutputLogger logger(output_file);
     while (!game_over()) {
         step(logger);
         board_->print();
@@ -42,7 +57,7 @@ void GameManager::step(OutputLogger& logger) {
     TankAction action2 = player2.algorithm()->decideAction(*player2.tank(), *board_);
 
     if constexpr (config::get<bool>("verbose_debug")) {
-        std::cout << "[GameManager] Player " << 1 << " decided to execute action: " << tankActionToString(action1) << std::endl;
+        std::cout << "[GameManager] Player " << 1 << " decided to execute action: " << tank_action_to_string(action1) << std::endl;
     }
 
     bool valid1 = board_->execute_tank_action(player1.tank(), action1);

@@ -10,7 +10,7 @@ struct BFSState
 {
     Position pos;
     Direction dir;
-    
+
     bool operator==(const BFSState& other) const
     {
         return pos == other.pos && dir == other.dir;
@@ -42,4 +42,4 @@ Direction getOppositeDirection(Direction dir);
 Direction getDirectionAfterRotation(Direction dir, TankAction action);
 std::string directionToString(Direction dir);
 std::string directionToArrow(Direction dir);
-std::string tankActionToString(TankAction action);
+std::string tank_action_to_string(TankAction action);

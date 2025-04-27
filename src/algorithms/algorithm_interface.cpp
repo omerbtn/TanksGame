@@ -4,37 +4,37 @@
 
 // Returns an evasive action if there is an incoming shell toward the tank
 // TODO: Change to evade the closest shell
-std::optional<TankAction> AlgorithmInterface::getEvadeActionIfShellIncoming(const Tank &tank, const Board &board) 
+std::optional<TankAction> AlgorithmInterface::getEvadeActionIfShellIncoming(const Tank &tank, const Board &board)
 {
     const Position& tankPos = tank.position();
     const Direction& tankDir = tank.direction();
 
     // Scan the board for shells
-    for (int y = 0; y < board.getHeight(); ++y) 
+    for (int y = 0; y < board.get_height(); ++y)
     {
-        for (int x = 0; x < board.getWidth(); ++x)
+        for (int x = 0; x < board.get_width(); ++x)
         {
             Position pos(x, y);
-            const Cell& cell = board.getCell(pos);
+            const Cell& cell = board.get_cell(pos);
 
-            if (cell.has(ObjectType::Shell))  
+            if (cell.has(ObjectType::Shell))
             {
                 auto shellDir = static_cast<Shell*>(cell.get_object(ObjectType::Shell).get())->direction();
 
                 // Check if the shell has a line of sight to our tank
-                if (hasLineOfSight(pos, tankPos, shellDir, board)) 
+                if (hasLineOfSight(pos, tankPos, shellDir, board))
                 {
                     // Shell is coming towards us, need to run away
                     // We don't want to run towards the shell, or at the opposite direction (because the shell is faster)
                     if (tankDir != getOppositeDirection(shellDir) &&
-                        tankDir != shellDir) 
+                        tankDir != shellDir)
                     {
                         // We can just move forward and avoid the shell
                         // Before, we need to check if the next cell is safe
                         Position nextPos = board.forward_position(tankPos, tankDir);
-                        const Cell& nextCell = board.getCell(nextPos);
-                        
-                        if (nextCell.empty()) 
+                        const Cell& nextCell = board.get_cell(nextPos);
+
+                        if (nextCell.empty())
                         {
                             return TankAction::MoveForward;
                         }
@@ -50,12 +50,12 @@ std::optional<TankAction> AlgorithmInterface::getEvadeActionIfShellIncoming(cons
                     {
                         Direction newDir = getDirectionAfterRotation(tankDir, rotateAction);
                         // Avoid facing toward the shell or the opposite direction
-                        if (newDir != shellDir && newDir != getOppositeDirection(shellDir)) 
+                        if (newDir != shellDir && newDir != getOppositeDirection(shellDir))
                         {
                             Position newPos = board.forward_position(tankPos, newDir);
-                            const Cell& newCell = board.getCell(newPos);
+                            const Cell& newCell = board.get_cell(newPos);
 
-                            if (newCell.empty()) 
+                            if (newCell.empty())
                             {
                                 return rotateAction; // Rotate away from the shell, so next turn we can move forward
                             }

@@ -21,7 +21,7 @@ bool SmartAlgorithm::isShellInPathDangerous(const Position& pos, const Board& bo
         {
             // Check 2 steps in each direction
             current = board.forward_position(current, dir);
-            const Cell& cell = board.getCell(current);
+            const Cell& cell = board.get_cell(current);
             // Check for a shell moving towards the current position
             if (cell.has(ObjectType::Shell) &&
                 static_cast<Shell*>(cell.get_object(ObjectType::Shell).get())->direction() == getOppositeDirection(dir))
@@ -90,16 +90,16 @@ std::optional<TankAction> SmartAlgorithm::findFirstSafeActionToOpponent(const Bo
             while (parent.find(current) != parent.end() && parent[current].first != startState)
             {
                 current = parent[current].first;
-                std::cout << tankActionToString(parent[current].second) << " -> " << std::endl;
+                std::cout << tank_action_to_string(parent[current].second) << " -> " << std::endl;
             }
             std::cout << "[SmartAlgorithm] First move to execute: "
-            << tankActionToString(parent[current].second) << std::endl;
+            << tank_action_to_string(parent[current].second) << std::endl;
             return parent[current].second;
         }
 
         // Try moving forward if safe
         Position nextPos = board.forward_position(current.pos, current.dir);
-        const Cell& nextCell = board.getCell(nextPos);
+        const Cell& nextCell = board.get_cell(nextPos);
         if (nextCell.empty() && !isShellInPathDangerous(nextPos, board))
         {
             BFSState nextState{nextPos, current.dir};

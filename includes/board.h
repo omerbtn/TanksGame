@@ -29,14 +29,16 @@ public:
     bool execute_tank_action(std::shared_ptr<Tank> tank, TankAction action);
     void update();
     Position forward_position(const Position& pos, Direction dir) const;
-    const Cell& getCell(Position position) const;
-    int getHeight() const;
-    int getWidth() const;
+    const Cell& get_cell(Position position) const;
+    size_t get_height() const;
+    size_t get_width() const;
+    const std::string& input_file_name() const;
 
 private:
     void update_shells();
 
     size_t width_, height_;
+    std::string input_file_name_;
     std::vector<std::vector<Cell>> grid_;
     std::map<size_t, Player> players_;
 };

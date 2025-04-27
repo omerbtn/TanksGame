@@ -23,14 +23,6 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        std::shared_ptr<Tank> tank1 = board.get_player_tank(1);
-        std::shared_ptr<Tank> tank2 = board.get_player_tank(2);
-
-        if (!tank1 || !tank2) {
-            std::cerr << "Missing one or both tanks.\n";
-            return 1;
-        }
-
         GameManager manager(&board);
         manager.run();
     } catch (const std::exception& exc) {

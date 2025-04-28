@@ -8,7 +8,7 @@ TankAction SimpleAlgorithm::decideAction(const Tank &tank, const Board &board)
     const Direction& tankDir = tank.direction();
 
     // If a shell is coming, run away
-    if (auto evade = getEvadeActionIfShellIncoming(tank, board)) 
+    if (auto evade = getEvadeActionIfShellIncoming(tank, board, std::max(board.get_width(), board.get_height())))  // Be more conservative
     {
         return *evade;
     }

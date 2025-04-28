@@ -375,3 +375,13 @@ CMakeCache.txt
 .ninja_log
 build.ninja
 *.cmake
+
+_deps/
+lib
+
+# Ignore executable files
+*.a
+*.exe
+
+# Ignore generated config files
+includes/config_generated.h

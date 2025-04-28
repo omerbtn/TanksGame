@@ -13,10 +13,8 @@ int main(int argc, char* argv[]) {
 
     std::string file_path = argv[1];*/
 
-    // Set the output stream to use UTF-8 for wide characters
     try {
         Board board;
-        std::cout << "↑" << std::endl;
 
         if (!board.load_from_file(static_cast<std::string>(config::get<std::string_view>("map_file")))) {
             std::cout << "Failed to load game board.\n";

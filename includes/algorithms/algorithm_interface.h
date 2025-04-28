@@ -14,5 +14,5 @@ public:
     virtual ~AlgorithmInterface() = default;
 
 protected:
-    std::optional<TankAction> getEvadeActionIfShellIncoming(const Tank &tank, const Board &board);
+    std::optional<TankAction> getEvadeActionIfShellIncoming(const Tank &tank, const Board &board, size_t shell_max_distance = 4);
 };

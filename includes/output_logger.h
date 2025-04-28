@@ -11,15 +11,15 @@ class OutputLogger
     bool valid_ = false;
 
 public:
-    OutputLogger(const std::string& filename) {
-        out_.open(filename);
-        if (!out_.is_open()) {
+    OutputLogger(const std::string& filename) : out_(filename) {
+        if (!out_) {
             valid_ = false;
             std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
         } else {
             valid_ = true;
         }
     }
+
     void logAction(int player, int step, TankAction action, bool valid)
     {
         if (!valid_) {
@@ -29,6 +29,7 @@ public:
         out_ << "Step " << step << " | Player " << player << " | Action: " << action_to_string(action) << " | "
              << (valid ? " OK" : " BAD") << std::endl;
     }
+    
     void logResult(const Tank &t1, const Tank &t2, int step)
     {
         if (!valid_) {

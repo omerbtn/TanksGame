@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "game_object_interface.h"
 #include "tank.h"
@@ -18,16 +19,19 @@ public:
 
     Position& position();
     const Position& position() const;
-    std::unordered_map<ObjectType, std::shared_ptr<GameObjectInterface>>& objects();
-    const std::unordered_map<ObjectType, std::shared_ptr<GameObjectInterface>>& objects() const;
+    //std::unordered_map<ObjectType, std::shared_ptr<GameObjectInterface>> objects();
+    //const std::unordered_map<ObjectType, std::shared_ptr<GameObjectInterface>> objects() const;
 
     void add_object(std::shared_ptr<GameObjectInterface> obj);
-    void remove_object(ObjectType type);
-    std::shared_ptr<GameObjectInterface> get_object(ObjectType type) const;
+    void remove_objects_by_type(ObjectType type);
+    void remove_object(std::shared_ptr<GameObjectInterface> obj);
+    std::shared_ptr<GameObjectInterface> get_object_by_type(ObjectType type) const;
+    const std::vector<std::shared_ptr<GameObjectInterface>>& get_objects_by_type(ObjectType type) const;
+    size_t get_objects_count() const;
     bool has(ObjectType type) const;
     bool empty() const;
 
 private:
     Position position_;
-    std::unordered_map<ObjectType, std::shared_ptr<GameObjectInterface>> objects_;
+    std::unordered_map<ObjectType, std::vector<std::shared_ptr<GameObjectInterface>>> objects_;
 };

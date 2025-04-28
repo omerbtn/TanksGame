@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_set>
 #include <optional>
 
 #include "types/position.h"
@@ -33,12 +34,20 @@ public:
     size_t get_height() const;
     size_t get_width() const;
     const std::string& input_file_name() const;
+    void do_shells_step();
 
-private:
-    void update_shells();
+    
+    private:
+    //void update_shells();
+    void update_active_shells();
+    void resolve_collisions(Cell& cell);
+    void on_explosion(Cell& cell);
 
     size_t width_, height_;
     std::string input_file_name_;
     std::vector<std::vector<Cell>> grid_;
     std::map<size_t, Player> players_;
+    std::vector<std::pair<Position, std::shared_ptr<Shell>>> active_shells_;
+    std::unordered_set<Position> cells_to_update_;
+    std::unordered_map<Position, std::shared_ptr<Tank>> old_tanks_positions_;
 };

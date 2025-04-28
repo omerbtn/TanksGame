@@ -1,6 +1,8 @@
 #include "game_manager.h"
 
 #include <iostream>
+#include <algorithm>
+#include <filesystem>
 
 #include "board.h"
 #include "tank.h"
@@ -13,34 +15,55 @@
 GameManager::GameManager(Board* board) : board_{board}, total_max_steps_(config::get<int>("total_max_steps")) {
 }
 
-static std::pair<std::string, std::string> split_filename(const std::string& filename) {
-    size_t dot_pos = filename.rfind('.');
+static std::pair<std::string, std::string> split_filename(const std::string& filename) 
+{
+    size_t last_slash_pos = filename.find_last_of("/\\");
 
-    if (dot_pos == std::string::npos) {
-        return std::make_pair(filename, "");
+    std::string directory;
+    std::string name;
+
+    if (last_slash_pos == std::string::npos) 
+    {
+        // No directory component
+        directory = "";
+        name = filename;
+    }
+    else
+    {
+        directory = filename.substr(0, last_slash_pos + 1); // Include the slash
+        name = filename.substr(last_slash_pos + 1);
     }
 
-    std::string name = filename.substr(0, dot_pos);
-    std::string extension = filename.substr(dot_pos + 1);
-
-    return std::make_pair(name, extension);
+    return std::make_pair(directory, name);
 }
 
-void GameManager::run() {
-    auto [filename, ext] = split_filename(board_->input_file_name());
-    auto output_file = filename + static_cast<std::string>(config::get<std::string_view>("output_file_suffix")) + ext;
+void GameManager::run() 
+{
+    auto [directory, filename] = split_filename(board_->input_file_name());
+    auto output_file = directory + static_cast<std::string>(config::get<std::string_view>("output_file_prefix")) + filename;
     OutputLogger logger(output_file);
-    while (!game_over()) {
-        step(logger);
+    
+    while (!game_over()) 
+    {
+        board_->do_shells_step();
+        if (half_steps_count_ % 2 == 0)
+        {
+            std::cout << "GameManager] Do tanks step, half_steps_count = " << half_steps_count_ << std::endl;
+            step(logger);
+        }
+        else
+        {
+            std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
+        }
         board_->print();
+        half_steps_count_++;
     }
 
-    logger.logResult(*board_->get_player_tank(1), *board_->get_player_tank(2), step_count_);
+    logger.logResult(*board_->get_player_tank(1), *board_->get_player_tank(2), half_steps_count_ / 2);
 }
 
 void GameManager::step(OutputLogger& logger) {
-    board_->update();
-
+    
     Player player1 = board_->players()[1];
     Player player2 = board_->players()[2];
 
@@ -48,7 +71,7 @@ void GameManager::step(OutputLogger& logger) {
         // TODO: Fix
         Tank tank = *player1.tank();
         std::cout << "[GameManager] Player " << 1 << " tank state: \n"
-                    << "\tPosition: (" << tank.position().first << "," << tank.position().second << "), \n"
+        << "\tPosition: (" << tank.position().first << "," << tank.position().second << "), \n"
                     << "\tDirection: " << directionToString(tank.direction()) << ", \n"
                     << "\tAlive: " << (tank.is_alive() ? "yes" : "no") << ", \n"
                     << "\tAmmo: " << tank.ammo() << std::endl;
@@ -62,19 +85,20 @@ void GameManager::step(OutputLogger& logger) {
 
     bool valid1 = board_->execute_tank_action(player1.tank(), action1);
     bool valid2 = board_->execute_tank_action(player2.tank(), action2);
-
+    
     if constexpr (config::get<bool>("verbose_debug")) {
         std::cout << "[GameManager] Player " << 1 << " action " << (valid1 ? "succeeded" : "failed") << std::endl;
     }
 
-    logger.logAction(1, step_count_, action1, valid1);
-    logger.logAction(2, step_count_, action2, valid2);
+    board_->update();
 
-    ++step_count_;
+    logger.logAction(1, half_steps_count_ / 2, action1, valid1);
+    logger.logAction(2, half_steps_count_ / 2, action2, valid2);
+
     if (total_max_steps_ > 0) {
         --total_max_steps_;
     }
-
+    
     if (tie_countdown_.has_value()) {
         if (*tie_countdown_ > 0) {
             (*tie_countdown_)--;

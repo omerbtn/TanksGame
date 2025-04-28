@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <optional>
+#include <algorithm>
 
 #include "algorithms/algorithm_utils.h"
 #include "global_config.h"
@@ -17,14 +18,14 @@ bool SmartAlgorithm::isShellInPathDangerous(const Position& pos, const Board& bo
         // Check all directions
         Direction dir = static_cast<Direction>(d);
         Position current = pos;
-        for (int i = 0; i < 2; ++i)
+        for (int i = 0; i < 4; ++i)
         {
-            // Check 2 steps in each direction
+            // Check 4 steps in each direction, as we might need time to evade
             current = board.forward_position(current, dir);
             const Cell& cell = board.get_cell(current);
             // Check for a shell moving towards the current position
             if (cell.has(ObjectType::Shell) &&
-                static_cast<Shell*>(cell.get_object(ObjectType::Shell).get())->direction() == getOppositeDirection(dir))
+                static_cast<Shell*>(cell.get_object_by_type(ObjectType::Shell).get())->direction() == getOppositeDirection(dir))
             {
                 return true;
             }
@@ -59,7 +60,7 @@ std::optional<TankAction> SmartAlgorithm::findFirstSafeActionToOpponent(const Bo
         if (++iterations % 10 == 0)
             std::cout << "Visited: " << visited.size() << ", Queue: " << q.size() << std::endl;
 
-        if (iterations > 5000)
+        if (iterations > 20000)
         {
             std::cout << "[SmartAlgorithm] BFS aborted after too many iterations!" << std::endl;
             break;
@@ -87,13 +88,25 @@ std::optional<TankAction> SmartAlgorithm::findFirstSafeActionToOpponent(const Bo
             << " to target at (" << targetPos.first << "," << targetPos.second << ")" << std::endl;
 
             std::cout << "[SmartAlgorithm] Backtracking to find first move to execute:" << std::endl;
+
+            std::vector<TankAction> moves_reversed;
             while (parent.find(current) != parent.end() && parent[current].first != startState)
             {
+                moves_reversed.push_back(parent[current].second);
                 current = parent[current].first;
-                std::cout << tank_action_to_string(parent[current].second) << " -> " << std::endl;
             }
+            moves_reversed.push_back(parent[current].second);
             std::cout << "[SmartAlgorithm] First move to execute: "
             << tank_action_to_string(parent[current].second) << std::endl;
+
+            std::reverse(moves_reversed.begin(), moves_reversed.end());
+
+            for (const TankAction& action : moves_reversed)
+            {
+                std::cout << tank_action_to_string(action) << " -> " << std::endl;
+                cached_path_.push(action);
+            }
+
             return parent[current].second;
         }
 
@@ -173,25 +186,47 @@ TankAction SmartAlgorithm::decideAction(const Tank& tank, const Board& board)
     // First, check if there's an incoming shell we must evade
     if (auto evade = getEvadeActionIfShellIncoming(tank, board))
     {
+        std::cout << "[SmartAlgorithm] Evading a shell using: " << tank_action_to_string(*evade) << std::endl;
+        cached_path_ = {}; // We are moving, so invalidate path
         return *evade;
     }
 
-    // If not in danger, check if we can shoot the opponent
+    // If not in danger, check if we can shoot the opponent or move towards him
     const std::shared_ptr<Tank> opponent = board.get_player_tank(tank.id() == 1 ? 2 : 1);
-    if (opponent && opponent->is_alive() && hasLineOfSight(tank.position(), opponent->position(), tank.direction(), board))
+    if (opponent && opponent->is_alive())
     {
+        // If we have line of sight now, shoot him!
+        if (hasLineOfSight(tank.position(), opponent->position(), tank.direction(), board))
+        {
+            std::cout << "[SmartAlgorithm] Shooting opponent at (" << opponent->position().first << "," << opponent->position().second << ")" <<
+             " from (" << tank.position().first << "," << tank.position().second << ")" << std::endl;
+    
+            return TankAction::Shoot;
+        }
 
-        std::cout << "[SmartAlgorithm] Shooting opponent at (" << opponent->position().first << "," << opponent->position().second << ")" <<
-         " from (" << tank.position().first << "," << tank.position().second << ")" << std::endl;
+        // If the oppnent moved, invalidate path
+        if (opponent->position() != cached_target_)
+        {
+            std::cout << "[SmartAlgorithm] Opponent moved, invalidating cached path" << std::endl;
+            cached_path_ = {};
+        }
 
-        return TankAction::Shoot;
-    }
+        // If we can't shoot, try to find a safe path towards the opponent
+        // If we have a cached path, follow it
+        if (!cached_path_.empty())
+        {
+            std::cout << "[SmartAlgorithm] Following cached path, executing action: " << tank_action_to_string(cached_path_.front()) << std::endl;
+            TankAction next_action = cached_path_.front();
+            cached_path_.pop();
+            return next_action;
+        }
 
-    // If we can't shoot, try to find a safe path towards the opponent
-    if (opponent)
-    {
+        // If we don't have a cached path, recompute it
         if (auto move = findFirstSafeActionToOpponent(board, tank.position(), tank.direction(), opponent->position()))
         {
+            std::cout << "[SmartAlgorithm] Recomputed path using BFS, executing action: " << tank_action_to_string(*move) << std::endl;
+            cached_target_ = opponent->position(); // Update opponent position
+            cached_path_.pop(); // Remove the first action from the path (== move)
             return *move;
         }
     }

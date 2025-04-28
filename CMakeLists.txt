@@ -5,6 +5,14 @@ project(tanks_game)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# TODO: remove
+# Enable debug symbols and set the debug type to gdb
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
+# Find Python
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
 include(FetchContent)
 
 # Download gtest at configure time
@@ -18,7 +26,7 @@ FetchContent_MakeAvailable(googletest)
 
 # Path to the config files
 set(CONFIG_INPUT "${CMAKE_SOURCE_DIR}/config.ini")
-set(CONFIG_OUTPUT "${CMAKE_BINARY_DIR}/config_generated.h")
+set(CONFIG_OUTPUT "${CMAKE_BINARY_DIR}/includes/config_generated.h")
 
 # Command to generate config_generated.h
 add_custom_command(

@@ -29,7 +29,7 @@ FetchContent_MakeAvailable(googletest)
 
 # Path to the config files
 set(CONFIG_INPUT "${CMAKE_SOURCE_DIR}/config.ini")
-set(CONFIG_OUTPUT "${CMAKE_BINARY_DIR}/includes/config_generated.h")
+set(CONFIG_OUTPUT "${CMAKE_SOURCE_DIR}/includes/config_generated.h")
 
 # Command to generate config_generated.h
 add_custom_command(

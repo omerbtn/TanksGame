@@ -44,21 +44,16 @@ void OutputLogger::logResult(const Tank &t1, const Tank &t2, int step)
 
 std::string OutputLogger::action_to_string(TankAction action) const 
 {
-    switch (action) 
+    switch (action)
     {
-        case TankAction::MoveForward:
-            return "MoveForward";
-        case TankAction::MoveBackward:
-            return "MoveBackward";
-        case TankAction::RotateLeft_1_8:
-            return "RotateLeft_1_8";
-        case TankAction::RotateRight_1_8:
-            return "RotateRight_1_8";
-        case TankAction::RotateLeft_1_4:
-            return "RotateLeft_1_4";
-        case TankAction::RotateRight_1_4:
-            return "RotateRight_1_4";
-        default:
-            return "Unknown action";
+        case TankAction::MoveForward: return "MoveForward";
+        case TankAction::MoveBackward: return "MoveBackward";
+        case TankAction::RotateLeft_1_8: return "RotateLeft_1_8";
+        case TankAction::RotateRight_1_8: return "RotateRight_1_8";
+        case TankAction::RotateLeft_1_4: return "RotateLeft_1_4";
+        case TankAction::RotateRight_1_4: return "RotateRight_1_4";
+        case TankAction::Shoot: return "Shoot";
+        case TankAction::Idle: return "Idle";
+        default: return "Unknown Action";
     }
 }

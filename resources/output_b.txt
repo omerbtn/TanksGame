@@ -1,0 +1,15 @@
+Step 0 | Player 1 | Action: RotateRight_1_4 |  OK
+Step 0 | Player 2 | Action: Idle |  OK
+Step 1 | Player 1 | Action: MoveForward |  OK
+Step 1 | Player 2 | Action: Idle |  OK
+Step 2 | Player 1 | Action: MoveForward |  OK
+Step 2 | Player 2 | Action: Idle |  OK
+Step 3 | Player 1 | Action: MoveForward |  OK
+Step 3 | Player 2 | Action: Idle |  OK
+Step 4 | Player 1 | Action: RotateLeft_1_4 |  OK
+Step 4 | Player 2 | Action: Shoot |  OK
+Step 5 | Player 1 | Action: RotateLeft_1_4 |  OK
+Step 5 | Player 2 | Action: Shoot |  BAD
+Step 6 | Player 1 | Action: RotateRight_1_4 |  BAD
+Step 6 | Player 2 | Action: Idle |  OK
+Result: Player 2 wins - Tank 1 destroyed

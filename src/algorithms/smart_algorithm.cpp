@@ -37,8 +37,11 @@ bool SmartAlgorithm::isShellInPathDangerous(const Position& pos, const Board& bo
 
 std::optional<TankAction> SmartAlgorithm::findFirstSafeActionToOpponent(const Board& board, const Position& start_pos, Direction start_dir, const Position& target_pos)
 {
-    // For debugging purposes
-    std::cout << "[SmartAlgorithm] Starting BFS toward opponent" << std::endl;
+    if constexpr (config::get<bool>("verbose_debug")) 
+    {
+        // For debugging purposes
+        std::cout << "[SmartAlgorithm] Starting BFS toward opponent" << std::endl;
+    }
 
     std::queue<BFSState> q;
     std::unordered_map<BFSState, std::pair<BFSState, TankAction>> parent;
@@ -268,7 +271,7 @@ TankAction SmartAlgorithm::decideAction(const Tank& tank, const Board& board)
             {
                 std::cout << "[SmartAlgorithm] Recomputed path using BFS, executing action: " << tank_action_to_string(*move) << std::endl;
             }
-            
+
             cached_target_ = opponent->position(); // Update opponent position
             cached_path_.pop(); // Remove the first action from the path (== move)
             return *move;

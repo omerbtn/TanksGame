@@ -43,6 +43,9 @@ void GameManager::run()
     auto output_file = directory + static_cast<std::string>(config::get<std::string_view>("output_file_prefix")) + filename;
     OutputLogger logger(output_file);
     
+    std ::cout << "[GameManager] Starting game with the board:" << std::endl;
+    board_->print();
+
     while (!game_over()) 
     {
         board_->do_shells_step();

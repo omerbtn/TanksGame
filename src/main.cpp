@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     try {
         Board board;
 
-        if (!board.load_from_file(static_cast<std::string>(config::get<std::string_view>("map_file")))) {
+        if (!board.load_from_file(file_path)) {
             std::cout << "Failed to load game board." << std::endl;
             return 1;
         }

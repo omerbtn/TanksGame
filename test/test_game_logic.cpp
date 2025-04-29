@@ -11,7 +11,7 @@ protected:
     Board board;
 
     void SetUp() override {
-        ASSERT_TRUE(board.load_from_file("test/board.txt"));
+        ASSERT_TRUE(board.load_from_file("../test/board.txt"));
     }
 };
 
@@ -147,8 +147,8 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick) {
     board.execute_tank_action(tank, TankAction::Shoot);
 
     Position oldPos;
-    for (int x = 0; x < board.get_height(); ++x) {
-        for (int y = 0; y < board.get_width(); ++y) {
+    for (size_t x = 0; x < board.get_height(); ++x) {
+        for (size_t y = 0; y < board.get_width(); ++y) {
             const auto& cell = board.get_cell(Position(x, y));
             if (cell.has(ObjectType::Shell)) {
                 oldPos = cell.position();
@@ -162,8 +162,8 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick) {
     board.do_shells_step();  // Move shells another step forward
 
     Position newPos;
-    for (int x = 0; x < board.get_height(); ++x) {
-        for (int y = 0; y < board.get_width(); ++y) {
+    for (size_t x = 0; x < board.get_height(); ++x) {
+        for (size_t y = 0; y < board.get_width(); ++y) {
             const auto& cell = board.get_cell(Position(x, y));
             if (cell.has(ObjectType::Shell)) {
                 newPos = cell.position();
@@ -213,8 +213,8 @@ TEST_F(BoardTest, ShellCollisionDestroysBothShells) {
     board.update();
     board.update();
 
-    for (int x=0; x<board.get_height(); ++x) {
-        for (int y = 0; y < board.get_width(); ++y) {
+    for (size_t x = 0; x < board.get_height(); ++x) {
+        for (size_t y = 0; y < board.get_width(); ++y) {
             const auto& cell = board.get_cell(Position(x,y));
             ASSERT_FALSE(cell.has(ObjectType::Shell)); // Validate no shells remaining.
         }

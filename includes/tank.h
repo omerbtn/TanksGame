@@ -29,8 +29,8 @@ public:
 private:
     virtual ObjectType type() const override;
 
-    Position position_;
     size_t id_;
+    Position position_;
     size_t shells_;
     size_t cooldown_ = 0;
     size_t backwait_ = 0;

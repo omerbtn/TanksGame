@@ -139,9 +139,9 @@ void Board::print() const
 {
     std::cout << "Game Board:" << std::endl;
 
-    for (int y = 0; y < height_; ++y) 
+    for (size_t y = 0; y < height_; ++y) 
     {
-        for (int x = 0; x < width_; ++x) 
+        for (size_t x = 0; x < width_; ++x) 
         {
             const Cell& cell = grid_[x][y];
             std::string to_print = "[";
@@ -378,7 +378,6 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing Idle for Tank " << tank->id() << std::endl;
     
-            bool is_backing = tank->is_backing();
             tank->tick_backwait();
     
             // Staying idle is always legal

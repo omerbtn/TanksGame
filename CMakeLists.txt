@@ -5,6 +5,9 @@ project(tanks_game)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable strict compiler warnings
+add_compile_options(-Wall -Wextra -Werror -pedantic)
+
 # TODO: remove
 # Enable debug symbols and set the debug type to gdb
 set(CMAKE_BUILD_TYPE Debug)
@@ -57,6 +60,9 @@ target_include_directories(tanks_game_lib PUBLIC ${CMAKE_BINARY_DIR})
 add_executable(tanks_game src/main.cpp)
 
 target_link_libraries(tanks_game PRIVATE tanks_game_lib)
+
+# Put the game binary in the project root
+set_target_properties(tanks_game PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # Enable testing
 enable_testing()

@@ -5,7 +5,7 @@ bool hasLineOfSight(const Position& from, const Position& to, Direction dir, con
 {
     Position current = board.forward_position(from, dir);
 
-    for (int steps = 0; steps < std::max(board.get_width(), board.get_height()); ++steps)
+    for (size_t steps = 0; steps < std::max(board.get_width(), board.get_height()); ++steps)
     {
         if (current == to)
             return true;

@@ -3,7 +3,9 @@
 #include "movable_object.h"
 #include "types/direction.h"
 
-class Shell : public MovableObject {
+
+class Shell : public MovableObject 
+{
 public:
     using MovableObject::MovableObject;
 

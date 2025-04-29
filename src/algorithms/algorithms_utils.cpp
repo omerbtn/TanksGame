@@ -1,39 +1,17 @@
 #include "algorithms/algorithm_utils.h"
 
-Direction getDirectionTo(int sx, int sy, int tx, int ty)
-{
-    int dx = tx - sx;
-    int dy = sy - ty;
-
-    if (dx == 0 && dy > 0)
-        return Direction::U;
-    if (dx > 0 && dy > 0)
-        return Direction::UR;
-    if (dx > 0 && dy == 0)
-        return Direction::R;
-    if (dx > 0 && dy < 0)
-        return Direction::DR;
-    if (dx == 0 && dy < 0)
-        return Direction::D;
-    if (dx < 0 && dy < 0)
-        return Direction::DL;
-    if (dx < 0 && dy == 0)
-        return Direction::L;
-    if (dx < 0 && dy > 0)
-        return Direction::UL;
-
-    return Direction::U; // fallback
-}
 
 bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board)
 {
     Position current = board.forward_position(from, dir);
 
-    //while (current != from)
-    for (int steps = 0; steps < board.get_width(); ++steps)
+    for (int steps = 0; steps < std::max(board.get_width(), board.get_height()); ++steps)
     {
         if (current == to)
             return true;
+
+        if (current == from)
+            return false; // We are back to the starting position
 
         const Cell& cell = board.get_cell(current);
         if (cell.has(ObjectType::Wall))
@@ -43,11 +21,6 @@ bool hasLineOfSight(const Position& from, const Position& to, Direction dir, con
     }
 
     return false;
-}
-
-Direction getDirectionTo(const Position& from, const Position& to)
-{
-    return getDirectionTo(from.first, from.second, to.first, to.second);
 }
 
 Direction getOppositeDirection(Direction dir)

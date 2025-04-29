@@ -3,7 +3,8 @@
 #include "game_object_interface.h"
 #include "types/direction.h"
 
-class MovableObject : public GameObjectInterface {
+class MovableObject : public GameObjectInterface 
+{
 public:
     MovableObject(Direction direction);
 

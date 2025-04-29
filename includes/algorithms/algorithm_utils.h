@@ -35,9 +35,7 @@ namespace std
     };
 }
 
-Direction getDirectionTo(int sx, int sy, int tx, int ty);
 bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board);
-Direction getDirectionTo(const Position& from, const Position& to);
 Direction getOppositeDirection(Direction dir);
 Direction getDirectionAfterRotation(Direction dir, TankAction action);
 std::string directionToString(Direction dir);

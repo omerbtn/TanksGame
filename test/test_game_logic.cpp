@@ -26,6 +26,7 @@ TEST_F(BoardTest, TankStepsOnMineAndDies) {
     // Move forward into the mine
     tank->direction() = Direction::R;
     bool result = board.execute_tank_action(tank, TankAction::MoveForward);
+    board.update();
 
     EXPECT_TRUE(result);
     EXPECT_FALSE(tank->is_alive());  // Tank should be dead after stepping on mine
@@ -54,12 +55,12 @@ TEST_F(BoardTest, TankShootsAndHitsOtherTank) {
 
     // Place tanks facing each other
     tank1->position() = std::make_pair(4, 5);
-    tank2->position() = std::make_pair(6, 5);
+    tank2->position() = std::make_pair(5, 5);
     tank1->direction() = Direction::R;
     tank2->direction() = Direction::L;
 
     board.grid()[4][5] = Cell({4, 5}, tank1);
-    board.grid()[6][5] = Cell({6, 5}, tank2);
+    board.grid()[5][5] = Cell({5, 5}, tank2);
 
     // Tank1 shoots
     bool result = board.execute_tank_action(tank1, TankAction::Shoot);
@@ -156,7 +157,9 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick) {
         }
     }
 
-    board.update();
+    // To be called every half step, so call twice
+    board.do_shells_step();  // Move shells one step forward
+    board.do_shells_step();  // Move shells another step forward
 
     Position newPos;
     for (int x = 0; x < board.get_height(); ++x) {
@@ -179,7 +182,7 @@ TEST_F(BoardTest, WallDestroyedAfterTwoShellHits) {
 
     auto& player1 = board.players()[1];
     auto tank = player1.tank();
-    tank->position() = std::make_pair(3, 5);
+    tank->position() = std::make_pair(4, 5);
     tank->direction() = Direction::R;
 
     board.execute_tank_action(tank, TankAction::Shoot);

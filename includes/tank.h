@@ -6,7 +6,6 @@
 
 class Tank : public MovableObject
 {
-
 public:
     Tank(size_t id, Position position, Direction direction);
 

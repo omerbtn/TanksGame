@@ -12,9 +12,9 @@ public:
     TankAction decideAction(const Tank &tank, const Board &board) override;
 
 private:
-    std::queue<TankAction> cached_path_;
-    Position cached_target_;
-
     bool isShellInPathDangerous(const Position& pos, const Board& board);
     std::optional<TankAction> findFirstSafeActionToOpponent(const Board& board, const Position& startPos, Direction startDir, const Position& targetPos);
+    
+    std::queue<TankAction> cached_path_;
+    Position cached_target_;
 };

@@ -1,13 +1,17 @@
 #include "wall.h"
 
-void Wall::weaken() {
+
+void Wall::weaken() 
+{
     hit_count++;
 }
 
-bool Wall::is_destroyed() const {
+bool Wall::is_destroyed() const 
+{
     return hit_count >= 2;
 }
 
-ObjectType Wall::type() const {
+ObjectType Wall::type() const 
+{
     return ObjectType::Wall;
 }

@@ -1,12 +1,13 @@
 #include "movable_object.h"
 
-MovableObject::MovableObject(Direction direction) : direction_{direction} {
-}
+MovableObject::MovableObject(Direction direction) : direction_{direction} {}
 
-Direction& MovableObject::direction() {
+Direction& MovableObject::direction() 
+{
     return direction_;
 }
 
-const Direction& MovableObject::direction() const {
+const Direction& MovableObject::direction() const 
+{
     return direction_;
 }

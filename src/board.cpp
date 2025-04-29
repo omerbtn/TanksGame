@@ -208,11 +208,14 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
     Position current_pos = tank->position();
     Position new_pos;
+    
     switch (action) 
     {
         case TankAction::MoveForward: 
         {
-            std::cout << "[Board] Executing MoveForward for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing MoveForward for Tank " << tank->id() << std::endl;
+            
             if (tank->is_backing()) 
             {
                 // Only move forward action is able to reset the back movement
@@ -227,7 +230,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
             
             if (new_cell.has(ObjectType::Wall))
             {
-                // Illegal move
+                // Illegal move, can't move into walls
                 return false;
             }
             
@@ -244,7 +247,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
         }
         case TankAction::MoveBackward: 
         {
-            std::cout << "[Board] Executing MoveBackward for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing MoveBackward for Tank " << tank->id() << std::endl;
+        
             if (!tank->is_backing()) 
             {
                 tank->start_backwait();
@@ -260,9 +265,10 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
                     Cell& current_cell = grid_[tank->position().first][tank->position().second];
                     Cell& new_cell = grid_[new_pos.first][new_pos.second];
+                    
                     if (new_cell.has(ObjectType::Wall))
                     {
-                        // Illegal move
+                        // Illegal move, can't move into walls
                         return false;
                     }
         
@@ -281,9 +287,12 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
             return true;  // still waiting
         }
+
         case TankAction::RotateLeft_1_8: 
         {
-            std::cout << "[Board] Executing RotateLeft_1_8 for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing RotateLeft_1_8 for Tank " << tank->id() << std::endl;
+    
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
             if (is_backing) 
@@ -297,7 +306,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
         case TankAction::RotateRight_1_8: 
         {
-            std::cout << "[Board] Executing RotateRight_1_8 for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing RotateRight_1_8 for Tank " << tank->id() << std::endl;
+    
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
             if (is_backing) 
@@ -311,7 +322,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
         case TankAction::RotateLeft_1_4: 
         {
-            std::cout << "[Board] Executing RotateLeft_1_4 for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing RotateLeft_1_4 for Tank " << tank->id() << std::endl;
+            
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
             if (is_backing) 
@@ -322,9 +335,12 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
             tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 6) % 8);
             return true;
         }
+
         case TankAction::RotateRight_1_4: 
         {
-            std::cout << "[Board] Executing RotateRight_1_4 for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing RotateRight_1_4 for Tank " << tank->id() << std::endl;
+    
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
             if (is_backing) 
@@ -338,7 +354,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
 
         case TankAction::Shoot: 
         {
-            std::cout << "[Board] Executing Shoot for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing Shoot for Tank " << tank->id() << std::endl;
+    
             tank->tick_backwait();
             if (tank->can_shoot()) 
             {
@@ -351,14 +369,18 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, TankAction action)
                 cells_to_update_.insert(shell_pos);
                 return true;
             }
+
             return false;
         }
 
         case TankAction::Idle: 
         {
-            std::cout << "[Board] Executing Idle for Tank " << tank->id() << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+                std::cout << "[Board] Executing Idle for Tank " << tank->id() << std::endl;
+    
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
+    
             // Staying idle is always legal
             return true;
         }
@@ -450,8 +472,10 @@ void Board::resolve_collisions(Cell& cell)
         {
             auto tank_ptr = std::static_pointer_cast<Tank>(tank);
             tank_ptr->destroy();
-            cell.remove_object(tank);
         }
+
+        // Remove all tanks from the cell
+        cell.remove_objects_by_type(ObjectType::Tank);
     }
     
 }

@@ -5,7 +5,9 @@
 #include "tank.h"
 #include "algorithms/algorithm_interface.h"
 
-class Player {
+
+class Player 
+{
 public:
     Player() = default;
     Player(std::shared_ptr<Tank> tank, std::shared_ptr<AlgorithmInterface> algorithm);

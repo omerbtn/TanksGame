@@ -385,3 +385,6 @@ lib
 
 # Ignore generated config files
 includes/config_generated.h
+
+# Ignore testing directory
+Testing/

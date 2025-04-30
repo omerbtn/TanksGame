@@ -1,95 +1,87 @@
 #include "tank.h"
-#include "shell.h"
 
-Tank::Tank(Position position, Direction direction, Board* board) : MovableObject(position, ObjectType::Tank, direction, board),
-															  artillery_shells(16), shoot_cooldown (0), backward_state(BackwardState::None) {}
+#include "global_config.h"
+
+Tank::Tank(size_t id, Position position, Direction direction)
+    : MovableObject{direction}, id_{id}, position_{position}, shells_{config::get<size_t>("shell_per_tank")} {}
+
+ObjectType Tank::type() const 
+{
+    return ObjectType::Tank;
+}
+
+Position& Tank::position() 
+{
+    return position_;
+}
+
+const Position& Tank::position() const 
+{
+    return position_;
+}
+
+size_t Tank::id() const 
+{
+    return id_;
+}
+
+bool Tank::is_alive() const 
+{
+    return alive_;
+}
+
+size_t Tank::ammo() const 
+{
+    return shells_;
+}
+
+void Tank::destroy() 
+{
+    alive_ = false;
+}
+
+void Tank::decrease_cooldown() 
+{
+    if (cooldown_ > 0) cooldown_--;
+}
+
+bool Tank::can_shoot() const 
+{
+    return cooldown_ == 0 && shells_ > 0 && backwait_ == 0;
+}
 
 void Tank::shoot() 
 {
-	if (is_waiting_for_reverse() || shoot_cooldown != 0 || artillery_shells == 0)
-	{
-		// Illegal move, do nothing
-		do_nothing();
-	}
-	else
-	{
-		Shell* shell = new Shell(position, direction, board);  // TODO: Should change, shell should be created in the adjacent cell
-		board->addShell(shell);
-		shoot_cooldown = 4;
-		artillery_shells--;
-		cancel_backward();
-	}
+    cooldown_ = 4;
+    shells_--;
 }
 
-void Tank::move_forward() 
+bool Tank::is_backing() const 
 {
-	if (!is_waiting_for_reverse()) {
-		move(true);
-	}	
-	// If the tank is in reverse, cancel it
-	cancel_backward();
-	reduce_shoot_cooldown();
+    return backwait_ > 0;
 }
 
-void Tank::move_backward()
+void Tank::start_backwait() 
 {
-	/*
-	if (reverse_counter == 0)
-		in_reverse = true;
-
-	if (in_reverse)
-	{
-		move(false);
-	}
-	else
-		reverse_counter--;
-
-	if (!in_reverse)
-		reverse_counter--;
-	*/
-	update_backward_state();
-	if (backward_state == BackwardState::ReadyToMove) {
-		move(false);
-	}
-	reduce_shoot_cooldown();
+    backwait_ = 2;
 }
 
-void Tank::update_backward_state() 
+void Tank::tick_backwait() 
 {
-	if (backward_state == BackwardState::None)
-		backward_state = BackwardState::Waiting1;
-	else if (backward_state == BackwardState::Waiting1) {
-		backward_state = BackwardState::Waiting2;
-	}
-	else if (backward_state == BackwardState::Waiting2) {
-		backward_state = BackwardState::ReadyToMove;
-	}
-	// If the state is ReadyToMove ,stay in the same state, as the tank can keep moving backward immediately
+    if (backwait_ > 0) --backwait_;
 }
 
-void Tank::rotate(Direction rotate_direction) 
+void Tank::reset_backwait() 
 {
-	if (is_waiting_for_reverse())
-	{
-		// Illegal move, do nothing
-		do_nothing();
-		return;
-	}
-	
-	cancel_backward();
-	reduce_shoot_cooldown();
-	direction = (Direction)(((int)direction + (int)rotate_direction) % 360);
+    backwait_ = 0;
 }
 
-void Tank::do_nothing() 
+void Tank::continue_backing() 
 {
-	// If the tank is waiting for reverse, update the state
-	// If the tank is not waiting for reverse, cancel the backward state
-	if (is_waiting_for_reverse())
-		update_backward_state();
-	else
-		cancel_backward();
+    backwait_ = 1;
+}
 
-	// Anyway, the shoot cooldown should be reduced
-	reduce_shoot_cooldown();
+bool Tank::ready_to_move_back() const 
+{
+    return backwait_ == 0;
 }

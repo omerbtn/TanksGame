@@ -2,23 +2,28 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "Build TanksGame",
+        "label": "Configure CMake",
         "type": "shell",
-        "command": "cl",
-        "args": [
-            "/EHsc",
-            "/std:c++20",
-            "/Fe:build/tanks_game.exe",
-            "src/main.cpp",  // Make sure main.cpp is first (entry point)
-            "src/*.cpp",     // Compile all the .cpp files in src/
-            "/Iincludes",    // Include the header files
-            "/Fo:build/"     // Output object files to the build/ directory
-        ],
+        "command": "cmake -S . -B build",
+        "problemMatcher": [],
+        "options": {
+          "cwd": "${workspaceFolder}" 
+        }
+      },
+      {
+        "label": "Build Project",
+        "type": "shell",
+        "dependsOn": ["Configure CMake"],
+        "command": "cmake --build build",
         "group": {
           "kind": "build",
           "isDefault": true
         },
-        "problemMatcher": ["$msCompile"]
+        "problemMatcher": ["$gcc"],
+        "options": {
+        "cwd": "${workspaceFolder}"
+        },
+        "detail": "Generated task for building the project"
       }
     ]
   }

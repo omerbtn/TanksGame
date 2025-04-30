@@ -1,11 +1,14 @@
 #pragma once
 
-#include "movableObject.h"
+#include "movable_object.h"
+#include "types/direction.h"
+
 
 class Shell : public MovableObject 
 {
 public:
-    Shell(Position position, Direction direction, Board* board);
-    virtual void move_forward() override;
-};
+    using MovableObject::MovableObject;
 
+private:
+    virtual ObjectType type() const override;
+};

@@ -1,36 +1,37 @@
 #pragma once
 
-#include "Position.h"
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
-class GameObject;
-class Shell;
-class Mine;
-class Tank;
-class Wall;
+#include "game_object_interface.h"
+#include "tank.h"
+#include "shell.h"
+#include "wall.h"
+#include "mine.h"
+#include "types/position.h"
 
-class Cell {
-protected:
-    Position position;
-    Shell* shell = nullptr;  // Maybe just turn all these to std::vector<GameObject*> and traverse it to resolve collisions
-    Mine* mine = nullptr;    // Then add_object will just add the object to the vector, and resolve_collisions will traverse
-    Tank* tank = nullptr;    // the vector and check for collisions
-    Wall* wall = nullptr;
-
+class Cell
+{
 public:
-    explicit Cell(Position position, GameObject* object = nullptr); // Can know the exact type by object->getType(), no need for overloading constructors
-    //Cell(int x, int y, Mine* mine);
-    //Cell(int x, int y, Tank* tank);
-    //Cell(int x, int y, Wall* wall);
-    Position getPosition() const;
-    int getX() const;
-    int getY() const;
-    bool add_object(GameObject* obj);
-    bool is_tank() const;
-    bool is_wall() const;
-    bool is_shell() const;
-    bool is_mine() const;
-    ~Cell() = default;
+    Cell() = default;
+    Cell(Position position, std::shared_ptr<GameObjectInterface> object = nullptr);
+
+    Position& position();
+    const Position& position() const;
+
+    void add_object(std::shared_ptr<GameObjectInterface> obj);
+    void remove_object(std::shared_ptr<GameObjectInterface> obj);
+    void remove_objects_by_type(ObjectType type);
+
+    std::shared_ptr<GameObjectInterface> get_object_by_type(ObjectType type) const;
+    const std::vector<std::shared_ptr<GameObjectInterface>>& get_objects_by_type(ObjectType type) const;
+    size_t get_objects_count() const;
+    
+    bool has(ObjectType type) const;
+    bool empty() const;
 
 private:
-    void resolve_collisions();
+    Position position_;
+    std::unordered_map<ObjectType, std::vector<std::shared_ptr<GameObjectInterface>>> objects_;
 };

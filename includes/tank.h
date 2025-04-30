@@ -1,40 +1,38 @@
 #pragma once
 
-#include "movableObject.h"
-#include "direction.h"
+#include "movable_object.h"
+#include "types/direction.h"
+#include "types/position.h"
 
-// forward declaration
-class Board;
-
-enum class BackwardState {
-    None,         // No backward movement
-    Waiting1,     // 1st step waiting
-    Waiting2,     // 2nd step waiting
-    ReadyToMove,  // Ready to move backward
-};
-
-class Tank : public MovableObject {
-private:
-    int artillery_shells;
-    int shoot_cooldown;
-	//bool in_reverse;      // Should be true if the tank is in reverse, i.e. he can move backward freely  
-    //int reverse_counter;  // Should be decreased every turn
-    BackwardState backward_state; // State of the tank when moving backward, should be updated every turn
-
+class Tank : public MovableObject
+{
 public:
-    Tank(Position position, Direction direction, Board* board);
+    Tank(size_t id, Position position, Direction direction);
 
+    Position& position();
+    const Position& position() const;
+
+    size_t id() const;
+    bool is_alive() const;
+    size_t ammo() const;
+    void destroy();
+    void decrease_cooldown();
+    bool can_shoot() const;
     void shoot();
-    void move_forward();
-    void move_backward();
-    void rotate(Direction rotate_direction);
-    void do_nothing();
+    bool is_backing() const;
+    void start_backwait();
+    void tick_backwait();
+    void reset_backwait();
+    void continue_backing();
+    bool ready_to_move_back() const;
 
 private:
-    void cancel_backward() { backward_state = BackwardState::None; };
-    void update_backward_state();
-    void reduce_shoot_cooldown() { if (shoot_cooldown > 0) shoot_cooldown--; };
-    bool is_waiting_for_reverse() const { return backward_state == BackwardState::Waiting1 || backward_state == BackwardState::Waiting2; };
+    virtual ObjectType type() const override;
+
+    size_t id_;
+    Position position_;
+    size_t shells_;
+    size_t cooldown_ = 0;
+    size_t backwait_ = 0;
+    bool alive_ = true;
 };
-
-

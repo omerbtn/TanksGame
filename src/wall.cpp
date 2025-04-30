@@ -1,7 +1,17 @@
 #include "wall.h"
 
-Wall::Wall(Position position) : GameObject(position, ObjectType::Wall) ,durability (2){}
 
-bool Wall::hit() {
-	return --durability == 0;
+void Wall::weaken() 
+{
+    hit_count++;
+}
+
+bool Wall::is_destroyed() const 
+{
+    return hit_count >= 2;
+}
+
+ObjectType Wall::type() const 
+{
+    return ObjectType::Wall;
 }

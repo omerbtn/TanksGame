@@ -1,11 +1,17 @@
 #pragma once
-#include "gameObject.h"
 
-class Wall : public GameObject {
-protected:
-    int durability;
+#include <cstddef>
 
+#include "game_object_interface.h"
+
+class Wall : public GameObjectInterface
+{
 public:
-    Wall(Position position);
-    bool hit();
+    void weaken();
+    bool is_destroyed() const;
+
+private:
+    virtual ObjectType type() const override;
+
+    std::size_t hit_count = 0;
 };

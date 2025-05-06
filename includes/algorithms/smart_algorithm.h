@@ -1,20 +1,29 @@
 #pragma once
 
-#include <queue>
+/*#include <queue>
 #include "algorithm_interface.h"
 #include "board.h"
 #include "tank.h"
-#include "algorithm_utils.h"
+#include "algorithm_utils.h"*/
 
-class SmartAlgorithm : public AlgorithmInterface
+#include "common/TankAlgorithm.h"
+class SmartAlgorithm : public TankAlgorithm
 {
 public:
-    TankAction decideAction(const Tank &tank, const Board &board) override;
+    virtual ~SmartAlgorithm() = default;
+    virtual ActionRequest getAction() override {
+        return ActionRequest::DoNothing;
+    }
+
+    virtual void updateBattleInfo(BattleInfo& info) override {
+        return;
+    }
+    /*TankAction decideAction(const Tank &tank, const Board &board) override;
 
 private:
     bool isShellInPathDangerous(const Position& pos, const Board& board);
     std::optional<TankAction> findFirstSafeActionToOpponent(const Board& board, const Position& startPos, Direction startDir, const Position& targetPos);
-    
+
     std::queue<TankAction> cached_path_;
-    Position cached_target_;
+    Position cached_target_;*/
 };

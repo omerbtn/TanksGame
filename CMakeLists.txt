@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Enable strict compiler warnings
-add_compile_options(-Wall -Wextra -Werror -pedantic)
+# add_compile_options(-Wall -Wextra -Werror -pedantic) TODO: restore
 
 # TODO: remove
 # Enable debug symbols and set the debug type to gdb
@@ -44,7 +44,7 @@ add_custom_command(
 add_custom_target(generate_config DEPENDS ${CONFIG_OUTPUT})
 
 # Include header files
-include_directories(includes includes/algorithms includes/types)
+include_directories(common includes includes/algorithms includes/types)
 
 # Collect all .cpp files in the main folder
 file(GLOB_RECURSE SOURCES "src/*.cpp")

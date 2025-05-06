@@ -1,13 +1,18 @@
 #pragma once
 
-#include "algorithm_interface.h"
+#include "common/TankAlgorithm.h"
 
-#include "board.h"
-#include "tank.h"
-#include "algorithm_utils.h"
-
-class SimpleAlgorithm : public AlgorithmInterface
+class SimpleAlgorithm : public TankAlgorithm
 {
 public:
-    TankAction decideAction(const Tank &tank, const Board &board) override;
+    //TankAction decideAction(const Tank&tank, const Board &board) override;
+    virtual ~SimpleAlgorithm() = default;
+    virtual ActionRequest getAction() override {
+        return ActionRequest::DoNothing;
+    }
+
+    virtual void updateBattleInfo(BattleInfo& info) override {
+        (void)info;
+        return;
+    }
 };

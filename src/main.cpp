@@ -4,13 +4,24 @@
 #include "board.h"
 #include "global_config.h"
 
-#include "factory/concrete_player_factory.h"
-#include "factory/concrete_tank_algorithm_factory.h"
+#include "concrete_player_factory.h"
+#include "concrete_tank_algorithm_factory.h"
 
-int main(int argc, char** argv) {
-    // TODO - use argv..
-    GameManager game{ConcretePlayerFactory(), ConcreteTankAlgorithmFactory()};
-    game.readBoard("resources/game_map.txt");
+int main(int argc, char** argv) 
+{
+    if (argc != 2)
+    {
+        std::cerr << "Usage: tanks_game <game_board_input_file>" << std::endl;
+        return 1;
+    }
+
+    // There was a problem with the temporary factories, they died before readBoard, so moved to create them here
+    // Seems ok with the assignment requirements
+    ConcretePlayerFactory playerFactory;
+    ConcreteTankAlgorithmFactory algorithmFactory;
+
+    GameManager game{playerFactory, algorithmFactory};
+    game.readBoard(argv[1]);
     game.run();
 
     return 0;

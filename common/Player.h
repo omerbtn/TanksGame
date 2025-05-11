@@ -2,10 +2,12 @@
 
 #include <cstddef>
 
-class TankAlgorithm;
-class SatelliteView;
+#include "TankAlgorithm.h"
+#include "SatelliteView.h"
 
-class Player {
+
+class Player 
+{
 public:
     Player(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells) {}
     virtual ~Player() {}

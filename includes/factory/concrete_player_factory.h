@@ -1,9 +1,9 @@
 #pragma once
 
-#include "common/PlayerFactory.h"
+#include "PlayerFactory.h"
 
-#include "players/concrete_player_1.h"
-#include "players/concrete_player_2.h"
+#include "concrete_player_1.h"
+#include "concrete_player_2.h"
 
 class ConcretePlayerFactory : public PlayerFactory
 {

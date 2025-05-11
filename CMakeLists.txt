@@ -4,6 +4,7 @@ project(tanks_game)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Enable strict compiler warnings
 # add_compile_options(-Wall -Wextra -Werror -pedantic) TODO: restore
@@ -44,7 +45,7 @@ add_custom_command(
 add_custom_target(generate_config DEPENDS ${CONFIG_OUTPUT})
 
 # Include header files
-include_directories(common includes includes/algorithms includes/types)
+include_directories(common includes includes/algorithms includes/types includes/factory includes/players)
 
 # Collect all .cpp files in the main folder
 file(GLOB_RECURSE SOURCES "src/*.cpp")

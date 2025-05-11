@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 enum class TankAction
 {
@@ -10,4 +10,4 @@ enum class TankAction
     RotateRight_1_4,
     Shoot,
     Idle
-};
+};*/

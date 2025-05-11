@@ -6,7 +6,8 @@ OutputLogger::OutputLogger(const std::string& filename) : out_(filename)
     if (!out_) 
     {
         valid_ = false;
-        std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
+        if (!filename.empty())
+            std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
     } 
     else 
     {
@@ -14,7 +15,7 @@ OutputLogger::OutputLogger(const std::string& filename) : out_(filename)
     }
 }
 
-void OutputLogger::logAction(int player, int step, TankAction action, bool valid) 
+void OutputLogger::logAction(int player, int step, ActionRequest action, bool valid) 
 {
     if (!valid_) 
     {
@@ -42,18 +43,19 @@ void OutputLogger::logResult(const Tank &t1, const Tank &t2, int step)
         out_ << "Result: Tie - Time expired" << std::endl;
 }
 
-std::string OutputLogger::action_to_string(TankAction action) const 
+std::string OutputLogger::action_to_string(ActionRequest action) const 
 {
     switch (action)
     {
-        case TankAction::MoveForward: return "MoveForward";
-        case TankAction::MoveBackward: return "MoveBackward";
-        case TankAction::RotateLeft_1_8: return "RotateLeft_1_8";
-        case TankAction::RotateRight_1_8: return "RotateRight_1_8";
-        case TankAction::RotateLeft_1_4: return "RotateLeft_1_4";
-        case TankAction::RotateRight_1_4: return "RotateRight_1_4";
-        case TankAction::Shoot: return "Shoot";
-        case TankAction::Idle: return "Idle";
+        case ActionRequest::MoveForward: return "MoveForward";
+        case ActionRequest::MoveBackward: return "MoveBackward";
+        case ActionRequest::RotateLeft90: return "RotateLeft_1_4";
+        case ActionRequest::RotateRight90: return "RotateRight_1_4";
+        case ActionRequest::RotateLeft45: return "RotateLeft_1_8";
+        case ActionRequest::RotateRight45: return "RotateRight_1_8";
+        case ActionRequest::Shoot: return "Shoot";
+        case ActionRequest::GetBattleInfo: return "GetBattleInfo";
+        case ActionRequest::DoNothing: return "DoNothing";
         default: return "Unknown Action";
     }
 }

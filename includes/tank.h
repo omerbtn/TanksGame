@@ -4,15 +4,18 @@
 #include "types/direction.h"
 #include "types/position.h"
 
+
 class Tank : public MovableObject
 {
 public:
-    Tank(size_t id, Position position, Direction direction);
+    Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells);
 
     Position& position();
     const Position& position() const;
 
-    size_t id() const;
+    int id() const;  // Keeping just for compatibility with the old code, should replace with player_id() as this is just confusing
+    int player_id() const { return player_id_; }
+    int tank_id() const { return tank_id_; }
     bool is_alive() const;
     size_t ammo() const;
     void destroy();
@@ -29,7 +32,8 @@ public:
 private:
     virtual ObjectType type() const override;
 
-    size_t id_;
+    int tank_id_;
+    int player_id_;
     Position position_;
     size_t shells_;
     size_t cooldown_ = 0;

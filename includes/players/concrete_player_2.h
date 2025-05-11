@@ -2,16 +2,17 @@
 
 #include <iostream>
 
-#include "common/Player.h"
+#include "Player.h"
+#include "TankAlgorithm.h"
+#include "SatelliteView.h"
 
-class TankAlgorithm;
-class SatelliteView;
 
-class ConcretePlayer2 : public Player {
+class ConcretePlayer2 : public Player 
+{
 public:
     using Player::Player;
 
-    virtual ~ConcretePlayer2() = default;
+    virtual ~ConcretePlayer2() override = default;
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override {
         // Implement the logic to update the tank with battle information
         // This is just a placeholder implementation

@@ -2,6 +2,7 @@
 
 #include "types/direction.h"
 #include "types/position.h"
+#include "ActionRequest.h"
 #include "board.h"
 
 
@@ -35,9 +36,9 @@ namespace std
     };
 }
 
-bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board);
+//bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board);
 Direction getOppositeDirection(Direction dir);
-Direction getDirectionAfterRotation(Direction dir, TankAction action);
+Direction getDirectionAfterRotation(Direction dir, ActionRequest action);
 std::string directionToString(Direction dir);
 std::string directionToArrow(Direction dir);
-std::string tank_action_to_string(TankAction action);
+std::string tank_action_to_string(ActionRequest action);

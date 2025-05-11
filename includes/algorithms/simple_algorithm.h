@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/TankAlgorithm.h"
+#include "TankAlgorithm.h"
 
 class SimpleAlgorithm : public TankAlgorithm
 {

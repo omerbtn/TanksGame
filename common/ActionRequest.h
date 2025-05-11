@@ -1,4 +1,7 @@
-enum class ActionRequest {
+#pragma once
+
+enum class ActionRequest 
+{
     MoveForward,
     MoveBackward,
     RotateLeft90,

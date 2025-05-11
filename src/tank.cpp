@@ -2,8 +2,8 @@
 
 #include "global_config.h"
 
-Tank::Tank(size_t id, Position position, Direction direction)
-    : MovableObject{direction}, id_{id}, position_{position}, shells_{config::get<size_t>("shell_per_tank")} {}
+Tank::Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
+    : MovableObject(direction), player_id_(player_id), tank_id_(tank_id), position_(position), shells_(num_shells) {}
 
 ObjectType Tank::type() const 
 {
@@ -20,9 +20,9 @@ const Position& Tank::position() const
     return position_;
 }
 
-size_t Tank::id() const 
+int Tank::id() const 
 {
-    return id_;
+    return player_id_;
 }
 
 bool Tank::is_alive() const 

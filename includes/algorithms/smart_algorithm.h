@@ -6,7 +6,7 @@
 #include "tank.h"
 #include "algorithm_utils.h"*/
 
-#include "common/TankAlgorithm.h"
+#include "TankAlgorithm.h"
 class SmartAlgorithm : public TankAlgorithm
 {
 public:

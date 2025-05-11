@@ -4,6 +4,7 @@
 
 #include "game_object_interface.h"
 
+
 class Wall : public GameObjectInterface
 {
 public:

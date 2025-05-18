@@ -6,24 +6,25 @@
 #include "tank.h"
 #include "algorithm_utils.h"*/
 
-#include "TankAlgorithm.h"
-class SmartAlgorithm : public TankAlgorithm
-{
+#include <queue>
+
+#include "algorithms/algorithm_base.h"
+#include "board_battle_info.h"
+#include "algorithm_utils.h"
+
+class SmartAlgorithm : public AlgorithmBase {
 public:
     virtual ~SmartAlgorithm() = default;
-    virtual ActionRequest getAction() override {
-        return ActionRequest::DoNothing;
-    }
+    SmartAlgorithm(int player_index, int tank_index);
 
-    virtual void updateBattleInfo(BattleInfo& info) override {
-        return;
-    }
-    /*TankAction decideAction(const Tank &tank, const Board &board) override;
+    virtual ActionRequest getActionImpl() override;
 
 private:
-    bool isShellInPathDangerous(const Position& pos, const Board& board);
-    std::optional<TankAction> findFirstSafeActionToOpponent(const Board& board, const Position& startPos, Direction startDir, const Position& targetPos);
+    bool isShellInPathDangerous(const Position& pos);
+    std::optional<ActionRequest> findFirstSafeActionToOpponent(const Position& startPos, Direction startDir, const Position& targetPos);
 
-    std::queue<TankAction> cached_path_;
-    Position cached_target_;*/
+    std::queue<ActionRequest> cached_path_;
+    Position cached_target_;
+    int player_index_;
+    int tank_index_; // TODO: maybe remove..
 };

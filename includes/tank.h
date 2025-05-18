@@ -8,6 +8,7 @@
 class Tank : public MovableObject
 {
 public:
+    Tank();
     Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells);
 
     Position& position();

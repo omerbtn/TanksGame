@@ -11,9 +11,9 @@
 #include "algorithms/algorithm_utils.h"
 #include "global_config.h"
 
-
-//GameManager::GameManager(Board* board) : board_{board}, total_max_steps_(config::get<int>("total_max_steps")) {
-//}
+GameManager::GameManager(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory)
+    : board_(std::make_unique<Board>(playerFactory, algorithmFactory)) {
+}
 
 std::pair<std::string, std::string> GameManager::split_filename(const std::string& filename)
 {
@@ -25,7 +25,6 @@ std::pair<std::string, std::string> GameManager::split_filename(const std::strin
     if (last_slash_pos == std::string::npos)
     {
         // No directory component
-        directory = "";
         name = filename;
     }
     else
@@ -37,62 +36,66 @@ std::pair<std::string, std::string> GameManager::split_filename(const std::strin
     return std::make_pair(directory, name);
 }
 
-bool GameManager::readBoard(const std::string& filename) 
-{
+std::string GameManager::generate_result_message() const {
+    std::unordered_map<int, int> alive_counts;
+
+    for (const auto& tank : ordered_tanks_) {
+        if (tank->is_alive()) {
+            alive_counts[tank->player_id()]++;
+        }
+    }
+
+    std::vector<std::pair<int, int>> players_alive;  // {player_id, alive_count}
+
+    for (const auto& [player_id, count] : alive_counts) {
+        players_alive.emplace_back(player_id, count);
+    }
+
+    std::string summary;
+
+    if (players_alive.empty()) {
+        summary = "Tie, all players have zero tanks";
+    } else if (players_alive.size() == 1) {
+        summary = "Player " + std::to_string(players_alive[0].first) + " won with " + std::to_string(players_alive[0].second) +
+                  " tanks still alive";
+    } else if (total_max_steps_ == 0) {
+        summary = "Tie, reached max steps = " + std::to_string(half_steps_count_ / 2);
+        std::map<int, int> full_counts;
+        for (const auto& tank : ordered_tanks_) {
+            full_counts[tank->player_id()] += tank->is_alive() ? 1 : 0;
+        }
+
+        for (const auto& [player_id, count] : full_counts) {
+            summary += ", player " + std::to_string(player_id) + " has " + std::to_string(count) + " tanks";
+        }
+    }
+
+    return summary;
+}
+
+bool GameManager::readBoard(const std::string& filename) {
     GameInfo game_info = board_->load_from_file(filename);
-    
-    if (!game_info.is_valid) 
+
+    if (!game_info.is_valid)
     {
         return false;
     }
 
     total_max_steps_ = game_info.max_steps;
-    player1_ = playerFactory_.create(1, game_info.width, game_info.height, game_info.max_steps, game_info.num_shells);
-    player2_ = playerFactory_.create(2, game_info.width, game_info.height, game_info.max_steps, game_info.num_shells);
-    all_tanks_ = game_info.all_tanks;
-
-    for (const auto& tank_info : all_tanks_) 
-    {
-        auto algorithm = algorithmFactory_.create(tank_info.first, tank_info.second);
-        algorithms_.push_back(std::move(algorithm));
-    }
+    ordered_tanks_ = game_info.ordered_tanks;
 
     auto [directory, input_filename] = split_filename(filename);
     std::string output_filename = directory + static_cast<std::string>(config::get<std::string_view>("output_file_prefix")) + input_filename;
 
-    logger_ = OutputLogger(output_filename);
+    logger_ = std::move(OutputLogger(output_filename, ordered_tanks_.size()));
+
+    if (!logger_.is_valid()) {
+        std::cerr << "Logger is invalid!\n";
+        return false;
+    }
 
     return true;
 }
-
-/*void GameManager::run()
-{
-    auto [directory, filename] = split_filename(board_->input_file_name());
-    auto output_file = directory + static_cast<std::string>(config::get<std::string_view>("output_file_prefix")) + filename;
-    OutputLogger logger(output_file);
-
-    std ::cout << "[GameManager] Starting game with the board:" << std::endl;
-    board_->print();
-
-    while (!game_over())
-    {
-        board_->do_shells_step();
-        if (half_steps_count_ % 2 == 0)
-        {
-            std::cout << "[GameManager] Do tanks step, half_steps_count = " << half_steps_count_ << std::endl;
-            step(logger);
-        }
-        else
-        {
-            std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
-        }
-        board_->print();
-        half_steps_count_++;
-    }
-
-    logger.logResult(*board_->get_player_tank(1), *board_->get_player_tank(2), half_steps_count_ / 2);
-}
-*/    
 
 void GameManager::run()
 {
@@ -115,106 +118,64 @@ void GameManager::run()
         half_steps_count_++;
     }
 
-    // TODO: Output result to logger somehow
+    logger_.logResult(generate_result_message());
 }
-
-/*
-void GameManager::step(OutputLogger& logger)
-{
-    Player player1 = board_->players()[1];
-    Player player2 = board_->players()[2];
-
-    if constexpr (config::get<bool>("verbose_debug"))
-    {
-        for (const auto& [id, player] : board_->players())
-        {
-            const auto& tank = *player.tank();
-            std::cout << "[GameManager] Player " << id << " tank state: \n"
-                      << "\tPosition: (" << tank.position().first << "," << tank.position().second << "), \n"
-                      << "\tDirection: " << directionToString(tank.direction()) << ", \n"
-                      << "\tAlive: " << (tank.is_alive() ? "yes" : "no") << ", \n"
-                      << "\tAmmo: " << tank.ammo() << std::endl;
-        }
-    }
-
-    TankAction action1 = player1.algorithm()->decideAction(*player1.tank(), *board_);
-    TankAction action2 = player2.algorithm()->decideAction(*player2.tank(), *board_);
-
-    if constexpr (config::get<bool>("verbose_debug"))
-    {
-        std::cout << "[GameManager] Player " << 1 << " decided to execute action: " << tank_action_to_string(action1) << std::endl;
-        std::cout << "[GameManager] Player " << 2 << " decided to execute action: " << tank_action_to_string(action2) << std::endl;
-    }
-
-    bool valid1 = board_->execute_tank_action(player1.tank(), action1);
-    bool valid2 = board_->execute_tank_action(player2.tank(), action2);
-
-    if constexpr (config::get<bool>("verbose_debug"))
-    {
-        std::cout << "[GameManager] Player " << 1 << " action " << (valid1 ? "succeeded" : "failed") << std::endl;
-        std::cout << "[GameManager] Player " << 2 << " action " << (valid2 ? "succeeded" : "failed") << std::endl;
-    }
-
-    board_->update();
-
-    logger.logAction(1, half_steps_count_ / 2, action1, valid1);
-    logger.logAction(2, half_steps_count_ / 2, action2, valid2);
-
-    if (total_max_steps_ > 0)
-        --total_max_steps_;
-
-    if (tie_countdown_.has_value())
-    {
-        if (*tie_countdown_ > 0)
-            (*tie_countdown_)--;
-    }
-    else
-    {
-        // Handle the case all tanks used all their artillery
-        if (std::all_of(board_->players().begin(), board_->players().end(),
-                        [](const auto& player) { return player.second.tank()->ammo() == 0; }))
-        {
-            tie_countdown_.emplace(config::get<int>("max_steps_after_tie"));
-        }
-    }
-}
-
-*/
 
 void GameManager::do_tanks_step()
 {
-    std::vector<ActionRequest> actions_to_execute(all_tanks_.size());
-    std::vector<bool> actions_validity(all_tanks_.size());
+    std::vector<std::optional<ActionRequest>> actions_to_execute;
+    actions_to_execute.reserve(ordered_tanks_.size());
 
     // Get actions from all algorithms
-    for (size_t i = 0; i < all_tanks_.size(); ++i)
-    {
-        const auto& tank_info = all_tanks_[i];
-        ActionRequest action_request = algorithms_[i]->getAction();
-        actions_to_execute[i] = action_request;
+    for (const auto& tank : ordered_tanks_) {
+        if (!tank->is_alive()) {
+            actions_to_execute.push_back(std::nullopt);
+            continue;
+        }
+
+        const auto player_id = tank->player_id();
+        const auto tank_id = tank->tank_id();
+        auto algorithm = board_->get_algorithm(player_id, tank_id);
+        if (!algorithm)
+        {
+            std::cerr << "[GameManager] Algorithm not found for player " << player_id << " with tank " << tank_id << std::endl;
+            actions_to_execute.push_back(std::nullopt);
+            continue;
+        }
+
+        ActionRequest action_request = algorithm->getAction();
 
         if constexpr (config::get<bool>("verbose_debug"))
         {
-            std::cout << "[GameManager] Player " << tank_info.first << "with tank " << tank_info.second
+            std::cout << "[GameManager] Player " << player_id << " with tank " << tank_id
                       << " decided to execute action: " << tank_action_to_string(action_request) << std::endl;
         }
+
+        actions_to_execute.push_back(action_request);
     }
 
-    // TODO: Handle GetBattleInfo action
+    std::vector<bool> actions_validity;
+    actions_validity.reserve(ordered_tanks_.size());
 
     // Execute actions and check validity
-    for (size_t i = 0; i < all_tanks_.size(); ++i)
-    {
-        const auto& tank_info = all_tanks_[i];
-        const auto& tank = board_->get_tank(tank_info.first, tank_info.second);
+    for (size_t i = 0; i < ordered_tanks_.size(); ++i) {
+        const auto& tank = ordered_tanks_[i];
         if (tank && tank->is_alive())
         {
-            bool valid = board_->execute_tank_action(tank, actions_to_execute[i]);  // TODO: Maybe turn this function to get tank info (id's) instead of pointer
-            actions_validity[i] = valid;
+            auto action = actions_to_execute[i];
+            if (!action) {
+                actions_validity.push_back(false);
+                continue;
+            }
 
+            bool valid = board_->execute_tank_action(tank, *action);
+            actions_validity.push_back(valid);
+
+            const auto player_id = tank->player_id();
+            const auto tank_id = tank->tank_id();
             if constexpr (config::get<bool>("verbose_debug"))
             {
-                std::cout << "[GameManager] Player " << tank_info.first << "with tank" << tank_info.second
+                std::cout << "[GameManager] Player " << player_id << "with tank" << tank_id
                           <<  " action " << (valid ? "succeeded" : "failed") << std::endl;
             }
         }
@@ -222,7 +183,9 @@ void GameManager::do_tanks_step()
 
     board_->update();
 
-    // TODO: Log actions somehow
+    for (size_t i = 0; i < ordered_tanks_.size(); ++i) {
+        logger_.logAction(i, actions_to_execute[i], actions_validity[i], ordered_tanks_[i]->is_alive());
+    }
 
     if (total_max_steps_ > 0)
         --total_max_steps_;
@@ -235,11 +198,24 @@ void GameManager::do_tanks_step()
     else
     {
         // Handle the case all tanks used all their artillery
-        if (std::all_of(board_->get_player_tanks(1).begin(), board_->get_player_tanks(1).end(),
-                        [](const auto& tank) { return tank->ammo() == 0; }) &&
-            std::all_of(board_->get_player_tanks(2).begin(), board_->get_player_tanks(2).end(),
-                        [](const auto& tank) { return tank->ammo() == 0; }))
-        {
+        bool all_tanks_out_of_ammo = true;
+
+        for (int player_index = 1; player_index <= 9; ++player_index) {
+            const auto& tanks = board_->get_player_tanks(player_index);
+
+            for (const auto& tank : tanks) {
+                if (tank->is_alive() && tank->ammo() > 0) {
+                    all_tanks_out_of_ammo = false;
+                    break;
+                }
+            }
+
+            if (!all_tanks_out_of_ammo) {
+                break;
+            }
+        }
+
+        if (all_tanks_out_of_ammo) {
             tie_countdown_.emplace(config::get<int>("max_steps_after_tie"));
         }
     }
@@ -247,13 +223,15 @@ void GameManager::do_tanks_step()
 
 bool GameManager::is_game_over() const
 {
-    // Check if any tank is alive
-    bool player1_alive = std::any_of(board_->get_player_tanks(1).begin(), board_->get_player_tanks(1).end(),
-                                    [](const auto& tank) { return tank->is_alive(); });
-    
-    bool player2_alive = std::any_of(board_->get_player_tanks(2).begin(), board_->get_player_tanks(2).end(),
-                                    [](const auto& tank) { return tank->is_alive(); });
+    int alive_players = 0;
+
+    for (int player_index = 1; player_index <= 9; ++player_index) {
+        const auto& tanks = board_->get_player_tanks(player_index);
+        if (std::any_of(tanks.begin(), tanks.end(), [](const auto& tank) { return tank->is_alive(); })) {
+            ++alive_players;
+        }
+    }
 
     // Check if the game is over
-    return !player1_alive || !player2_alive || total_max_steps_ == 0 || (tie_countdown_.has_value() && *tie_countdown_ == 0);
+    return alive_players <= 1 || total_max_steps_ == 0 || (tie_countdown_.has_value() && *tie_countdown_ == 0);
 }

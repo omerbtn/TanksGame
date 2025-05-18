@@ -36,9 +36,13 @@ namespace std
     };
 }
 
-//bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board);
+bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const std::vector<std::vector<Cell>>& grid);
 Direction getOppositeDirection(Direction dir);
 Direction getDirectionAfterRotation(Direction dir, ActionRequest action);
 std::string directionToString(Direction dir);
 std::string directionToArrow(Direction dir);
 std::string tank_action_to_string(ActionRequest action);
+
+std::shared_ptr<Tank> getOpponent(const int player_index, const std::vector<std::vector<Cell>>& grid);
+Position forward_position(const Position& pos, Direction dir, const size_t width, const size_t height);
+Direction getSeedDirection(int player_index);

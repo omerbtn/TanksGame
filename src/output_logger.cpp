@@ -1,49 +1,65 @@
 #include "output_logger.h"
 
-
-OutputLogger::OutputLogger(const std::string& filename) : out_(filename) 
-{
-    if (!out_) 
+OutputLogger::OutputLogger(const std::string& filename, const size_t total_tanks) : out_(filename), total_tanks_(total_tanks) {
+    if (!out_)
     {
         valid_ = false;
         if (!filename.empty())
             std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
-    } 
-    else 
+    }
+    else
     {
         valid_ = true;
     }
 }
 
-void OutputLogger::logAction(int player, int step, ActionRequest action, bool valid) 
+bool OutputLogger::is_valid() const {
+    return valid_;
+}
+
+void OutputLogger::logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool is_alive)
 {
-    if (!valid_) 
+    if (!valid_)
     {
         return;
     }
 
-    out_ << "Step " << step << " | Player " << player << " | Action: " << action_to_string(action) << " | "
-         << (valid ? " OK" : " BAD") << std::endl;
+    if (!action) {
+        out_ << "killed";
+        valid = true; // To skip the ignored message
+        is_alive = true; // To skip the killed message
+    } else {
+        out_ << action_to_string(*action);
+    }
+
+    if (!valid)
+    {
+        out_ << " (ignored)";
+    }
+
+    if (!is_alive)
+    {
+        out_ << " (killed)";
+    }
+
+    if (tank_no < total_tanks_ - 1)
+    {
+        out_ << ", ";
+    } else {
+        out_ << std::endl;
+    }
 }
 
-void OutputLogger::logResult(const Tank &t1, const Tank &t2, int step) 
-{
-    if (!valid_) 
+void OutputLogger::logResult(std::string&& result) {
+    if (!valid_)
     {
         return;
     }
 
-    if (!t1.is_alive() && !t2.is_alive())
-        out_ << "Result: Tie - Both tanks destroyed at step " << step << std::endl;
-    else if (!t1.is_alive())
-        out_ << "Result: Player 2 wins - Tank 1 destroyed" << std::endl;
-    else if (!t2.is_alive())
-        out_ << "Result: Player 1 wins - Tank 2 destroyed" << std::endl;
-    else
-        out_ << "Result: Tie - Time expired" << std::endl;
+    out_ << std::move(result) << std::endl;
 }
 
-std::string OutputLogger::action_to_string(ActionRequest action) const 
+std::string OutputLogger::action_to_string(ActionRequest action) const
 {
     switch (action)
     {

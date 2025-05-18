@@ -1,26 +1,30 @@
 #include "algorithms/algorithm_utils.h"
 
-// bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board)
-// {
-//     Position current = board.forward_position(from, dir);
+bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const std::vector<std::vector<Cell>>& grid) {
+    auto width = grid[0].size();
+    auto height = grid.size();
 
-//     for (size_t steps = 0; steps < std::max(board.get_width(), board.get_height()); ++steps)
-//     {
-//         if (current == to)
-//             return true;
+    Position current = forward_position(from, dir, width, height);
 
-//         if (current == from)
-//             return false; // We are back to the starting position
+    for (size_t steps = 0; steps < std::max(width, height); ++steps) {
+        if (current == to)
+            return true;
 
-//         const Cell& cell = board.get_cell(current);
-//         if (cell.has(ObjectType::Wall))
-//             return false;
+        if (current == from)
+            return false; // We are back to the starting position
 
-//         current = board.forward_position(current, dir);
-//     }
+        int x = current.first % width;
+        int y = current.second % height;
 
-//     return false;
-// }
+        const Cell& cell = grid[x][y];
+        if (cell.has(ObjectType::Wall))
+            return false;
+
+        current = forward_position(current, dir, width, height);
+    }
+
+    return false;
+}
 
 Direction getOppositeDirection(Direction dir)
 {
@@ -99,4 +103,39 @@ std::string directionToArrow(Direction dir)
         case Direction::UL: return "↖";
         default: return "?"; // Unknown direction
     }
+}
+
+std::shared_ptr<Tank> getOpponent(const int player_index, const std::vector<std::vector<Cell>>& grid) {
+    for (size_t x = 0; x < grid.size(); ++x)
+    {
+        for (size_t y = 0; y < grid[x].size(); ++y)
+        {
+            const Cell& cell = grid[x][y];
+            if (cell.has(ObjectType::Tank)) {
+                auto tank = std::static_pointer_cast<Tank>(cell.get_object_by_type(ObjectType::Tank));
+                if (tank->player_id() != player_index)
+                {
+                    return tank;
+                }
+            }
+        }
+    }
+
+    return nullptr; // Not found
+}
+
+Position forward_position(const Position& pos, Direction dir, const size_t width, const size_t height) {
+    static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
+        {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
+        {Direction::D, {0, 1}},  {Direction::DL, {-1, 1}}, {Direction::L, {-1, 0}}, {Direction::UL, {-1, -1}}};
+    auto [dx, dy] = deltas.at(dir);
+    int new_x = (pos.first + dx + width) % width;
+    int new_y = (pos.second + dy + height) % height;
+
+    return Position(new_x, new_y);
+}
+
+Direction getSeedDirection(int player_index)
+{
+    return (player_index % 2 == 1) ? Direction::L : Direction::R;
 }

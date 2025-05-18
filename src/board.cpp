@@ -18,20 +18,32 @@
 #include "algorithms/seed_algorithm.h"
 #include "algorithms/algorithm_utils.h"
 #include "input_errors_logger.h"
+#include "board_satellite_view.h"
 #include "global_config.h"
 
+Board::Board(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory)
+    : playerFactory_(playerFactory), algorithmFactory_(algorithmFactory) {
+}
 
-std::vector<std::vector<Cell>>& Board::grid() 
+std::vector<std::vector<Cell>>& Board::grid()
 {
     return grid_;
 }
 
-GameInfo Board::load_from_file(const std::string& filename) 
-{
+TankAlgorithm* Board::get_algorithm(int player_id, int tank_id) {
+    auto it = algorithms_.find(std::make_pair(player_id, tank_id));
+    if (it != algorithms_.end()) {
+        return it->second.get();
+    }
+
+    return nullptr;
+}
+
+GameInfo Board::load_from_file(const std::string& filename) {
     InputErrorLogger error_logger;
     std::ifstream file(filename);
 
-    if (!file) 
+    if (!file)
     {
         error_logger.log("Couldn't open file: ", filename);
         return GameInfo();
@@ -61,32 +73,31 @@ GameInfo Board::load_from_file(const std::string& filename)
         !parse_metadata("Rows", height_) ||
         !parse_metadata("Cols", width_))
     {
-        // TODO: Print some error message to logger
+        error_logger.log("File structure is invalid: ", filename);
         return GameInfo();
     }
 
-    std::vector<std::pair<int, int>> all_tanks_;
-    
+    std::vector<std::shared_ptr<Tank>> ordered_tanks;
+
     grid_.resize(height_, std::vector<Cell>(width_));
-    
-    for (size_t y = 0; y < height_; ++y) 
+
+    for (size_t y = 0; y < height_; ++y)
     {
         std::getline(file, line);
-        if (line.size() > width_) 
+        if (line.size() > width_)
         {
             error_logger.log("Warning: The width of the ", y, " row is wrong. Filling the missing cells and ignoring the extra cells.");
-        } 
-        else if (line.size() < width_) 
+        }
+        else if (line.size() < width_)
         {
             line += std::string(width_ - line.size(), ' ');
         }
-        
-        for (size_t x = 0; x < width_ && x < line.size(); ++x) 
+
+        for (size_t x = 0; x < width_ && x < line.size(); ++x)
         {
-            //char ch = (x < line.size() ? line[x] : ' ');  // Seems redundant as we already padded the line
             char ch = line[x];
             Position pos(x, y);
-            switch (ch) 
+            switch (ch)
             {
                 case '#': {
                     grid_[x][y] = Cell(pos, std::make_shared<Wall>());
@@ -96,39 +107,39 @@ GameInfo Board::load_from_file(const std::string& filename)
                     grid_[x][y] = Cell(pos, std::make_shared<Mine>());
                     break;
                 }
-                case '1': {
-                    // if (players_.contains(1)) {
-                    //     error_logger.log("Warning: player 1 was already taken. Ignoring character '1' at (", x, ",", y,
-                    //                      "). Treating as empty.");
-                    //     break;
-                    // }
-                    auto algo = std::make_shared<SmartAlgorithm>();
-                    auto tank = std::make_shared<Tank>(1, player1_tanks_.size(), pos, Direction::L, num_shells);
-                    all_tanks_.emplace_back(1, player1_tanks_.size());
-                    player1_tanks_.push_back(tank);
-                    // auto player = Player(tank, algo);
-                    // players_[1] = player;
+                case '1': [[fallthrough]];
+                case '2': [[fallthrough]];
+                case '3': [[fallthrough]];
+                case '4': [[fallthrough]];
+                case '5': [[fallthrough]];
+                case '6': [[fallthrough]];
+                case '7': [[fallthrough]];
+                case '8': [[fallthrough]];
+                case '9': {
+                    int player_index = ch - '0';
+
+                    std::shared_ptr<Tank> tank;
+                    size_t tank_index = 0;
+                    auto direction = getSeedDirection(player_index);
+
+                    if (auto player_it = player_tanks_.find(player_index); player_it != player_tanks_.end()) {
+                        tank_index = player_it->second.second.size();
+                        tank = std::make_shared<Tank>(player_index, tank_index, pos, direction, num_shells);
+                        player_it->second.second.push_back(tank);
+                    } else {
+                        tank = std::make_shared<Tank>(player_index, tank_index, pos, direction, num_shells);
+                        auto player = playerFactory_.create(player_index, width_, height_, max_steps, num_shells);
+                        player_tanks_[player_index] = std::make_pair(std::move(player), std::vector<std::shared_ptr<Tank>>{tank});
+                    }
+
+                    ordered_tanks.emplace_back(tank);
+                    algorithms_[{player_index, tank_index}] = algorithmFactory_.create(player_index, tank_index);
                     grid_[x][y] = Cell(pos, tank);
                     break;
                 }
-                case '2': {
-                    // if (players_.contains(2)) {
-                        //     error_logger.log("Warning: player 2 was already taken. Ignoring character '2' at (", x, ",", y,
-                        //                      "). Treating as empty.");
-                        //     break;
-                        // }
-                        auto algo = std::make_shared<SimpleAlgorithm>();
-                        auto tank = std::make_shared<Tank>(2, player2_tanks_.size(), pos, Direction::R, num_shells);
-                        all_tanks_.emplace_back(2, player2_tanks_.size());
-                        player2_tanks_.push_back(tank);
-                        //auto player = Player(tank, algo);
-                        //players_[2] = player;
-                        grid_[x][y] = Cell(pos, tank);
-                        break;
-                    }
-                    case '.':
-                    case ' ': {
-                        grid_[x][y] = Cell(pos);
+                case '.':
+                case ' ': {
+                    grid_[x][y] = Cell(pos);
                     break;
                 }
                 default: {
@@ -140,23 +151,18 @@ GameInfo Board::load_from_file(const std::string& filename)
             }
         }
     }
-    
-    GameInfo game_info(width_, height_, max_steps, num_shells, all_tanks_);
-    // if (players_.size() != config::get<size_t>("num_players")) {
-        //     error_logger.log("Warning: Not enough players. Aborting.");
-        //     return false;
-        // }
-        
+
+    GameInfo game_info(width_, height_, max_steps, num_shells, std::move(ordered_tanks));
     return game_info;
 }
 
-void Board::print() const 
+void Board::print() const
 {
     std::cout << "Game Board:" << std::endl;
 
-    for (size_t y = 0; y < height_; ++y) 
+    for (size_t y = 0; y < height_; ++y)
     {
-        for (size_t x = 0; x < width_; ++x) 
+        for (size_t x = 0; x < width_; ++x)
         {
             const Cell& cell = grid_[x][y];
             std::string to_print = "[";
@@ -168,10 +174,10 @@ void Board::print() const
             if (cell.has(ObjectType::Mine)) to_print += "@";
 
             // Tanks
-            if (cell.has(ObjectType::Tank)) 
+            if (cell.has(ObjectType::Tank))
             {
                 const auto& tanks = cell.get_objects_by_type(ObjectType::Tank);
-                if (!tanks.empty()) 
+                if (!tanks.empty())
                 {
                     auto tank = std::static_pointer_cast<Tank>(tanks.front());  // Printing just one tank, couldn't be more
                     to_print += std::to_string(tank->player_id());
@@ -189,7 +195,7 @@ void Board::print() const
                 }
             }
 
-            while (to_print.size() < 3) 
+            while (to_print.size() < 3)
                 to_print += " ";
 
             to_print += "]";
@@ -199,48 +205,33 @@ void Board::print() const
     }
 }
 
-const std::shared_ptr<Tank> Board::get_tank(int player_id, int tank_id) const 
+const std::shared_ptr<Tank> Board::get_tank(int player_id, int tank_id) const
 {
-    if (player_id == 1 && tank_id < player1_tanks_.size()) 
+    if (auto it = player_tanks_.find(player_id); it != player_tanks_.end())
     {
-        return player1_tanks_[tank_id];
-    } 
-    else if (player_id == 2 && tank_id < player2_tanks_.size()) 
-    {
-        return player2_tanks_[tank_id];
+        const auto& tanks = it->second.second;
+        if (tank_id < tanks.size())
+        {
+            return tanks[tank_id];
+        }
     }
+
     return nullptr;
 }
 
-const std::vector<std::shared_ptr<Tank>>& Board::get_player_tanks(int player_id) const 
+const std::vector<std::shared_ptr<Tank>>& Board::get_player_tanks(int player_id) const
 {
     static const std::vector<std::shared_ptr<Tank>> empty_vector;
 
-    if (player_id == 1) 
+    if (auto it = player_tanks_.find(player_id); it != player_tanks_.end())
     {
-        return player1_tanks_;
-    } 
-    else if (player_id == 2) 
-    {
-        return player2_tanks_;
+        return it->second.second;
     }
 
     return empty_vector;  // Return empty vector if invalid player id
 }
 
-/*std::shared_ptr<Tank> Board::get_player_tank(size_t id) {
-    auto players_it = players_.find(id);
-    return (players_it != players_.end()) ? players_it->second.tank() : nullptr;
-}
-
-const std::shared_ptr<Tank> Board::get_player_tank(size_t id) const {
-    const auto players_it = players_.find(id);
-    return (players_it != players_.end()) ? players_it->second.tank() : nullptr;
-}
-*/
-
-
-bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action) 
+bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action)
 {
     if (!tank || !tank->is_alive()) return false;
 
@@ -249,9 +240,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
     Position current_pos = tank->position();
     Position new_pos;
 
-    switch (action) 
+    switch (action)
     {
-        case ActionRequest::MoveForward: 
+        case ActionRequest::MoveForward:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing MoveForward for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
@@ -262,12 +253,12 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
                 return true;
             }
 
-            new_pos = forward_position(current_pos, tank->direction());
+            new_pos = forward_position(current_pos, tank->direction(), width_, height_);
 
             Cell& current_cell = grid_[current_pos.first][current_pos.second];
             Cell& new_cell = grid_[new_pos.first][new_pos.second];
 
-            if (new_cell.has(ObjectType::Wall)) 
+            if (new_cell.has(ObjectType::Wall))
             {
                 // Illegal move, can't move into walls
                 return false;
@@ -285,23 +276,23 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;
         }
 
-        case ActionRequest::MoveBackward: 
+        case ActionRequest::MoveBackward:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing MoveBackward for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
-            if (!tank->is_backing()) 
+            if (!tank->is_backing())
             {
                 tank->start_backwait();
                 return true;
-            } 
-            else 
+            }
+            else
             {
                 tank->tick_backwait();  // keep counting
-                if (tank->ready_to_move_back()) 
+                if (tank->ready_to_move_back())
                 {
                     tank->continue_backing();
-                    new_pos = forward_position(tank->position(), getOppositeDirection(tank->direction()));
+                    new_pos = forward_position(tank->position(), getOppositeDirection(tank->direction()), width_, height_);
 
                     Cell& current_cell = grid_[current_pos.first][current_pos.second];
                     Cell& new_cell = grid_[new_pos.first][new_pos.second];
@@ -327,7 +318,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;  // still waiting
         }
 
-        case ActionRequest::RotateLeft45: 
+        case ActionRequest::RotateLeft45:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing RotateLeft45 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
@@ -342,7 +333,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;
         }
 
-        case ActionRequest::RotateRight45: 
+        case ActionRequest::RotateRight45:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing RotateRight45 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
@@ -357,7 +348,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;
         }
 
-        case ActionRequest::RotateLeft90: 
+        case ActionRequest::RotateLeft90:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing RotateLeft90 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
@@ -372,7 +363,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;
         }
 
-        case ActionRequest::RotateRight90: 
+        case ActionRequest::RotateRight90:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing RotateRight90 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
@@ -387,16 +378,16 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;
         }
 
-        case ActionRequest::Shoot: 
+        case ActionRequest::Shoot:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing Shoot for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
             tank->tick_backwait();
 
-            if (tank->can_shoot()) 
+            if (tank->can_shoot())
             {
-                Position shell_pos = forward_position(current_pos, tank->direction());
+                Position shell_pos = forward_position(current_pos, tank->direction(), width_, height_);
                 auto& cell = grid_[shell_pos.first][shell_pos.second];
                 tank->shoot();
                 std::shared_ptr<Shell> shell = std::make_shared<Shell>(tank->direction());
@@ -409,18 +400,35 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return false;
         }
 
-        // TODO: Implement GetBattleInfo action
-        case ActionRequest::GetBattleInfo: 
+        case ActionRequest::GetBattleInfo:
         {
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
+            tank->tick_backwait();
+
+            auto player_it = player_tanks_.find(tank->player_id());
+            if (player_it == player_tanks_.end()) {
+                // Player not found, return false
+                return false;
+            }
+
+            // Provide satellite view to the player
+            BoardSatelliteView satelliteView(grid_, tank->position());
+            auto algorithm = get_algorithm(tank->player_id(), tank->tank_id());
+            if (!algorithm) {
+                // Algorithm not found, return false
+                return false;
+            }
+
+            player_it->second.first->updateTankWithBattleInfo(*algorithm, satelliteView);
+
             return true;
         }
 
-        case ActionRequest::DoNothing: 
+        case ActionRequest::DoNothing:
         {
-            if constexpr (config::get<bool>("verbose_debug")) 
+            if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing DoNothing for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
             tank->tick_backwait();
@@ -435,28 +443,28 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
 }
 
 // Moves all the shells one step forward, does not resolve collisions (besides crossing shells)
-void Board::update_active_shells() 
+void Board::update_active_shells()
 {
     std::vector<std::tuple<Position, Position, std::shared_ptr<Shell>>> moves;  // (from, to, shell)
 
     // First pass: prepeare moves
-    for (const auto& [pos, shell] : active_shells_) 
+    for (const auto& [pos, shell] : active_shells_)
     {
-        Position new_pos = forward_position(pos, shell->direction());
+        Position new_pos = forward_position(pos, shell->direction(), width_, height_);
         moves.emplace_back(pos, new_pos, shell);
     }
 
     std::unordered_set<std::shared_ptr<Shell>> shells_to_remove;
 
     // Check for collisions (crossing shells)
-    for (size_t i = 0; i < moves.size(); ++i) 
+    for (size_t i = 0; i < moves.size(); ++i)
     {
-        for (size_t j = i + 1; j < moves.size(); ++j) 
+        for (size_t j = i + 1; j < moves.size(); ++j)
         {
             auto& [from1, to1, shell1] = moves[i];
             auto& [from2, to2, shell2] = moves[j];
 
-            if (to1 == from2 && to2 == from1) 
+            if (to1 == from2 && to2 == from1)
             {
                 // Shells are crossing each other, should mark as collision
                 shells_to_remove.insert(shell1);
@@ -466,17 +474,17 @@ void Board::update_active_shells()
     }
 
     // Second pass: move shells on the board, excluding removed shells
-    for (auto& [from, to, shell] : moves) 
+    for (auto& [from, to, shell] : moves)
     {
         grid_[from.first][from.second].remove_object(shell);
-        if (shells_to_remove.count(shell) == 0) 
+        if (shells_to_remove.count(shell) == 0)
         {
             grid_[to.first][to.second].add_object(shell);
             cells_to_update_.insert(to);
 
             // Update the position in active_shells_
             auto it = std::find_if(active_shells_.begin(), active_shells_.end(), [&shell](const auto& p) { return p.second == shell; });
-            if (it != active_shells_.end()) 
+            if (it != active_shells_.end())
             {
                 it->first = to;  // update position
             }
@@ -493,9 +501,9 @@ void Board::update_active_shells()
                          active_shells_.end());
 }
 
-void Board::resolve_collisions(Cell& cell) 
+void Board::resolve_collisions(Cell& cell)
 {
-    if ((((cell.has(ObjectType::Shell) && !cell.has(ObjectType::Mine)) || 
+    if ((((cell.has(ObjectType::Shell) && !cell.has(ObjectType::Mine)) ||
           (!cell.has(ObjectType::Shell) && cell.has(ObjectType::Mine))) &&
            cell.get_objects_count() > 1) ||
           (cell.has(ObjectType::Shell) && cell.has(ObjectType::Mine) && cell.get_objects_count() > 2)) {
@@ -505,10 +513,10 @@ void Board::resolve_collisions(Cell& cell)
         on_explosion(cell);
     }
 
-    else if (cell.get_objects_by_type(ObjectType::Tank).size() > 1) 
+    else if (cell.get_objects_by_type(ObjectType::Tank).size() > 1)
     {
         // Two (or more) tanks collided, all are destroyed
-        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank)) 
+        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank))
         {
             auto tank_ptr = std::static_pointer_cast<Tank>(tank);
             tank_ptr->destroy();
@@ -519,20 +527,20 @@ void Board::resolve_collisions(Cell& cell)
     }
 }
 
-void Board::on_explosion(Cell& cell) 
+void Board::on_explosion(Cell& cell)
 {
     // We have an explosion, all the objects must get hurt
 
     std::vector<std::shared_ptr<GameObjectInterface>> objects_to_remove;
 
     // Weaken wall if exists
-    if (cell.has(ObjectType::Wall)) 
+    if (cell.has(ObjectType::Wall))
     {
-        for (auto& wall : cell.get_objects_by_type(ObjectType::Wall)) 
+        for (auto& wall : cell.get_objects_by_type(ObjectType::Wall))
         {
             auto wall_ptr = std::static_pointer_cast<Wall>(wall);
             wall_ptr->weaken();
-            if (wall_ptr->is_destroyed()) 
+            if (wall_ptr->is_destroyed())
             {
                 objects_to_remove.push_back(wall);
             }
@@ -540,9 +548,9 @@ void Board::on_explosion(Cell& cell)
     }
 
     // Destroy all tanks
-    if (cell.has(ObjectType::Tank)) 
+    if (cell.has(ObjectType::Tank))
     {
-        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank)) 
+        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank))
         {
             auto tank_ptr = std::static_pointer_cast<Tank>(tank);
             tank_ptr->destroy();
@@ -551,7 +559,7 @@ void Board::on_explosion(Cell& cell)
     }
 
     // Destroy all shells
-    if (cell.has(ObjectType::Shell)) 
+    if (cell.has(ObjectType::Shell))
     {
         for (auto& shell : cell.get_objects_by_type(ObjectType::Shell)) {
             auto shell_ptr = std::static_pointer_cast<Shell>(shell);
@@ -562,7 +570,7 @@ void Board::on_explosion(Cell& cell)
                                    [&shell_position, &shell_ptr](const std::pair<Position, std::shared_ptr<Shell>>& active_shell) {
                                        return active_shell.first == shell_position && active_shell.second == shell_ptr;
                                    });
-            if (it != active_shells_.end()) 
+            if (it != active_shells_.end())
             {
                 active_shells_.erase(it);
             }
@@ -573,22 +581,22 @@ void Board::on_explosion(Cell& cell)
     }
 
     // Destroy mine if exists
-    if (cell.has(ObjectType::Mine)) 
+    if (cell.has(ObjectType::Mine))
     {
-        for (auto& mine : cell.get_objects_by_type(ObjectType::Mine)) 
+        for (auto& mine : cell.get_objects_by_type(ObjectType::Mine))
         {
             objects_to_remove.push_back(mine);
         }
     }
 
     // Remove all collected objects safely, to avoid invalidating iterators
-    for (auto& object : objects_to_remove) 
+    for (auto& object : objects_to_remove)
     {
         cell.remove_object(object);
     }
 }
 
-void Board::do_shells_step() 
+void Board::do_shells_step()
 {
     // Move all the shells one step forward
     update_active_shells();
@@ -597,12 +605,12 @@ void Board::do_shells_step()
     update();
 }
 
-void Board::update() 
+void Board::update()
 {
     // Check for crossing tanks
-    for (auto it1 = old_tanks_positions_.begin(); it1 != old_tanks_positions_.end(); ++it1) 
+    for (auto it1 = old_tanks_positions_.begin(); it1 != old_tanks_positions_.end(); ++it1)
     {
-        for (auto it2 = std::next(it1); it2 != old_tanks_positions_.end(); ++it2) 
+        for (auto it2 = std::next(it1); it2 != old_tanks_positions_.end(); ++it2)
         {
             Position old_pos1 = it1->first;
             auto tank1 = it1->second;
@@ -610,7 +618,7 @@ void Board::update()
             Position old_pos2 = it2->first;
             auto tank2 = it2->second;
 
-            if (tank1->position() == old_pos2 && tank2->position() == old_pos1) 
+            if (tank1->position() == old_pos2 && tank2->position() == old_pos1)
             {
                 // Tanks are crossing each other, both should be destroyed
                 tank1->destroy();
@@ -626,7 +634,7 @@ void Board::update()
     old_tanks_positions_.clear();
 
     // Resolve collisions for all the cells from this turn
-    for (auto& cell_pos : cells_to_update_) 
+    for (auto& cell_pos : cells_to_update_)
     {
         resolve_collisions(grid_[cell_pos.first][cell_pos.second]);
     }
@@ -635,31 +643,19 @@ void Board::update()
     cells_to_update_.clear();
 }
 
-Position Board::forward_position(const Position& pos, Direction dir) const 
-{
-    static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
-        {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
-        {Direction::D, {0, 1}},  {Direction::DL, {-1, 1}}, {Direction::L, {-1, 0}}, {Direction::UL, {-1, -1}}};
-    auto [dx, dy] = deltas.at(dir);
-    int new_x = (pos.first + dx + width_) % width_;
-    int new_y = (pos.second + dy + height_) % height_;
-
-    return Position(new_x, new_y);
-}
-
-const Cell& Board::get_cell(Position position) const 
+const Cell& Board::get_cell(Position position) const
 {
     int x = position.first % width_;
     int y = position.second % height_;
     return grid_[x][y];
 }
 
-size_t Board::get_height() const 
+size_t Board::get_height() const
 {
     return height_;
 }
 
-size_t Board::get_width() const 
+size_t Board::get_width() const
 {
     return width_;
 }

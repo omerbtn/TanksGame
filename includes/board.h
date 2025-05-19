@@ -33,6 +33,7 @@ public:
     size_t get_height() const;
     size_t get_width() const;
     std::vector<std::vector<Cell>>& grid();
+    const std::vector<std::vector<Cell>>& grid() const;
     bool execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action);
     void do_shells_step();
     void update();

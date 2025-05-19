@@ -58,6 +58,8 @@ std::string GameManager::generate_result_message() const {
     } else if (players_alive.size() == 1) {
         summary = "Player " + std::to_string(players_alive[0].first) + " won with " + std::to_string(players_alive[0].second) +
                   " tanks still alive";
+    } else if (tie_countdown_.has_value() && *tie_countdown_ == 0) {
+        summary = "Tie, both players have zero shells for " + std::to_string(config::get<int>("max_steps_after_tie")) + " steps";
     } else if (total_max_steps_ == 0) {
         summary = "Tie, reached max steps = " + std::to_string(half_steps_count_ / 2);
         std::map<int, int> full_counts;

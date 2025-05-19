@@ -19,6 +19,8 @@
 #include "algorithms/algorithm_utils.h"
 #include "input_errors_logger.h"
 #include "board_satellite_view.h"
+#include "printers/ansi_printer.h"
+#include "printers/default_printer.h"
 #include "global_config.h"
 
 Board::Board(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory)
@@ -27,6 +29,10 @@ Board::Board(const PlayerFactory& playerFactory, const TankAlgorithmFactory& alg
 
 std::vector<std::vector<Cell>>& Board::grid()
 {
+    return grid_;
+}
+
+const std::vector<std::vector<Cell>>& Board::grid() const {
     return grid_;
 }
 
@@ -158,51 +164,10 @@ GameInfo Board::load_from_file(const std::string& filename) {
 
 void Board::print() const
 {
-    std::cout << "Game Board:" << std::endl;
+    using SelectedPrinter = std::conditional_t<config::get<bool>("use_ansi_printer"), AnsiPrinter, DefaultPrinter>;
 
-    for (size_t y = 0; y < height_; ++y)
-    {
-        for (size_t x = 0; x < width_; ++x)
-        {
-            const Cell& cell = grid_[x][y];
-            std::string to_print = "[";
-
-            // Walls
-            if (cell.has(ObjectType::Wall)) to_print += "#";
-
-            // Mines
-            if (cell.has(ObjectType::Mine)) to_print += "@";
-
-            // Tanks
-            if (cell.has(ObjectType::Tank))
-            {
-                const auto& tanks = cell.get_objects_by_type(ObjectType::Tank);
-                if (!tanks.empty())
-                {
-                    auto tank = std::static_pointer_cast<Tank>(tanks.front());  // Printing just one tank, couldn't be more
-                    to_print += std::to_string(tank->player_id());
-                    to_print += directionToArrow(tank->direction());
-                }
-            }
-
-            // Shells
-            if (cell.has(ObjectType::Shell)) {
-                const auto& shells = cell.get_objects_by_type(ObjectType::Shell);
-                if (!shells.empty()) {
-                    auto shell = std::static_pointer_cast<Shell>(shells.front());  // Printing just one shell, couldn't be more
-                    to_print += "*";
-                    to_print += directionToArrow(shell->direction());
-                }
-            }
-
-            while (to_print.size() < 3)
-                to_print += " ";
-
-            to_print += "]";
-            std::cout << to_print;
-        }
-        std::cout << std::endl;
-    }
+    SelectedPrinter printer(*this);
+    printer.print();
 }
 
 const std::shared_ptr<Tank> Board::get_tank(int player_id, int tank_id) const

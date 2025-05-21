@@ -19,7 +19,8 @@ std::pair<size_t, size_t> get_dimensions_from_satellite(const SatelliteView& vie
     return {width, height};
 }
 
-std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const SatelliteView& view, int player_index, Position& curr_tank_pos) {
+std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const SatelliteView& view, int player_index, Position& curr_tank_pos)
+{
     auto [width, height] = get_dimensions_from_satellite(view);
 
     std::vector<std::vector<Cell>> grid(height, std::vector<Cell>(width));
@@ -55,7 +56,7 @@ std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const Satell
                     break;
             }
 
-            grid[y][x] = std::move(cell);
+            grid[x][y] = std::move(cell);
         }
     }
 

@@ -5,6 +5,12 @@
 
 using Position = std::pair<size_t, size_t>;
 
+// Print Position as (x, y)
+inline std::ostream& operator<<(std::ostream& os, const Position& pos) 
+{
+    return os << '(' << pos.first << ", " << pos.second << ')';
+}
+
 namespace std
 {
     template <>

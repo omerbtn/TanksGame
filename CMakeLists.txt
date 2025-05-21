@@ -23,6 +23,7 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 
 # Make it available
@@ -45,7 +46,7 @@ add_custom_command(
 add_custom_target(generate_config DEPENDS ${CONFIG_OUTPUT})
 
 # Include header files
-include_directories(common includes includes/algorithms includes/types includes/factory includes/players)
+include_directories(${CMAKE_SOURCE_DIR} common includes includes/algorithms includes/types includes/factory includes/players)
 
 # Collect all .cpp files in the main folder
 file(GLOB_RECURSE SOURCES "src/*.cpp")

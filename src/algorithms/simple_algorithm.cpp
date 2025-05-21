@@ -1,7 +1,14 @@
 #include "algorithms/simple_algorithm.h"
 #include "algorithms/algorithm_utils.h"
+#include "global_config.h"
+#include <iostream>
 
-ActionRequest SimpleAlgorithm::getActionImpl() {
+
+SimpleAlgorithm::SimpleAlgorithm(int player_index, int tank_index)
+    : AlgorithmBase(player_index, tank_index) {}
+
+ActionRequest SimpleAlgorithm::getActionImpl() 
+{
     const Position& tank_pos = tank_->position();
     const Direction& tank_dir = tank_->direction();
 
@@ -13,9 +20,16 @@ ActionRequest SimpleAlgorithm::getActionImpl() {
 
     // Not under threat - can we shoot the opponent?
 
-    auto opponent = getOpponent(tank_->id(), grid_);
-    if (opponent && opponent->is_alive() && hasLineOfSight(tank_pos, opponent->position(), tank_dir, grid_)) {
+    // auto opponent = getOpponent(tank_->id(), grid_);
+    Position opponent_pos;
+    if (hasLineOfSightToOpponent(tank_pos, tank_dir, opponent_pos))
+    {
         // He is just in front of us, shoot him!
+        if constexpr (config::get<bool>("verbose_debug"))
+        {
+            std::cout << "[SimpleAlgorithm] Shooting opponent at " << opponent_pos 
+                      << " from " << tank_pos << std::endl;
+        }
         return ActionRequest::Shoot;
     }
 

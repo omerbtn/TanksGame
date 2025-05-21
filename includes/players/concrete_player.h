@@ -18,12 +18,13 @@ public:
     virtual ~ConcretePlayer() override = default;
 
     ConcretePlayer(size_t x, size_t y, size_t max_steps, size_t num_shells)
-        : Player{PlayerIndex, x, y, max_steps, num_shells}, x_{x}, y_{y}, maxSteps_{max_steps}, numShells_{num_shells} {
-    }
+        : Player(PlayerIndex, x, y, max_steps, num_shells), x_(x), y_(y), maxSteps_(max_steps), numShells_(num_shells) {}
+        
     ConcretePlayer(const ConcretePlayer&) = delete; // Disable copy constructor
     ConcretePlayer& operator=(const ConcretePlayer&) = delete; // Disable copy assignment
 
-    virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override {
+    virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override 
+    {
         Position tank_position;
         auto grid = reconstruct_grid_from_satellite_view(satellite_view, PlayerIndex, tank_position);
         Direction dir = getSeedDirection(PlayerIndex);

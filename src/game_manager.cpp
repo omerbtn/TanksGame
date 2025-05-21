@@ -160,27 +160,26 @@ void GameManager::do_tanks_step()
     actions_validity.reserve(ordered_tanks_.size());
 
     // Execute actions and check validity
-    for (size_t i = 0; i < ordered_tanks_.size(); ++i) {
+    for (size_t i = 0; i < ordered_tanks_.size(); ++i) 
+    {
         const auto& tank = ordered_tanks_[i];
-        if (tank && tank->is_alive())
+        auto action = actions_to_execute[i];
+        
+        if (!tank || !tank->is_alive() || !action)
         {
-            auto action = actions_to_execute[i];
-            if (!action) {
-                actions_validity.push_back(false);
-                continue;
-            }
-
-            bool valid = board_->execute_tank_action(tank, *action);
-            actions_validity.push_back(valid);
-
-            const auto player_id = tank->player_id();
-            const auto tank_id = tank->tank_id();
-            if constexpr (config::get<bool>("verbose_debug"))
-            {
-                std::cout << "[GameManager] Player " << player_id << "with tank" << tank_id
-                          <<  " action " << (valid ? "succeeded" : "failed") << std::endl;
-            }
+            actions_validity.push_back(false);
+            continue;
         }
+        
+        bool valid = board_->execute_tank_action(tank, *action);
+        actions_validity.push_back(valid);
+
+        if constexpr (config::get<bool>("verbose_debug"))
+        {
+            std::cout << "[GameManager] Player " << tank->player_id() << " with tank " << tank->tank_id()
+                        <<  " action " << (valid ? "succeeded" : "failed") << std::endl;
+        }
+    
     }
 
     board_->update();

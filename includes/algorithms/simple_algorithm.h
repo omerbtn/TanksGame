@@ -8,5 +8,6 @@ class SimpleAlgorithm : public AlgorithmBase
 {
 public:
     virtual ~SimpleAlgorithm() = default;
+    SimpleAlgorithm(int player_index, int tank_index);
     virtual ActionRequest getActionImpl() override;
 };

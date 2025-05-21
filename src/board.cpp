@@ -198,13 +198,21 @@ const std::vector<std::shared_ptr<Tank>>& Board::get_player_tanks(int player_id)
 
 bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action)
 {
-    if (!tank || !tank->is_alive()) return false;
+    if (!tank || !tank->is_alive())
+    {
+        if constexpr (config::get<bool>("verbose_debug"))
+            std::cout << "[Board] Tank " << (tank ? (std::to_string(tank->tank_id()) + " of Player " + std::to_string(tank->player_id())) : "") 
+                      << " is not alive or invalid." << std::endl; 
+        return false;
+    } 
 
     tank->decrease_cooldown();
 
     Position current_pos = tank->position();
     Position new_pos;
 
+    // TODO: Should handle MoveBackward better, if backwait is over we should move backward unless we're in MoveForward.
+    // Currently, we move backward just if we are in MoveBackward.
     switch (action)
     {
         case ActionRequest::MoveForward:
@@ -283,55 +291,13 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             return true;  // still waiting
         }
 
-        case ActionRequest::RotateLeft45:
-        {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing RotateLeft45 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
-
-            bool is_backing = tank->is_backing();
-            tank->tick_backwait();
-            if (is_backing) {
-                return false;
-            }
-
-            tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 7) % 8);
-            return true;
-        }
-
-        case ActionRequest::RotateRight45:
-        {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing RotateRight45 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
-
-            bool is_backing = tank->is_backing();
-            tank->tick_backwait();
-            if (is_backing) {
-                return false;
-            }
-
-            tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 1) % 8);
-            return true;
-        }
-
-        case ActionRequest::RotateLeft90:
-        {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing RotateLeft90 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
-
-            bool is_backing = tank->is_backing();
-            tank->tick_backwait();
-            if (is_backing) {
-                return false;
-            }
-
-            tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 6) % 8);
-            return true;
-        }
-
+        case ActionRequest::RotateLeft45:   [[fallthrough]];
+        case ActionRequest::RotateRight45:  [[fallthrough]];
+        case ActionRequest::RotateLeft90:   [[fallthrough]];
         case ActionRequest::RotateRight90:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing RotateRight90 for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing " << tank_action_to_string(action) << "for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
@@ -339,7 +305,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
                 return false;
             }
 
-            tank->direction() = static_cast<Direction>((static_cast<int>(tank->direction()) + 2) % 8);
+            tank->direction() = getDirectionAfterRotation(tank->direction(), action);
             return true;
         }
 
@@ -367,6 +333,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
 
         case ActionRequest::GetBattleInfo:
         {
+            // TODO: GetBattleInfo should return info based on the previous turn, currently it updates after tank actions on this turn
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
@@ -375,6 +342,8 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             auto player_it = player_tanks_.find(tank->player_id());
             if (player_it == player_tanks_.end()) {
                 // Player not found, return false
+                if constexpr (config::get<bool>("verbose_debug"))
+                    std::cerr << "[Board] Player " << tank->player_id() << " not found for GetBattleInfo." << std::endl;
                 return false;
             }
 
@@ -383,6 +352,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             auto algorithm = get_algorithm(tank->player_id(), tank->tank_id());
             if (!algorithm) {
                 // Algorithm not found, return false
+                if constexpr (config::get<bool>("verbose_debug"))
+                    std::cerr << "[Board] Algorithm not found for Player " << tank->player_id() 
+                              << " Tank " << tank->tank_id() << " for GetBattleInfo." << std::endl;
                 return false;
             }
 

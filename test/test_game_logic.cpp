@@ -5,11 +5,21 @@
 #include "mine.h"
 #include "cell.h"
 #include "game_manager.h"
+#include "concrete_player_factory.h"
+#include "concrete_tank_algorithm_factory.h"
 
 class BoardTest : public ::testing::Test 
 {
 protected:
+    ConcretePlayerFactory playerFactory_;
+    ConcreteTankAlgorithmFactory algorithmFactory_;
     Board board;
+
+    BoardTest()
+        : playerFactory_(ConcretePlayerFactory()),
+          algorithmFactory_(ConcreteTankAlgorithmFactory()),
+          board(playerFactory_, algorithmFactory_)
+    {}
 
     void SetUp() override {
         ASSERT_TRUE(board.load_from_file("../test/board.txt").is_valid);

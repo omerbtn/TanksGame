@@ -1,31 +1,5 @@
 #include "algorithms/algorithm_utils.h"
 
-bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const std::vector<std::vector<Cell>>& grid) {
-    auto width = grid[0].size();
-    auto height = grid.size();
-
-    Position current = forward_position(from, dir, width, height);
-
-    for (size_t steps = 0; steps < std::max(width, height); ++steps) {
-        if (current == to)
-            return true;
-
-        if (current == from)
-            return false; // We are back to the starting position
-
-        int x = current.first % width;
-        int y = current.second % height;
-
-        const Cell& cell = grid[x][y];
-        if (cell.has(ObjectType::Wall))
-            return false;
-
-        current = forward_position(current, dir, width, height);
-    }
-
-    return false;
-}
-
 Direction getOppositeDirection(Direction dir)
 {
     return static_cast<Direction>((static_cast<int>(dir) + 4) % 8);
@@ -78,10 +52,10 @@ std::string tank_action_to_string(ActionRequest action)
     {
         case ActionRequest::MoveForward: return "MoveForward";
         case ActionRequest::MoveBackward: return "MoveBackward";
-        case ActionRequest::RotateLeft90: return "RotateLeft_1_4";
-        case ActionRequest::RotateRight90: return "RotateRight_1_4";
-        case ActionRequest::RotateLeft45: return "RotateLeft_1_8";
-        case ActionRequest::RotateRight45: return "RotateRight_1_8";
+        case ActionRequest::RotateLeft90: return "RotateLeft90";
+        case ActionRequest::RotateRight90: return "RotateRight90";
+        case ActionRequest::RotateLeft45: return "RotateLeft45";
+        case ActionRequest::RotateRight45: return "RotateRight45";
         case ActionRequest::Shoot: return "Shoot";
         case ActionRequest::GetBattleInfo: return "GetBattleInfo";
         case ActionRequest::DoNothing: return "DoNothing";
@@ -103,25 +77,6 @@ std::string directionToArrow(Direction dir)
         case Direction::UL: return "↖";
         default: return "?"; // Unknown direction
     }
-}
-
-std::shared_ptr<Tank> getOpponent(const int player_index, const std::vector<std::vector<Cell>>& grid) {
-    for (size_t x = 0; x < grid.size(); ++x)
-    {
-        for (size_t y = 0; y < grid[x].size(); ++y)
-        {
-            const Cell& cell = grid[x][y];
-            if (cell.has(ObjectType::Tank)) {
-                auto tank = std::static_pointer_cast<Tank>(cell.get_object_by_type(ObjectType::Tank));
-                if (tank->player_id() != player_index)
-                {
-                    return tank;
-                }
-            }
-        }
-    }
-
-    return nullptr; // Not found
 }
 
 Position forward_position(const Position& pos, Direction dir, const size_t width, const size_t height) {

@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <unordered_map>
+#include <algorithm>
 
 static std::string trim(const std::string& s) {
     auto start = s.find_first_not_of(" \t\n\r");
@@ -28,7 +29,7 @@ ActionRequest UserAlgorithm::getAction() {
     print_help();
 
     while (true) {
-        std::cout << "\n[Action] Type command (type 'help' to list options): ";
+        std::cout << "\n[Action] Type command for Player " << player_index_ << ", Tank " << tank_index_ << " (type 'help' to list options): ";
         std::string input;
         std::getline(std::cin, input);
         std::transform(input.begin(), input.end(), input.begin(), [](char c) { return std::tolower(c); });

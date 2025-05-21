@@ -21,7 +21,7 @@ public:
 
 private:
     bool isShellInPathDangerous(const Position& pos);
-    std::optional<ActionRequest> findFirstSafeActionToOpponent(const Position& startPos, Direction startDir, const Position& targetPos);
+    std::optional<ActionRequest> findFirstSafeActionToOpponent(const Position& startPos, Direction startDir);
 
     std::queue<ActionRequest> cached_path_;
     Position cached_target_;

@@ -35,7 +35,7 @@ public:
     std::vector<std::vector<Cell>>& grid();
     const std::vector<std::vector<Cell>>& grid() const;
     bool execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action);
-    void do_shells_step();
+    void do_shells_step(bool shells_only = true);
     void update();
     TankAlgorithm* get_algorithm(int player_id, int tank_id);
 
@@ -49,6 +49,7 @@ private:
 
     size_t width_, height_;
     std::vector<std::vector<Cell>> grid_;
+    std::vector<std::vector<Cell>> prev_grid_;  // Previous state of the grid, used for GetBattleInfo
     std::vector<std::pair<Position, std::shared_ptr<Shell>>> active_shells_;
     std::unordered_set<Position> cells_to_update_;
     std::unordered_map<Position, std::shared_ptr<Tank>> old_tanks_positions_;

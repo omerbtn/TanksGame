@@ -42,5 +42,6 @@ std::string directionToString(Direction dir);
 std::string directionToArrow(Direction dir);
 std::string tank_action_to_string(ActionRequest action);
 
-Position forward_position(const Position& pos, Direction dir, const size_t width, const size_t height);
+Position forward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
+Position backward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
 Direction getSeedDirection(int player_index);

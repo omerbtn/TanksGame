@@ -9,53 +9,33 @@ SimpleAlgorithm::SimpleAlgorithm(int player_index, int tank_index)
 
 ActionRequest SimpleAlgorithm::getActionImpl() 
 {
-    const Position& tank_pos = tank_->position();
-    const Direction& tank_dir = tank_->direction();
-
     // If a shell is coming, run away
-    /*if (auto evade = getEvadeActionIfShellIncoming(tank, board, std::max(board.get_width(), board.get_height())))  // Be more conservative
+    if (auto evade = getEvadeActionIfShellIncoming(std::max(width_, height_)))  // Be more conservative
     {
+        if constexpr (config::get<bool>("verbose_debug"))
+        {
+            std::cout << "[SimpleAlgorithm] Evading a shell using: " << tank_action_to_string(*evade) << std::endl;
+        }
         return *evade;
-    }*/
+    }
 
-    // Not under threat - can we shoot the opponent?
-
-    // auto opponent = getOpponent(tank_->id(), grid_);
+    // Not under threat, check if we can shoot the opponent
     Position opponent_pos;
-    if (hasLineOfSightToOpponent(tank_pos, tank_dir, opponent_pos))
+    if (tank_->can_shoot() && hasLineOfSightToOpponent(tank_->position(), tank_->direction(), opponent_pos))
     {
         // He is just in front of us, shoot him!
         if constexpr (config::get<bool>("verbose_debug"))
         {
             std::cout << "[SimpleAlgorithm] Shooting opponent at " << opponent_pos 
-                      << " from " << tank_pos << std::endl;
+                      << " from " << tank_->position() << std::endl;
         }
         return ActionRequest::Shoot;
     }
 
-    // Otherwise, just do nothing
-    return ActionRequest::DoNothing;
+    // Always prefer requesting BattleInfo if we don't have something better to do
+    if constexpr (config::get<bool>("verbose_debug"))
+    {
+        std::cout << "[SimpleAlgorithm] Nothing to do, requesting BattleInfo." << std::endl;
+    }
+    return ActionRequest::GetBattleInfo;
 }
-
-/*TankAction SimpleAlgorithm::decideAction(const Tank &tank, const Board &board)
-{
-    const Position& tank_pos = tank.position();
-    const Direction& tank_dir = tank.direction();
-
-    // If a shell is coming, run away
-    if (auto evade = getEvadeActionIfShellIncoming(tank, board, std::max(board.get_width(), board.get_height())))  // Be more conservative
-    {
-        return *evade;
-    }
-
-    // Not under threat - can we shoot the opponent?
-    const std::shared_ptr<Tank> opponent = board.get_player_tank(tank.id() == 1 ? 2 : 1);
-    if (opponent && opponent->is_alive() && hasLineOfSight(tank_pos, opponent->position(), tank_dir, board))
-    {
-        // He is just in front of us, shoot him!
-        return TankAction::Shoot;
-    }
-
-    // Otherwise, just do nothing
-    return TankAction::Idle;
-}*/

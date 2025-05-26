@@ -18,7 +18,7 @@ public:
     virtual ~ConcretePlayer() override = default;
 
     ConcretePlayer(size_t x, size_t y, size_t max_steps, size_t num_shells)
-        : Player(PlayerIndex, x, y, max_steps, num_shells), x_(x), y_(y), maxSteps_(max_steps), numShells_(num_shells) {}
+        : Player(PlayerIndex, x, y, max_steps, num_shells), width_(x), height_(y), maxSteps_(max_steps), numShells_(num_shells) {}
         
     ConcretePlayer(const ConcretePlayer&) = delete; // Disable copy constructor
     ConcretePlayer& operator=(const ConcretePlayer&) = delete; // Disable copy assignment
@@ -34,7 +34,7 @@ public:
     }
 
 private:
-    size_t x_, y_;
+    size_t width_, height_;
     size_t maxSteps_;
     size_t numShells_;
     size_t tank_id_ = 0;

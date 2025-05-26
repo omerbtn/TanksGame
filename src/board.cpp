@@ -45,7 +45,8 @@ TankAlgorithm* Board::get_algorithm(int player_id, int tank_id) {
     return nullptr;
 }
 
-GameInfo Board::load_from_file(const std::string& filename) {
+GameInfo Board::load_from_file(const std::string& filename) 
+{
     InputErrorLogger error_logger;
     std::ifstream file(filename);
 
@@ -158,6 +159,9 @@ GameInfo Board::load_from_file(const std::string& filename) {
         }
     }
 
+    // Initialize prev_grid_ with the current grid state
+    prev_grid_ = grid_;
+
     GameInfo game_info(width_, height_, max_steps, num_shells, std::move(ordered_tanks));
     return game_info;
 }
@@ -166,7 +170,7 @@ void Board::print() const
 {
     using SelectedPrinter = std::conditional_t<config::get<bool>("use_ansi_printer"), AnsiPrinter, DefaultPrinter>;
 
-    SelectedPrinter printer(*this);
+    SelectedPrinter printer(grid_);
     printer.print();
 }
 
@@ -265,7 +269,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
                 if (tank->ready_to_move_back())
                 {
                     tank->continue_backing();
-                    new_pos = forward_position(tank->position(), getOppositeDirection(tank->direction()), width_, height_);
+                    new_pos = backward_position(tank->position(), tank->direction(), width_, height_);
 
                     Cell& current_cell = grid_[current_pos.first][current_pos.second];
                     Cell& new_cell = grid_[new_pos.first][new_pos.second];
@@ -297,7 +301,7 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::RotateRight90:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing " << tank_action_to_string(action) << "for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing " << tank_action_to_string(action) << " for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
             bool is_backing = tank->is_backing();
             tank->tick_backwait();
@@ -340,7 +344,8 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             tank->tick_backwait();
 
             auto player_it = player_tanks_.find(tank->player_id());
-            if (player_it == player_tanks_.end()) {
+            if (player_it == player_tanks_.end()) 
+            {
                 // Player not found, return false
                 if constexpr (config::get<bool>("verbose_debug"))
                     std::cerr << "[Board] Player " << tank->player_id() << " not found for GetBattleInfo." << std::endl;
@@ -348,9 +353,10 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             }
 
             // Provide satellite view to the player
-            BoardSatelliteView satelliteView(grid_, tank->position());
+            BoardSatelliteView satelliteView(prev_grid_, tank->position());
             auto algorithm = get_algorithm(tank->player_id(), tank->tank_id());
-            if (!algorithm) {
+            if (!algorithm) 
+            {
                 // Algorithm not found, return false
                 if constexpr (config::get<bool>("verbose_debug"))
                     std::cerr << "[Board] Algorithm not found for Player " << tank->player_id() 
@@ -533,13 +539,20 @@ void Board::on_explosion(Cell& cell)
     }
 }
 
-void Board::do_shells_step()
+void Board::do_shells_step(bool shells_only)
 {
     // Move all the shells one step forward
     update_active_shells();
 
     // Update the board and resolve collisions
     update();
+
+    if (shells_only)
+    {
+        // Update the previous grid with the current grid
+        // Only in shells-only step, for saving the previous turn state for GetBattleInfo
+        prev_grid_ = grid_;
+    }
 }
 
 void Board::update()

@@ -50,15 +50,15 @@ void Cell::remove_object(std::shared_ptr<GameObjectInterface> object)
     }
 }
 
+// Remove all objects of the specified type, can be usable sometimes
 void Cell::remove_objects_by_type(ObjectType type) 
 {
-    // Remove all objects of the specified type, can be usable sometimes
     objects_.erase(type);
 }
 
+// Return the first object of the specified type, don't use unless you know what you're doing
 std::shared_ptr<GameObjectInterface> Cell::get_object_by_type(ObjectType type) const 
 {
-    // Return the first object of the specified type, don't use unless you know what you're doing
     auto it = objects_.find(type);
     if (it != objects_.end() && !it->second.empty()) 
     {

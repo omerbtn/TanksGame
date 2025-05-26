@@ -21,10 +21,8 @@ public:
 
 private:
     bool isShellInPathDangerous(const Position& pos);
-    std::optional<ActionRequest> findFirstSafeActionToOpponent(const Position& startPos, Direction startDir);
+    std::optional<ActionRequest> findFirstSafeActionToOpponent();
 
     std::queue<ActionRequest> cached_path_;
     Position cached_target_;
-    int player_index_;
-    int tank_index_; // TODO: maybe remove..
 };

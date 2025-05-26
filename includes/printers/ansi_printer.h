@@ -90,31 +90,3 @@ private:
         }
     }
 };
-
-class AnsiPrint {
-public:
-    static const char* player_color(int player_id) {
-        switch (player_id) {
-            case 1:
-                return GREEN;
-            case 2:
-                return BLUE;
-            case 3:
-                return CYAN;
-            case 4:
-                return MAGENTA;
-            case 5:
-                return YELLOW;
-            case 6:
-                return WHITE;
-            case 7:
-                return RED;
-            case 8:
-                return ORANGE;
-            case 9:
-                return PINK;
-            default:
-                return WHITE;
-        }
-    }
-};

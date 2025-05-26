@@ -14,5 +14,6 @@ public:
 private:
     virtual ObjectType type() const override = 0;
 
+protected:
     Direction direction_;
 };

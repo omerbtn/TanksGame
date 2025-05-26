@@ -87,3 +87,13 @@ bool Tank::ready_to_move_back() const
 {
     return backwait_ == 0;
 }
+
+void Tank::copyRuntimeStateFrom(const Tank& other)
+{
+    position_ = other.position_;
+    direction_ = other.direction_;
+    shells_ = other.shells_;
+    cooldown_ = other.cooldown_;
+    backwait_ = other.backwait_;
+    alive_ = other.alive_;
+}

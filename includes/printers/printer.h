@@ -1,29 +1,29 @@
 #pragma once
 
 #include "board.h"
+#include "cell.h"
 
 template <typename Derived>
 class Printer {
 public:
-    explicit Printer(const Board& board) : board_(board) {
-    }
+    explicit Printer(const std::vector<std::vector<Cell>>& grid) : grid_(grid) {}
 
     void print() const {
         static_cast<const Derived*>(this)->print_impl();
     }
 
     const std::vector<std::vector<Cell>>& grid() const {
-        return board_.grid();
+        return grid_;
     }
 
     size_t width() const {
-        return board_.get_width();
+        return grid_[0].size();
     }
 
     size_t height() const {
-        return board_.get_height();
+        return grid_.size();
     }
 
 protected:
-    const Board& board_;
+    const std::vector<std::vector<Cell>>& grid_;
 };

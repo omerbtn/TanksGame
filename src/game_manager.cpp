@@ -106,15 +106,16 @@ void GameManager::run()
 
     while (!is_game_over())
     {
-        board_->do_shells_step();
         if (half_steps_count_ % 2 == 0)
         {
             std::cout << "[GameManager] Do tanks and shells step, half_steps_count = " << half_steps_count_ << std::endl;
+            board_->do_shells_step(false);
             do_tanks_step();
         }
         else
         {
             std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
+            board_->do_shells_step(true);
         }
         board_->print();
         half_steps_count_++;

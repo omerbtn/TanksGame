@@ -1,8 +1,25 @@
-GetBattleInfo, GetBattleInfo, GetBattleInfo
-MoveForward, DoNothing, MoveForward
-MoveForward, DoNothing, RotateRight45
-RotateLeft45, DoNothing, MoveForward
-Shoot, DoNothing, MoveForward
-Shoot (ignored), DoNothing, RotateLeft45
-GetBattleInfo, killed, GetBattleInfo
-Player 1 won with 2 tanks still alive
+GetBattleInfo, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+RotateLeft45, GetBattleInfo
+Shoot, GetBattleInfo
+GetBattleInfo, GetBattleInfo
+RotateRight45, MoveForward
+MoveForward, GetBattleInfo
+GetBattleInfo, GetBattleInfo
+RotateLeft90, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+RotateRight45, GetBattleInfo
+GetBattleInfo, GetBattleInfo
+Shoot, GetBattleInfo
+GetBattleInfo, GetBattleInfo
+RotateRight90, MoveForward
+MoveForward, GetBattleInfo
+GetBattleInfo, GetBattleInfo
+RotateLeft45, GetBattleInfo
+MoveForward, GetBattleInfo
+RotateRight45, GetBattleInfo
+Shoot, GetBattleInfo
+GetBattleInfo, killed
+Player 1 won with 1 tanks still alive

@@ -13,7 +13,6 @@ public:
 
     Position& position();
     const Position& position() const;
-
     int id() const;  // Keeping just for compatibility with the old code, should replace with player_id() as this is just confusing
     int player_id() const { return player_id_; }
     int tank_id() const { return tank_id_; }
@@ -29,6 +28,7 @@ public:
     void reset_backwait();
     void continue_backing();
     bool ready_to_move_back() const;
+    void copyRuntimeStateFrom(const Tank& other);
 
 private:
     virtual ObjectType type() const override;

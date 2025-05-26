@@ -79,15 +79,22 @@ std::string directionToArrow(Direction dir)
     }
 }
 
-Position forward_position(const Position& pos, Direction dir, const size_t width, const size_t height) {
+Position forward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+{
     static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
         {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
         {Direction::D, {0, 1}},  {Direction::DL, {-1, 1}}, {Direction::L, {-1, 0}}, {Direction::UL, {-1, -1}}};
+
     auto [dx, dy] = deltas.at(dir);
-    int new_x = (pos.first + dx + width) % width;
-    int new_y = (pos.second + dy + height) % height;
+    int new_x = (pos.first + (dx + width) * steps) % width;
+    int new_y = (pos.second + (dy + height) * steps) % height;
 
     return Position(new_x, new_y);
+}
+
+Position backward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+{
+    return forward_position(pos, getOppositeDirection(dir), width, height, steps);
 }
 
 Direction getSeedDirection(int player_index)

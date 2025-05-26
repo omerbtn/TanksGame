@@ -3,6 +3,7 @@
 #include "cell.h"
 #include "common/SatelliteView.h"
 
+// For what? We already have the dimensions x and y from ctor
 std::pair<size_t, size_t> get_dimensions_from_satellite(const SatelliteView& view) {
     size_t width = 0, height = 0;
 

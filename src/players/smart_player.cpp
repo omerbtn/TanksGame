@@ -71,8 +71,6 @@ void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& s
 }
 
 // Derives all possible directions for shells based on the previous and current grid states.
-// TODO: Fix, walls in the way should stop shells and not be considered as possible directions.
-//       Add all possible directions, not just the first that matches with the smallest number of turns passed.         
 void SmartPlayer::updateShellPossibleDirections(const std::vector<std::vector<Cell>>& prev_grid,
                                                 const std::vector<std::vector<Cell>>& curr_grid)
 {
@@ -80,105 +78,126 @@ void SmartPlayer::updateShellPossibleDirections(const std::vector<std::vector<Ce
     auto prev_shell_possible_directions = shell_possible_directions_;
     shell_possible_directions_.clear();
 
-    static const std::vector<Direction> all_directions = {
-        Direction::U, Direction::UR, Direction::R, Direction::DR,
-        Direction::D, Direction::DL, Direction::L, Direction::UL
-    };
-
     size_t interval = config::get<size_t>("battle_info_interval");  // Max turns passed since last GetBattleInfo
-    bool found_valid_turns = false;
-
-    // For each shell, accumulate possible directions for all valid number of turns passed
-    std::unordered_map<Position, std::unordered_set<Direction>> accumulated_directions;
-
-    // Try to find valid number of turns passed that match all shells' movement
-    for (size_t turns_passed = 0; turns_passed <= interval; ++turns_passed) 
+    size_t num_shells = getNumberOfShellsInGrid(curr_grid);
+    
+    // Try to find possible directions for as many shells as possible, when the number of unexplainable shells is from 0 to num_shells
+    for (size_t max_unexplainable = 0; max_unexplainable < num_shells; ++max_unexplainable)
     {
-        std::unordered_map<Position, std::unordered_set<Direction>> candidate_map;
-        bool all_shells_possible = true;
-        
-        for (size_t x = 0; x < width_; ++x) 
+        bool found_valid = false;
+    
+        // For each shell, accumulate possible directions for all valid number of turns passed
+        std::unordered_map<Position, std::unordered_set<Direction>> accumulated_directions;
+    
+        // Try to find valid number of turns passed that match all shells' movements
+        for (size_t turns_passed = 0; turns_passed <= interval; ++turns_passed) 
         {
-            for (size_t y = 0; y < height_; ++y) 
-            {
-                Position curr_pos{x, y};
-                
-                if (!curr_grid[x][y].has(ObjectType::Shell)) 
-                    continue;
-                
-                // For every shell, find all possible directions it could have moved from
-                std::unordered_set<Direction> possible_dirs;
-                for (Direction dir : all_directions) 
-                {
-                    bool blocked = false;
-                    // Make sure not to count directions blocked by walls
-                    // We allow tanks be in the way, because they could have moved in after the shell 
-                    // and we want this function to catch all possible directions
-                    for (size_t step = 1; step <= 2 * turns_passed; ++step) 
-                    {
-                        Position intermediate = backward_position(curr_pos, dir, width_, height_, step);
-                        if (prev_grid[intermediate.first][intermediate.second].has(ObjectType::Wall)) 
-                        {
-                            blocked = true;
-                            break;
-                        }
-                    }
-                    if (blocked) continue;
-
-                    Position prev_pos = backward_position(curr_pos, dir, width_, height_, 2 * turns_passed);
-                    if (prev_grid[prev_pos.first][prev_pos.second].has(ObjectType::Shell)) 
-                    {
-                        // If we have previous knowledge, intersect
-                        auto it = prev_shell_possible_directions.find(prev_pos);
-                        if (it != prev_shell_possible_directions.end()) 
-                        {
-                            if (it->second.count(dir)) 
-                                possible_dirs.insert(dir);
-                        } 
-                        else 
-                        {
-                            // We don't know this shell yet, every direction is possible
-                            possible_dirs.insert(dir);
-                        }
-                    }
-                }
-                if (possible_dirs.empty()) 
-                {
-                    all_shells_possible = false;
-                    break;
-                }
-                candidate_map[curr_pos] = std::move(possible_dirs);
-            }
-            if (!all_shells_possible) break;
-        }
-
-        if (all_shells_possible) 
-        {
-            // Found valid number of turns passed, accumulate possible directions for wach shell
-            found_valid_turns = true;
+            std::unordered_map<Position, std::unordered_set<Direction>> candidate_map;
+            std::vector<Position> unexplainable_shells;
             
-            for (const auto& [pos, dirs] : candidate_map) 
+            getShellPossibleDirectionsForTurnsPassed(
+                prev_grid, curr_grid, prev_shell_possible_directions, turns_passed, 
+                candidate_map, unexplainable_shells);
+    
+            if (unexplainable_shells.size() <= max_unexplainable)
             {
-                accumulated_directions[pos].insert(dirs.begin(), dirs.end());
+                // If we have less unexplainable shells than allowed, we can consider this a valid number of turns passed
+                // and accumulate possible directions for each shell
+                found_valid = true;
+                accumulateDirections(accumulated_directions, candidate_map, unexplainable_shells);
             }
         }
+        
+        if (found_valid) 
+        {
+            // Found valid possible directions with as few unexplainable shells as possible
+            shell_possible_directions_ = std::move(accumulated_directions);
+            return;
+        }
+    }
+
+    // Fallback: treat all shells as new with all directions possible
+    // Shouldn't happen, as this is the case of all shells are unexplainable
+    const auto& all_directions = getAllDirections();
+    for (size_t x = 0; x < width_; ++x) 
+    {
+        for (size_t y = 0; y < height_; ++y) 
+        {
+            Position curr_pos{x, y};
+            if (!curr_grid[x][y].has(ObjectType::Shell)) continue;
+            shell_possible_directions_[curr_pos] = std::unordered_set<Direction>(all_directions.begin(), all_directions.end());
+        }
+    }
+}
+
+void SmartPlayer::accumulateDirections(std::unordered_map<Position, std::unordered_set<Direction>>& accumulated_directions,
+                                       std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                                       const std::vector<Position>& unexplainable_shells)
+{
+    const auto& all_directions = getAllDirections();
+    
+    // For unexplainable shells, treat as new with all directions possible
+    for (const auto& pos : unexplainable_shells) 
+    {
+        candidate_map[pos] = std::unordered_set<Direction>(all_directions.begin(), all_directions.end());
     }
     
-    if (found_valid_turns)
+    // Accumulate possible directions for all shells
+    for (const auto& [pos, dirs] : candidate_map) 
     {
-        shell_possible_directions_ = std::move(accumulated_directions);
+        accumulated_directions[pos].insert(dirs.begin(), dirs.end());
     }
-    else
+}
+
+void SmartPlayer::getShellPossibleDirectionsForTurnsPassed(const std::vector<std::vector<Cell>>& prev_grid,
+                                                           const std::vector<std::vector<Cell>>& curr_grid,
+                                                           const std::unordered_map<Position, std::unordered_set<Direction>>& prev_shell_possible_directions,
+                                                           size_t turns_passed,
+                                                           std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                                                           std::vector<Position>& unexplainable_shells)
+{
+    const auto& all_directions = getAllDirections();
+
+    for (size_t x = 0; x < width_; ++x) 
     {
-        // If no valid turns found, treat all shells as new with all directions possible
-        for (size_t x = 0; x < width_; ++x) 
+        for (size_t y = 0; y < height_; ++y) 
         {
-            for (size_t y = 0; y < height_; ++y) 
+            Position curr_pos{x, y};
+            
+            if (!curr_grid[x][y].has(ObjectType::Shell)) 
+                continue;
+            
+            // For every shell, find all possible directions it could have moved from
+            std::unordered_set<Direction> possible_dirs;
+            for (Direction dir : all_directions) 
             {
-                Position curr_pos{x, y};
-                if (!curr_grid[x][y].has(ObjectType::Shell)) continue;
-                shell_possible_directions_[curr_pos] = std::unordered_set<Direction>(all_directions.begin(), all_directions.end());
+                // Make sure not to count directions blocked by walls
+                // We allow tanks and shells be in the way, because they could have moved in after the shell 
+                // and we want this function to catch all possible directions
+                if (isBlockedByWall(prev_grid, curr_pos, dir, 2 * turns_passed)) continue;
+
+                Position prev_pos = backward_position(curr_pos, dir, width_, height_, 2 * turns_passed);
+                if (prev_grid[prev_pos.first][prev_pos.second].has(ObjectType::Shell)) 
+                {
+                    // If we have previous knowledge, intersect
+                    auto it = prev_shell_possible_directions.find(prev_pos);
+                    if (it != prev_shell_possible_directions.end()) 
+                    {
+                        if (it->second.count(dir)) 
+                            possible_dirs.insert(dir);
+                    } 
+                    else 
+                    {
+                        // Shouldn't happen, because we should know all shells from prev_grid
+                        possible_dirs.insert(dir);
+                    }
+                }
             }
+            if (possible_dirs.empty()) 
+            {
+                unexplainable_shells.push_back(curr_pos);
+            }
+            candidate_map[curr_pos] = std::move(possible_dirs);  // If is empty, will fill with all directions if allowed
         }
     }
 }

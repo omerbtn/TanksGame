@@ -9,7 +9,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable strict compiler warnings
 # add_compile_options(-Wall -Wextra -Werror -pedantic) TODO: restore
 
-# TODO: remove
 # Enable debug symbols and set the debug type to gdb
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")

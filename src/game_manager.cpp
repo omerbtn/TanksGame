@@ -178,13 +178,14 @@ void GameManager::do_tanks_step()
         if constexpr (config::get<bool>("verbose_debug"))
         {
             std::cout << "[GameManager] Player " << tank->player_id() << " with tank " << tank->tank_id()
-                        <<  " action " << (valid ? "succeeded" : "failed") << std::endl;
+                        <<  " action " << tank_action_to_string(*action) << (valid ? " succeeded" : " failed") << std::endl;
         }
     
     }
 
     board_->update();
 
+    // TODO: Check why not outputting (killed) for tank in the turn of death
     for (size_t i = 0; i < ordered_tanks_.size(); ++i) {
         logger_.logAction(i, actions_to_execute[i], actions_validity[i], ordered_tanks_[i]->is_alive());
     }

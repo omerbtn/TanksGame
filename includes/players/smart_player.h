@@ -29,6 +29,17 @@ private:
     void updateShellPossibleDirections(const std::vector<std::vector<Cell>>& prev_grid,
                                        const std::vector<std::vector<Cell>>& curr_grid);
 
+    void getShellPossibleDirectionsForTurnsPassed(const std::vector<std::vector<Cell>>& prev_grid,
+                                                  const std::vector<std::vector<Cell>>& curr_grid,
+                                                  const std::unordered_map<Position, std::unordered_set<Direction>>& prev_shell_possible_directions,
+                                                  size_t turns_passed,
+                                                  std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                                                  std::vector<Position>& unexplainable_shells);
+
+    void accumulateDirections(std::unordered_map<Position, std::unordered_set<Direction>>& accumulated_directions,
+                              std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                              const std::vector<Position>& unexplainable_shells);
+
     int player_index_;
     size_t width_, height_;
     size_t max_steps_;

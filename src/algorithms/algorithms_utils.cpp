@@ -101,3 +101,45 @@ Direction getSeedDirection(int player_index)
 {
     return (player_index % 2 == 1) ? Direction::L : Direction::R;
 }
+
+size_t getNumberOfShellsInGrid(const std::vector<std::vector<Cell>>& grid)
+{
+    size_t count = 0;
+    for (const auto& row : grid)
+    {
+        for (const auto& cell : row)
+        {
+            if (cell.has(ObjectType::Shell))
+            {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+// Moving *backward* from a position in a given direction, checking if there are walls blocking the path
+bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position& from, Direction dir, size_t steps)
+{
+    size_t width = grid[0].size();
+    size_t height = grid.size();
+    Position pos = from;
+    for (size_t i = 0; i < steps; ++i)
+    {
+        pos = backward_position(pos, dir, width, height);
+        if (grid[pos.first][pos.second].has(ObjectType::Wall))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+const std::vector<Direction>& getAllDirections()
+{
+    static const std::vector<Direction> all_directions = {
+        Direction::U, Direction::UR, Direction::R, Direction::DR,
+        Direction::D, Direction::DL, Direction::L, Direction::UL
+    };
+    return all_directions;
+}

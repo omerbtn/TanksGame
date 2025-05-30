@@ -129,11 +129,14 @@ GameInfo Board::load_from_file(const std::string& filename)
                     size_t tank_index = 0;
                     auto direction = getSeedDirection(player_index);
 
-                    if (auto player_it = player_tanks_.find(player_index); player_it != player_tanks_.end()) {
+                    if (auto player_it = player_tanks_.find(player_index); player_it != player_tanks_.end()) 
+                    {
                         tank_index = player_it->second.second.size();
                         tank = std::make_shared<Tank>(player_index, tank_index, pos, direction, num_shells);
                         player_it->second.second.push_back(tank);
-                    } else {
+                    } 
+                    else 
+                    {
                         tank = std::make_shared<Tank>(player_index, tank_index, pos, direction, num_shells);
                         auto player = playerFactory_.create(player_index, width_, height_, max_steps, num_shells);
                         player_tanks_[player_index] = std::make_pair(std::move(player), std::vector<std::shared_ptr<Tank>>{tank});
@@ -224,7 +227,8 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing MoveForward for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 
-            if (tank->is_backing()) {
+            if (tank->is_backing()) 
+            {
                 // Only move forward action is able to reset the back movement
                 tank->reset_backwait();
                 return true;
@@ -337,7 +341,6 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
 
         case ActionRequest::GetBattleInfo:
         {
-            // TODO: GetBattleInfo should return info based on the previous turn, currently it updates after tank actions on this turn
             if constexpr (config::get<bool>("verbose_debug"))
                 std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
 

@@ -51,7 +51,7 @@ bool AlgorithmBase::hasLineOfSightToOpponent(const Position& start, Direction di
             }
         }
         // We allow mines and shells in the way, as mine doesn't block line of sight and shell will probably go away
-        // until our shell arrives. If not, shell is moving towards us and shooting at him might be a good idea.
+        // until our shell arrives. If not, shell is moving towards us and shooting at it might be a good idea.
          
         current = forward_position(current, dir, width_, height_);
     }
@@ -276,9 +276,8 @@ void AlgorithmBase::handle_tank_movement(const ActionRequest action)
         }
         case ActionRequest::DoNothing:
             [[fallthrough]];
-        case ActionRequest::GetBattleInfo: {
+        case ActionRequest::GetBattleInfo:
             break;
-        }
         default: {
             assert(false);
             break;
@@ -287,10 +286,7 @@ void AlgorithmBase::handle_tank_movement(const ActionRequest action)
 }
 
 ActionRequest AlgorithmBase::getAction() 
-{
-    // TODO: should change it, might be a good idea that just one tank will request info at a time (except for the first turn),
-    // so the player could derive more information on the board
-    
+{    
     if constexpr (config::get<bool>("verbose_debug"))
     {
         std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known grid:" << std::endl;

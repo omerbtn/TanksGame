@@ -43,7 +43,6 @@ std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const Satell
                     cell.add_object(std::make_shared<Shell>(Direction::U));
                     break;
                 case '1':
-                    // TODO: later change that the battle info will hold all shells and tanks information.. - rethink
                     cell.add_object(std::make_shared<Tank>(1, 0, pos, Direction::L, 0));
                     break;
                 case '2':

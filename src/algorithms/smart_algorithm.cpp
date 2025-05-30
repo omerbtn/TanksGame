@@ -80,12 +80,12 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
 
         BFSState current = q.front();
 
-        if constexpr (config::get<bool>("verbose_debug"))
-        {
-            // For debugging purposes
-            std::cout << "[SmartAlgorithm] Visiting state: Pos" << current.pos
-                      << " Dir=" << directionToString(current.dir) << std::endl;
-        }
+        // if constexpr (config::get<bool>("verbose_debug"))
+        // {
+        //     // For debugging purposes
+        //     std::cout << "[SmartAlgorithm] Visiting state: Pos" << current.pos
+        //               << " Dir=" << directionToString(current.dir) << std::endl;
+        // }
 
         q.pop();
         
@@ -149,23 +149,23 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
         {
             BFSState next_state{next_pos, current.dir};
 
-            if constexpr (config::get<bool>("verbose_debug"))
-            {
-                // For debugging purposes
-                std::cout << "[SmartAlgorithm] Considering move forward to Pos" << next_pos
-                          << " Dir=" << directionToString(current.dir)
-                          << " -> visited? " << (visited.count(next_state) ? "yes" : "no") << std::endl;
-            }
+            // if constexpr (config::get<bool>("verbose_debug"))
+            // {
+            //     // For debugging purposes
+            //     std::cout << "[SmartAlgorithm] Considering move forward to Pos" << next_pos
+            //               << " Dir=" << directionToString(current.dir)
+            //               << " -> visited? " << (visited.count(next_state) ? "yes" : "no") << std::endl;
+            // }
 
             // Check if the next state has already been visited
             if (visited.find(next_state) == visited.end())
             {
-                if constexpr (config::get<bool>("verbose_debug"))
-                {
-                    // For debugging purposes
-                    std::cout << "[SmartAlgorithm] Pushing state: Pos" << next_state.pos
-                              << " Dir=" << directionToString(next_state.dir) << std::endl;
-                }
+                // if constexpr (config::get<bool>("verbose_debug"))
+                // {
+                //     // For debugging purposes
+                //     std::cout << "[SmartAlgorithm] Pushing state: Pos" << next_state.pos
+                //               << " Dir=" << directionToString(next_state.dir) << std::endl;
+                // }
 
                 visited.insert(next_state);
                 parent[next_state] = {current, ActionRequest::MoveForward};
@@ -179,23 +179,23 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
             Direction new_dir = getDirectionAfterRotation(current.dir, action);
             BFSState rotated_state{current.pos, new_dir};
 
-            if constexpr (config::get<bool>("verbose_debug"))
-            {
-                // For debugging purposes
-                std::cout << "[SmartAlgorithm] Considering rotation to Dir="
-                          << directionToString(new_dir) << " from Pos" << current.pos
-                          << " -> visited? " << (visited.count(rotated_state) ? "yes" : "no") << std::endl;
-            }
+            // if constexpr (config::get<bool>("verbose_debug"))
+            // {
+            //     // For debugging purposes
+            //     std::cout << "[SmartAlgorithm] Considering rotation to Dir="
+            //               << directionToString(new_dir) << " from Pos" << current.pos
+            //               << " -> visited? " << (visited.count(rotated_state) ? "yes" : "no") << std::endl;
+            // }
 
             // Check if the next state has already been visited
             if (visited.find(rotated_state) == visited.end())
             {
-                if constexpr (config::get<bool>("verbose_debug"))
-                {
-                    // For debugging purposes
-                    std::cout << "[SmartAlgorithm] Pushing state: Pos" << rotated_state.pos
-                    << " Dir=" << directionToString(rotated_state.dir) << std::endl;
-                }
+                // if constexpr (config::get<bool>("verbose_debug"))
+                // {
+                //     // For debugging purposes
+                //     std::cout << "[SmartAlgorithm] Pushing state: Pos" << rotated_state.pos
+                //     << " Dir=" << directionToString(rotated_state.dir) << std::endl;
+                // }
 
                 visited.insert(rotated_state);
                 parent[rotated_state] = {current, action};

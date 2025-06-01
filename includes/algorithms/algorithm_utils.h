@@ -42,11 +42,11 @@ Direction getOppositeDirection(Direction dir);
 Direction getDirectionAfterRotation(Direction dir, ActionRequest action);
 std::string directionToString(Direction dir);
 std::string directionToArrow(Direction dir);
-std::string tank_action_to_string(ActionRequest action);
+std::string tankActionToString(ActionRequest action);
 Direction getSeedDirection(int player_index);
 
-Position forward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
-Position backward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
+Position forwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
+Position backwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps = 1);
 
 size_t getNumberOfShellsInGrid(const std::vector<std::vector<Cell>>& grid);
 bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position& from, Direction dir, size_t steps);

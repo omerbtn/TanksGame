@@ -26,7 +26,7 @@ public:
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override 
     {
         Position tank_position;
-        auto grid = reconstruct_grid_from_satellite_view(satellite_view, PlayerIndex, tank_position);
+        auto grid = reconstructGridFromSatelliteView(satellite_view, PlayerIndex, tank_position);
         Direction dir = getSeedDirection(PlayerIndex);
 
         BoardBattleInfo info(grid, PlayerIndex, tank_id_, tank_position, dir, maxSteps_, numShells_);

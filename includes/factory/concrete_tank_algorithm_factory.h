@@ -23,9 +23,11 @@ public:
 
         switch (player_index) {
             case 1:
-                return std::make_unique<SmartAlgorithm>(player_index, tank_index);
+                // return std::make_unique<SmartAlgorithm>(player_index, tank_index);  // TODO: Switch back
+                return std::make_unique<UserAlgorithm>(player_index, tank_index);
             case 2:
-                return std::make_unique<SimpleAlgorithm>(player_index, tank_index);
+                // return std::make_unique<SimpleAlgorithm>(player_index, tank_index);
+                return std::make_unique<UserAlgorithm>(player_index, tank_index);
             case 3:
                 return std::make_unique<UserAlgorithm>(player_index, tank_index);
             case 4: [[fallthrough]];

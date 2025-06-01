@@ -23,7 +23,7 @@ public:
 protected:
     virtual ActionRequest getActionImpl() = 0;
 
-    void handle_tank_movement(const ActionRequest action);
+    void handleTankMovement(const ActionRequest action);
 
     bool hasLineOfSightToOpponent(const Position& start_pos, Direction dir, Position& r_opponent_pos) const;
     bool isShellIncoming(const Position& pos, Position* r_shell_pos = nullptr, Direction* r_shell_possible_dir = nullptr, size_t shell_max_distance = 8) const;

@@ -9,7 +9,7 @@ public:
     explicit Printer(const std::vector<std::vector<Cell>>& grid) : grid_(grid) {}
 
     void print() const {
-        static_cast<const Derived*>(this)->print_impl();
+        static_cast<const Derived*>(this)->printImpl();
     }
 
     const std::vector<std::vector<Cell>>& grid() const {

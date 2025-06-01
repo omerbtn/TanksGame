@@ -9,7 +9,7 @@ class DefaultPrinter : public Printer<DefaultPrinter> {
 public:
     using Printer::Printer;
 
-    void print_impl() const {
+    void printImpl() const {
         std::cout << "Game Board:" << std::endl;
 
         for (size_t y = 0; y < height(); ++y) {
@@ -25,17 +25,17 @@ public:
 
                 // Tanks
                 if (cell.has(ObjectType::Tank)) {
-                    const auto& tanks = cell.get_objects_by_type(ObjectType::Tank);
+                    const auto& tanks = cell.getObjectsByType(ObjectType::Tank);
                     if (!tanks.empty()) {
                         auto tank = std::static_pointer_cast<Tank>(tanks.front());  // Printing just one tank, couldn't be more
-                        to_print += std::to_string(tank->player_id());
+                        to_print += std::to_string(tank->playerId());
                         to_print += directionToArrow(tank->direction());
                     }
                 }
 
                 // Shells
                 if (cell.has(ObjectType::Shell)) {
-                    const auto& shells = cell.get_objects_by_type(ObjectType::Shell);
+                    const auto& shells = cell.getObjectsByType(ObjectType::Shell);
                     if (!shells.empty()) {
                         auto shell = std::static_pointer_cast<Shell>(shells.front());  // Printing just one shell, couldn't be more
                         to_print += "*";

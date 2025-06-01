@@ -14,14 +14,14 @@ ActionRequest SimpleAlgorithm::getActionImpl()
     {
         if constexpr (config::get<bool>("verbose_debug"))
         {
-            std::cout << "[SimpleAlgorithm] Evading a shell using: " << tank_action_to_string(*evade) << std::endl;
+            std::cout << "[SimpleAlgorithm] Evading a shell using: " << tankActionToString(*evade) << std::endl;
         }
         return *evade;
     }
 
     // Not under threat, check if we can shoot the opponent
     Position opponent_pos;
-    if (tank_->can_shoot() && hasLineOfSightToOpponent(tank_->position(), tank_->direction(), opponent_pos))
+    if (tank_->canShoot() && hasLineOfSightToOpponent(tank_->position(), tank_->direction(), opponent_pos))
     {
         // He is just in front of us, shoot him!
         if constexpr (config::get<bool>("verbose_debug"))

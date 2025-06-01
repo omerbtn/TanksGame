@@ -4,7 +4,7 @@
 #include "common/SatelliteView.h"
 
 // For what? We already have the dimensions x and y from ctor
-std::pair<size_t, size_t> get_dimensions_from_satellite(const SatelliteView& view) {
+std::pair<size_t, size_t> getDimensionsFromSatellite(const SatelliteView& view) {
     size_t width = 0, height = 0;
 
     // Find width
@@ -20,9 +20,9 @@ std::pair<size_t, size_t> get_dimensions_from_satellite(const SatelliteView& vie
     return {width, height};
 }
 
-std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const SatelliteView& view, int player_index, Position& curr_tank_pos)
+std::vector<std::vector<Cell>> reconstructGridFromSatelliteView(const SatelliteView& view, int player_index, Position& curr_tank_pos)
 {
-    auto [width, height] = get_dimensions_from_satellite(view);
+    auto [width, height] = getDimensionsFromSatellite(view);
 
     std::vector<std::vector<Cell>> grid(height, std::vector<Cell>(width));
 
@@ -34,22 +34,22 @@ std::vector<std::vector<Cell>> reconstruct_grid_from_satellite_view(const Satell
 
             switch (ch) {
                 case '#':
-                    cell.add_object(std::make_shared<Wall>());
+                    cell.addObject(std::make_shared<Wall>());
                     break;
                 case '@':
-                    cell.add_object(std::make_shared<Mine>());
+                    cell.addObject(std::make_shared<Mine>());
                     break;
                 case '*':
-                    cell.add_object(std::make_shared<Shell>(Direction::U));
+                    cell.addObject(std::make_shared<Shell>(Direction::U));
                     break;
                 case '1':
-                    cell.add_object(std::make_shared<Tank>(1, 0, pos, Direction::L, 0));
+                    cell.addObject(std::make_shared<Tank>(1, 0, pos, Direction::L, 0));
                     break;
                 case '2':
-                    cell.add_object(std::make_shared<Tank>(2, 0, pos, Direction::R, 0));
+                    cell.addObject(std::make_shared<Tank>(2, 0, pos, Direction::R, 0));
                     break;
                 case '%':
-                    cell.add_object(std::make_shared<Tank>(player_index, 0, pos, Direction::L, 0));
+                    cell.addObject(std::make_shared<Tank>(player_index, 0, pos, Direction::L, 0));
                     curr_tank_pos = pos;
                     break;
                 default:

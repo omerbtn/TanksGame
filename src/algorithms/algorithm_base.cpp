@@ -22,7 +22,7 @@ void AlgorithmBase::printGrid() const
 
 bool AlgorithmBase::hasLineOfSightToOpponent(const Position& start, Direction dir, Position& r_opponent_pos) const
 {
-    Position current = forward_position(start, dir, width_, height_);
+    Position current = forwardPosition(start, dir, width_, height_);
 
     for (size_t steps = 0; steps < std::max(width_, height_); ++steps) 
     {
@@ -39,8 +39,8 @@ bool AlgorithmBase::hasLineOfSightToOpponent(const Position& start, Direction di
         }
         else if (cell.has(ObjectType::Tank)) 
         {
-            auto tank = std::static_pointer_cast<Tank>(cell.get_object_by_type(ObjectType::Tank));
-            if (tank->player_id() != player_index_) 
+            auto tank = std::static_pointer_cast<Tank>(cell.getObjectByType(ObjectType::Tank));
+            if (tank->playerId() != player_index_) 
             {
                 r_opponent_pos = current;
                 return true; // Found an opponent
@@ -53,7 +53,7 @@ bool AlgorithmBase::hasLineOfSightToOpponent(const Position& start, Direction di
         // We allow mines and shells in the way, as mine doesn't block line of sight and shell will probably go away
         // until our shell arrives. If not, shell is moving towards us and shooting at it might be a good idea.
          
-        current = forward_position(current, dir, width_, height_);
+        current = forwardPosition(current, dir, width_, height_);
     }
 
     return false; // No opponent found
@@ -75,7 +75,7 @@ bool AlgorithmBase::isShellIncoming(const Position& pos, Position* r_shell_pos, 
         // Check all directions
         for (const auto& dir : directions_to_check) 
         {
-            Position current = backward_position(pos, dir, width_, height_, steps);
+            Position current = backwardPosition(pos, dir, width_, height_, steps);
             const Cell& cell = grid_[current.first][current.second];
 
             if (cell.has(ObjectType::Wall)) 
@@ -140,7 +140,7 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
         {
             // We can just move forward and evade the shell
             // Before, we need to check if the next cell is safe
-            Position next_pos = forward_position(tank_pos, tank_dir, width_, height_);
+            Position next_pos = forwardPosition(tank_pos, tank_dir, width_, height_);
             const Cell& next_cell = grid_[next_pos.first][next_pos.second];
 
             if (next_cell.empty() && !isShellIncoming(next_pos, nullptr, nullptr, shell_max_distance))
@@ -168,7 +168,7 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
             if (new_dir != shell_possible_dir && 
                 new_dir != getOppositeDirection(shell_possible_dir))  
             {
-                Position new_pos = forward_position(tank_pos, new_dir, width_, height_);
+                Position new_pos = forwardPosition(tank_pos, new_dir, width_, height_);
                 const Cell& new_cell = grid_[new_pos.first][new_pos.second];
 
                 // Check if the next position after rotation is safe
@@ -178,7 +178,7 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
                     // Rotate away from the shell, so next turn we can move forward
                     if constexpr (config::get<bool>("verbose_debug"))
                     {
-                        std::cout << "[AlgorithmBase] Evading shell by rotating " << tank_action_to_string(rotate_action) 
+                        std::cout << "[AlgorithmBase] Evading shell by rotating " << tankActionToString(rotate_action) 
                                   << " so next turn we can move forward from " << tank_pos << " to " << new_pos << std::endl;
                     }
                     return rotate_action;
@@ -222,7 +222,7 @@ void AlgorithmBase::updateBattleInfo(BattleInfo& info)
     height_ = grid_.size();
 
     Position tank_pos = concrete_info.getTankPosition();
-    auto tank_obj = grid_[tank_pos.first][tank_pos.second].get_object_by_type(ObjectType::Tank);
+    auto tank_obj = grid_[tank_pos.first][tank_pos.second].getObjectByType(ObjectType::Tank);
     auto new_tank = std::static_pointer_cast<Tank>(tank_obj);
 
     // If we already have a tank, transfer all runtime state to the new tank object
@@ -232,12 +232,12 @@ void AlgorithmBase::updateBattleInfo(BattleInfo& info)
     }
     tank_ = new_tank;
 
-    concrete_info.setTankInformation(tank_->tank_id(), tank_->direction());
+    concrete_info.setTankInformation(tank_->tankId(), tank_->direction());
 }
 
-void AlgorithmBase::handle_tank_movement(const ActionRequest action) 
+void AlgorithmBase::handleTankMovement(const ActionRequest action) 
 {
-    tank_->decrease_cooldown();
+    tank_->decreaseCooldown();
 
     // TODO: Handle MoveBackward. Not sure it's actually needed
     switch (action) 
@@ -245,13 +245,13 @@ void AlgorithmBase::handle_tank_movement(const ActionRequest action)
         case ActionRequest::MoveForward: 
         {
             Position current_pos = tank_->position();
-            Position new_pos = forward_position(current_pos, tank_->direction(), width_, height_);
+            Position new_pos = forwardPosition(current_pos, tank_->direction(), width_, height_);
 
             Cell& current_cell = grid_[current_pos.first][current_pos.second];
             Cell& new_cell = grid_[new_pos.first][new_pos.second];
 
-            new_cell.add_object(tank_);
-            current_cell.remove_object(tank_);
+            new_cell.addObject(tank_);
+            current_cell.removeObject(tank_);
             tank_->position() = new_pos;
             break;
         }
@@ -266,7 +266,7 @@ void AlgorithmBase::handle_tank_movement(const ActionRequest action)
         }
         case ActionRequest::Shoot: 
         {
-            if (tank_->can_shoot()) {
+            if (tank_->canShoot()) {
                 tank_->shoot();
             }
 
@@ -324,6 +324,6 @@ ActionRequest AlgorithmBase::getAction()
         turns_till_next_battle_info_ = config::get<size_t>("battle_info_interval") - 1; // Reset the counter
     }
 
-    handle_tank_movement(action);
+    handleTankMovement(action);
     return action;
 }

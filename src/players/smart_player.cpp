@@ -23,13 +23,13 @@ std::vector<std::vector<Cell>> SmartPlayer::reconstructGridFromSatelliteView(con
             switch (ch) 
             {
                 case '#':
-                    cell.add_object(std::make_shared<Wall>());
+                    cell.addObject(std::make_shared<Wall>());
                     break;
                 case '@':
-                    cell.add_object(std::make_shared<Mine>());
+                    cell.addObject(std::make_shared<Mine>());
                     break;
                 case '*':
-                    cell.add_object(std::make_shared<Shell>(Direction::U));  // Direction is unreliable
+                    cell.addObject(std::make_shared<Shell>(Direction::U));  // Direction is unreliable
                     break;
                 case '1':
                 case '2':
@@ -40,10 +40,10 @@ std::vector<std::vector<Cell>> SmartPlayer::reconstructGridFromSatelliteView(con
                 case '7':
                 case '8':
                 case '9':
-                    cell.add_object(std::make_shared<Tank>(ch - '0', 0, pos, getSeedDirection(ch - '0'), num_shells_));  // Direction is unreliable unless it's first turn
+                    cell.addObject(std::make_shared<Tank>(ch - '0', 0, pos, getSeedDirection(ch - '0'), num_shells_));  // Direction is unreliable unless it's first turn
                     break;
                 case '%':
-                    cell.add_object(std::make_shared<Tank>(player_index_, 0, pos, getSeedDirection(player_index_), num_shells_));  // Direction is unreliable unless it's first turn
+                    cell.addObject(std::make_shared<Tank>(player_index_, 0, pos, getSeedDirection(player_index_), num_shells_));  // Direction is unreliable unless it's first turn
                     r_tank_pos = pos;
                     break;
                 default:
@@ -176,7 +176,7 @@ void SmartPlayer::getShellPossibleDirectionsForTurnsPassed(const std::vector<std
                 // and we want this function to catch all possible directions
                 if (isBlockedByWall(prev_grid, curr_pos, dir, 2 * turns_passed)) continue;
 
-                Position prev_pos = backward_position(curr_pos, dir, width_, height_, 2 * turns_passed);
+                Position prev_pos = backwardPosition(curr_pos, dir, width_, height_, 2 * turns_passed);
                 if (prev_grid[prev_pos.first][prev_pos.second].has(ObjectType::Shell)) 
                 {
                     // If we have previous knowledge, intersect

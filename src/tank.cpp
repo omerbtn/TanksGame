@@ -22,12 +22,7 @@ const Position& Tank::position() const
     return position_;
 }
 
-int Tank::id() const
-{
-    return player_id_;
-}
-
-bool Tank::is_alive() const
+bool Tank::isAlive() const
 {
     return alive_;
 }
@@ -42,12 +37,12 @@ void Tank::destroy()
     alive_ = false;
 }
 
-void Tank::decrease_cooldown()
+void Tank::decreaseCooldown()
 {
     if (cooldown_ > 0) cooldown_--;
 }
 
-bool Tank::can_shoot() const
+bool Tank::canShoot() const
 {
     return cooldown_ == 0 && shells_ > 0 && backwait_ == 0;
 }
@@ -58,32 +53,32 @@ void Tank::shoot()
     shells_--;
 }
 
-bool Tank::is_backing() const
+bool Tank::isBacking() const
 {
     return backwait_ > 0;
 }
 
-void Tank::start_backwait()
+void Tank::startBackwait()
 {
     backwait_ = 2;
 }
 
-void Tank::tick_backwait()
+void Tank::tickBackwait()
 {
     if (backwait_ > 0) --backwait_;
 }
 
-void Tank::reset_backwait()
+void Tank::resetBackwait()
 {
     backwait_ = 0;
 }
 
-void Tank::continue_backing()
+void Tank::continueBacking()
 {
     backwait_ = 1;
 }
 
-bool Tank::ready_to_move_back() const
+bool Tank::readyToMoveBack() const
 {
     return backwait_ == 0;
 }

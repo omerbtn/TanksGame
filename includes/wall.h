@@ -9,7 +9,7 @@ class Wall : public GameObjectInterface
 {
 public:
     void weaken();
-    bool is_destroyed() const;
+    bool isDestroyed() const;
 
 private:
     virtual ObjectType type() const override;

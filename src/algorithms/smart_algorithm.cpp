@@ -28,12 +28,12 @@ bool SmartAlgorithm::isShellInPathDangerous(const Position& pos)
         for (int i = 0; i < 4; ++i)
         {
             // Check 4 steps in each direction, as we might need time to evade
-            current = forward_position(current, dir, width_, height_);
+            current = forwardPosition(current, dir, width_, height_);
             const Cell& cell = grid_[current.first][current.second];
 
             // Check for a shell moving towards the current position
             if (cell.has(ObjectType::Shell) &&
-                static_pointer_cast<Shell>(cell.get_object_by_type(ObjectType::Shell))->direction() == getOppositeDirection(dir))
+                static_pointer_cast<Shell>(cell.getObjectByType(ObjectType::Shell))->direction() == getOppositeDirection(dir))
             {
                 return true;
             }
@@ -117,7 +117,7 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
             if constexpr (config::get<bool>("verbose_debug"))
             {
                 std::cout << "[SmartAlgorithm] First move to execute: "
-                            << tank_action_to_string(parent[current].second) << std::endl;
+                            << tankActionToString(parent[current].second) << std::endl;
             }
 
             std::reverse(moves_reversed.begin(), moves_reversed.end());
@@ -127,7 +127,7 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
                 std::cout << "[SmartAlgorithm] Path to opponent: ";
                 for (size_t i = 0; i < moves_reversed.size(); ++i)
                 {
-                    std::cout << tank_action_to_string(moves_reversed[i]);
+                    std::cout << tankActionToString(moves_reversed[i]);
                     if (i + 1 < moves_reversed.size())
                         std::cout << " -> ";
                 }
@@ -141,7 +141,7 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
         }
 
         // Try moving forward if safe
-        Position next_pos = forward_position(current.pos, current.dir, width_, height_);
+        Position next_pos = forwardPosition(current.pos, current.dir, width_, height_);
         const Cell& nextCell = grid_[next_pos.first][next_pos.second];
 
         // Check if the next cell is empty and not threatened by a shell
@@ -220,7 +220,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
     {
         if constexpr (config::get<bool>("verbose_debug"))
         {
-            std::cout << "[SmartAlgorithm] Evading a shell using: " << tank_action_to_string(*evade) << std::endl;
+            std::cout << "[SmartAlgorithm] Evading a shell using: " << tankActionToString(*evade) << std::endl;
         }
         cached_path_ = {}; // We are moving, so invalidate path
         return *evade;
@@ -230,7 +230,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
     Position opponent_pos;
     if (hasLineOfSightToOpponent(tank_->position(), tank_->direction(), opponent_pos)) 
     {
-        if (tank_->can_shoot())
+        if (tank_->canShoot())
         {
             // The opponent is in front of us and we can shoot him
             if constexpr (config::get<bool>("verbose_debug"))
@@ -248,7 +248,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
         // If the oppnent moved, invalidate path
         const Cell& target_cell = grid_[cached_target_.first][cached_target_.second];
         if (!target_cell.has(ObjectType::Tank) ||
-            static_pointer_cast<Tank>(target_cell.get_object_by_type(ObjectType::Tank))->tank_id() == player_index_)
+            static_pointer_cast<Tank>(target_cell.getObjectByType(ObjectType::Tank))->tankId() == player_index_)
         {
             if constexpr (config::get<bool>("verbose_debug"))
             {
@@ -263,7 +263,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
         {
             if constexpr (config::get<bool>("verbose_debug"))
             {
-                std::cout << "[SmartAlgorithm] Following cached path, executing action: " << tank_action_to_string(cached_path_.front()) << std::endl;
+                std::cout << "[SmartAlgorithm] Following cached path, executing action: " << tankActionToString(cached_path_.front()) << std::endl;
             }
     
             ActionRequest next_action = cached_path_.front();
@@ -276,7 +276,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
         {
             if constexpr (config::get<bool>("verbose_debug"))
             {
-                std::cout << "[SmartAlgorithm] Computed path using BFS, executing action: " << tank_action_to_string(*move) << std::endl;
+                std::cout << "[SmartAlgorithm] Computed path using BFS, executing action: " << tankActionToString(*move) << std::endl;
             }
     
             cached_path_.pop(); // Remove the first action from the path (== move)

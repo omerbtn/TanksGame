@@ -46,7 +46,7 @@ std::string directionToString(Direction dir)
     }
 }
 
-std::string tank_action_to_string(ActionRequest action)
+std::string tankActionToString(ActionRequest action)
 {
     switch (action)
     {
@@ -79,7 +79,7 @@ std::string directionToArrow(Direction dir)
     }
 }
 
-Position forward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+Position forwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
 {
     static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
         {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
@@ -92,9 +92,9 @@ Position forward_position(const Position& pos, Direction dir, size_t width, size
     return Position(new_x, new_y);
 }
 
-Position backward_position(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+Position backwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
 {
-    return forward_position(pos, getOppositeDirection(dir), width, height, steps);
+    return forwardPosition(pos, getOppositeDirection(dir), width, height, steps);
 }
 
 Direction getSeedDirection(int player_index)
@@ -126,7 +126,7 @@ bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position&
     Position pos = from;
     for (size_t i = 0; i < steps; ++i)
     {
-        pos = backward_position(pos, dir, width, height);
+        pos = backwardPosition(pos, dir, width, height);
         if (grid[pos.first][pos.second].has(ObjectType::Wall))
         {
             return true;

@@ -11,11 +11,11 @@ public:
                     size_t max_steps, size_t num_shells)
         : grid_(grid), tank_(player_id, tank_id, position, direction, num_shells) {}
 
-    std::vector<std::vector<Cell>> get_grid() const {
+    std::vector<std::vector<Cell>> getGrid() const {
         return grid_;
     }
 
-    Tank& get_tank() {
+    Tank& getTank() {
         return tank_;
     }
 

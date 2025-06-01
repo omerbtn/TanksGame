@@ -21,7 +21,7 @@ class AnsiPrinter : public Printer<AnsiPrinter> {
 public:
     using Printer::Printer;
 
-    void print_impl() const {
+    void printImpl() const {
         std::cout << "Game Board:" << std::endl;
 
         for (size_t y = 0; y < height(); ++y) {
@@ -37,17 +37,17 @@ public:
 
                 // Tanks
                 if (cell.has(ObjectType::Tank)) {
-                    const auto& tanks = cell.get_objects_by_type(ObjectType::Tank);
+                    const auto& tanks = cell.getObjectsByType(ObjectType::Tank);
                     if (!tanks.empty()) {
                         auto tank = std::static_pointer_cast<Tank>(tanks.front());  // Printing just one tank, couldn't be more
-                        to_print += std::string(player_color(tank->player_id())) + std::to_string(tank->player_id()) +
+                        to_print += std::string(playerColor(tank->playerId())) + std::to_string(tank->playerId()) +
                                     directionToArrow(tank->direction()) + RESET;
                     }
                 }
 
                 // Shells
                 if (cell.has(ObjectType::Shell)) {
-                    const auto& shells = cell.get_objects_by_type(ObjectType::Shell);
+                    const auto& shells = cell.getObjectsByType(ObjectType::Shell);
                     if (!shells.empty()) {
                         auto shell = std::static_pointer_cast<Shell>(shells.front());  // Printing just one shell, couldn't be more
                         to_print += std::string(YELLOW) + "*" + directionToArrow(shell->direction()) + RESET;
@@ -65,7 +65,7 @@ public:
     }
 
 private:
-    static const char* player_color(int player_id) {
+    static const char* playerColor(int player_id) {
         switch (player_id) {
             case 1:
                 return GREEN;

@@ -23,26 +23,26 @@ class Board
 public:
     Board(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory);
 
-    GameInfo load_from_file(const std::string& filename);
+    GameInfo loadFromFile(const std::string& filename);
     void print() const;
 
-    const std::shared_ptr<Tank> get_tank(int player_id, int tank_id) const;
-    const std::vector<std::shared_ptr<Tank>>& get_player_tanks(int player_id) const;
+    const std::shared_ptr<Tank> getTank(int player_id, int tank_id) const;
+    const std::vector<std::shared_ptr<Tank>>& getPlayerTanks(int player_id) const;
 
-    const Cell& get_cell(Position position) const;
-    size_t get_height() const;
-    size_t get_width() const;
+    const Cell& getCell(Position position) const;
+    size_t getHeight() const;
+    size_t getWidth() const;
     std::vector<std::vector<Cell>>& grid();
-    const std::vector<std::vector<Cell>>& grid() const;
-    bool execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action);
-    void do_shells_step(bool shells_only = true);
+    const std::vector<std::vector<Cell>>& getGrid() const;
+    bool executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action);
+    void doShellsStep(bool shells_only = true);
     void update();
-    TankAlgorithm* get_algorithm(int player_id, int tank_id);
+    TankAlgorithm* getAlgorithm(int player_id, int tank_id);
 
 private:
-    void update_active_shells();
-    void resolve_collisions(Cell& cell);
-    void on_explosion(Cell& cell);
+    void updateActiveShells();
+    void resolveCollisions(Cell& cell);
+    void onExplosion(Cell& cell);
 
     const PlayerFactory& playerFactory_;
     const TankAlgorithmFactory& algorithmFactory_;

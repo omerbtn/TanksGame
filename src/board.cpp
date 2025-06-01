@@ -32,11 +32,11 @@ std::vector<std::vector<Cell>>& Board::grid()
     return grid_;
 }
 
-const std::vector<std::vector<Cell>>& Board::grid() const {
+const std::vector<std::vector<Cell>>& Board::getGrid() const {
     return grid_;
 }
 
-TankAlgorithm* Board::get_algorithm(int player_id, int tank_id) {
+TankAlgorithm* Board::getAlgorithm(int player_id, int tank_id) {
     auto it = algorithms_.find(std::make_pair(player_id, tank_id));
     if (it != algorithms_.end()) {
         return it->second.get();
@@ -45,7 +45,7 @@ TankAlgorithm* Board::get_algorithm(int player_id, int tank_id) {
     return nullptr;
 }
 
-GameInfo Board::load_from_file(const std::string& filename) 
+GameInfo Board::loadFromFile(const std::string& filename) 
 {
     InputErrorLogger error_logger;
     std::ifstream file(filename);
@@ -177,7 +177,7 @@ void Board::print() const
     printer.print();
 }
 
-const std::shared_ptr<Tank> Board::get_tank(int player_id, int tank_id) const
+const std::shared_ptr<Tank> Board::getTank(int player_id, int tank_id) const
 {
     if (auto it = player_tanks_.find(player_id); it != player_tanks_.end())
     {
@@ -191,7 +191,7 @@ const std::shared_ptr<Tank> Board::get_tank(int player_id, int tank_id) const
     return nullptr;
 }
 
-const std::vector<std::shared_ptr<Tank>>& Board::get_player_tanks(int player_id) const
+const std::vector<std::shared_ptr<Tank>>& Board::getPlayerTanks(int player_id) const
 {
     static const std::vector<std::shared_ptr<Tank>> empty_vector;
 
@@ -203,38 +203,39 @@ const std::vector<std::shared_ptr<Tank>>& Board::get_player_tanks(int player_id)
     return empty_vector;  // Return empty vector if invalid player id
 }
 
-bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action)
+bool Board::executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action)
 {
-    if (!tank || !tank->is_alive())
+    if (!tank || !tank->isAlive())
     {
         if constexpr (config::get<bool>("verbose_debug"))
-            std::cout << "[Board] Tank " << (tank ? (std::to_string(tank->tank_id()) + " of Player " + std::to_string(tank->player_id())) : "") 
+            std::cout << "[Board] Tank " << (tank ? (std::to_string(tank->tankId()) + " of Player " + std::to_string(tank->playerId())) : "") 
                       << " is not alive or invalid." << std::endl; 
         return false;
     } 
 
-    tank->decrease_cooldown();
+    tank->decreaseCooldown();
 
     Position current_pos = tank->position();
     Position new_pos;
 
-    // TODO: Should handle MoveBackward better, if backwait is over we should move backward unless we're in MoveForward.
+    // TODO: Should fix MoveBackward, if backwait is over we should move backward unless we're in MoveForward.
     // Currently, we move backward just if we are in MoveBackward.
+    // Also, after performing the move backward other actions are ignored for one turn with no reason.
     switch (action)
     {
         case ActionRequest::MoveForward:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing MoveForward for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing MoveForward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            if (tank->is_backing()) 
+            if (tank->isBacking()) 
             {
                 // Only move forward action is able to reset the back movement
-                tank->reset_backwait();
+                tank->resetBackwait();
                 return true;
             }
 
-            new_pos = forward_position(current_pos, tank->direction(), width_, height_);
+            new_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
 
             Cell& current_cell = grid_[current_pos.first][current_pos.second];
             Cell& new_cell = grid_[new_pos.first][new_pos.second];
@@ -245,8 +246,8 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
                 return false;
             }
 
-            new_cell.add_object(tank);
-            current_cell.remove_object(tank);
+            new_cell.addObject(tank);
+            current_cell.removeObject(tank);
             tank->position() = new_pos;
             cells_to_update_.insert(new_pos);
 
@@ -260,20 +261,20 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::MoveBackward:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing MoveBackward for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing MoveBackward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            if (!tank->is_backing())
+            if (!tank->isBacking())
             {
-                tank->start_backwait();
+                tank->startBackwait();
                 return true;
             }
             else
             {
-                tank->tick_backwait();  // keep counting
-                if (tank->ready_to_move_back())
+                tank->tickBackwait();  // keep counting
+                if (tank->readyToMoveBack())
                 {
-                    tank->continue_backing();
-                    new_pos = backward_position(tank->position(), tank->direction(), width_, height_);
+                    tank->continueBacking();
+                    new_pos = backwardPosition(tank->position(), tank->direction(), width_, height_);
 
                     Cell& current_cell = grid_[current_pos.first][current_pos.second];
                     Cell& new_cell = grid_[new_pos.first][new_pos.second];
@@ -283,8 +284,8 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
                         return false;
                     }
 
-                    new_cell.add_object(tank);
-                    current_cell.remove_object(tank);
+                    new_cell.addObject(tank);
+                    current_cell.removeObject(tank);
                     tank->position() = new_pos;
                     cells_to_update_.insert(new_pos);
 
@@ -305,10 +306,10 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::RotateRight90:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing " << tank_action_to_string(action) << " for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing " << tankActionToString(action) << " for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            bool is_backing = tank->is_backing();
-            tank->tick_backwait();
+            bool is_backing = tank->isBacking();
+            tank->tickBackwait();
             if (is_backing) {
                 return false;
             }
@@ -320,17 +321,17 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::Shoot:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing Shoot for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing Shoot for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            tank->tick_backwait();
+            tank->tickBackwait();
 
-            if (tank->can_shoot())
+            if (tank->canShoot())
             {
-                Position shell_pos = forward_position(current_pos, tank->direction(), width_, height_);
+                Position shell_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
                 auto& cell = grid_[shell_pos.first][shell_pos.second];
                 tank->shoot();
                 std::shared_ptr<Shell> shell = std::make_shared<Shell>(tank->direction());
-                cell.add_object(shell);
+                cell.addObject(shell);
                 active_shells_.emplace_back(shell_pos, shell);
                 cells_to_update_.insert(shell_pos);
                 return true;
@@ -342,28 +343,28 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::GetBattleInfo:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            tank->tick_backwait();
+            tank->tickBackwait();
 
-            auto player_it = player_tanks_.find(tank->player_id());
+            auto player_it = player_tanks_.find(tank->playerId());
             if (player_it == player_tanks_.end()) 
             {
                 // Player not found, return false
                 if constexpr (config::get<bool>("verbose_debug"))
-                    std::cerr << "[Board] Player " << tank->player_id() << " not found for GetBattleInfo." << std::endl;
+                    std::cerr << "[Board] Player " << tank->playerId() << " not found for GetBattleInfo." << std::endl;
                 return false;
             }
 
             // Provide satellite view to the player
             BoardSatelliteView satelliteView(prev_grid_, tank->position());
-            auto algorithm = get_algorithm(tank->player_id(), tank->tank_id());
+            auto algorithm = getAlgorithm(tank->playerId(), tank->tankId());
             if (!algorithm) 
             {
                 // Algorithm not found, return false
                 if constexpr (config::get<bool>("verbose_debug"))
-                    std::cerr << "[Board] Algorithm not found for Player " << tank->player_id() 
-                              << " Tank " << tank->tank_id() << " for GetBattleInfo." << std::endl;
+                    std::cerr << "[Board] Algorithm not found for Player " << tank->playerId() 
+                              << " Tank " << tank->tankId() << " for GetBattleInfo." << std::endl;
                 return false;
             }
 
@@ -375,9 +376,9 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
         case ActionRequest::DoNothing:
         {
             if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing DoNothing for Tank " << tank->tank_id() << " of Player " << tank->player_id() << std::endl;
+                std::cout << "[Board] Executing DoNothing for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
 
-            tank->tick_backwait();
+            tank->tickBackwait();
 
             // Do nothing is always legal
             return true;
@@ -389,14 +390,14 @@ bool Board::execute_tank_action(std::shared_ptr<Tank> tank, ActionRequest action
 }
 
 // Moves all the shells one step forward, does not resolve collisions (besides crossing shells)
-void Board::update_active_shells()
+void Board::updateActiveShells()
 {
     std::vector<std::tuple<Position, Position, std::shared_ptr<Shell>>> moves;  // (from, to, shell)
 
     // First pass: prepeare moves
     for (const auto& [pos, shell] : active_shells_)
     {
-        Position new_pos = forward_position(pos, shell->direction(), width_, height_);
+        Position new_pos = forwardPosition(pos, shell->direction(), width_, height_);
         moves.emplace_back(pos, new_pos, shell);
     }
 
@@ -422,10 +423,10 @@ void Board::update_active_shells()
     // Second pass: move shells on the board, excluding removed shells
     for (auto& [from, to, shell] : moves)
     {
-        grid_[from.first][from.second].remove_object(shell);
+        grid_[from.first][from.second].removeObject(shell);
         if (shells_to_remove.count(shell) == 0)
         {
-            grid_[to.first][to.second].add_object(shell);
+            grid_[to.first][to.second].addObject(shell);
             cells_to_update_.insert(to);
 
             // Update the position in active_shells_
@@ -447,33 +448,33 @@ void Board::update_active_shells()
                          active_shells_.end());
 }
 
-void Board::resolve_collisions(Cell& cell)
+void Board::resolveCollisions(Cell& cell)
 {
     if ((((cell.has(ObjectType::Shell) && !cell.has(ObjectType::Mine)) ||
           (!cell.has(ObjectType::Shell) && cell.has(ObjectType::Mine))) &&
-           cell.get_objects_count() > 1) ||
-          (cell.has(ObjectType::Shell) && cell.has(ObjectType::Mine) && cell.get_objects_count() > 2)) {
+           cell.getObjectsCount() > 1) ||
+          (cell.has(ObjectType::Shell) && cell.has(ObjectType::Mine) && cell.getObjectsCount() > 2)) {
         // If there's shell or mine and at least one another object, we have an explosion
         // If there're both and at least one another object, we have an explosion
         // Want to allow shell and mine to be in the same cell without exploding
-        on_explosion(cell);
+        onExplosion(cell);
     }
 
-    else if (cell.get_objects_by_type(ObjectType::Tank).size() > 1)
+    else if (cell.getObjectsByType(ObjectType::Tank).size() > 1)
     {
         // Two (or more) tanks collided, all are destroyed
-        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank))
+        for (auto& tank : cell.getObjectsByType(ObjectType::Tank))
         {
             auto tank_ptr = std::static_pointer_cast<Tank>(tank);
             tank_ptr->destroy();
         }
 
         // Remove all tanks from the cell
-        cell.remove_objects_by_type(ObjectType::Tank);
+        cell.removeObjectsByType(ObjectType::Tank);
     }
 }
 
-void Board::on_explosion(Cell& cell)
+void Board::onExplosion(Cell& cell)
 {
     // We have an explosion, all the objects must get hurt
 
@@ -482,11 +483,11 @@ void Board::on_explosion(Cell& cell)
     // Weaken wall if exists
     if (cell.has(ObjectType::Wall))
     {
-        for (auto& wall : cell.get_objects_by_type(ObjectType::Wall))
+        for (auto& wall : cell.getObjectsByType(ObjectType::Wall))
         {
             auto wall_ptr = std::static_pointer_cast<Wall>(wall);
             wall_ptr->weaken();
-            if (wall_ptr->is_destroyed())
+            if (wall_ptr->isDestroyed())
             {
                 objects_to_remove.push_back(wall);
             }
@@ -496,7 +497,7 @@ void Board::on_explosion(Cell& cell)
     // Destroy all tanks
     if (cell.has(ObjectType::Tank))
     {
-        for (auto& tank : cell.get_objects_by_type(ObjectType::Tank))
+        for (auto& tank : cell.getObjectsByType(ObjectType::Tank))
         {
             auto tank_ptr = std::static_pointer_cast<Tank>(tank);
             tank_ptr->destroy();
@@ -507,7 +508,7 @@ void Board::on_explosion(Cell& cell)
     // Destroy all shells
     if (cell.has(ObjectType::Shell))
     {
-        for (auto& shell : cell.get_objects_by_type(ObjectType::Shell)) {
+        for (auto& shell : cell.getObjectsByType(ObjectType::Shell)) {
             auto shell_ptr = std::static_pointer_cast<Shell>(shell);
 
             // Remove the shell from the active shells list
@@ -529,7 +530,7 @@ void Board::on_explosion(Cell& cell)
     // Destroy mine if exists
     if (cell.has(ObjectType::Mine))
     {
-        for (auto& mine : cell.get_objects_by_type(ObjectType::Mine))
+        for (auto& mine : cell.getObjectsByType(ObjectType::Mine))
         {
             objects_to_remove.push_back(mine);
         }
@@ -538,14 +539,14 @@ void Board::on_explosion(Cell& cell)
     // Remove all collected objects safely, to avoid invalidating iterators
     for (auto& object : objects_to_remove)
     {
-        cell.remove_object(object);
+        cell.removeObject(object);
     }
 }
 
-void Board::do_shells_step(bool shells_only)
+void Board::doShellsStep(bool shells_only)
 {
     // Move all the shells one step forward
-    update_active_shells();
+    updateActiveShells();
 
     // Update the board and resolve collisions
     update();
@@ -575,10 +576,10 @@ void Board::update()
             {
                 // Tanks are crossing each other, both should be destroyed
                 tank1->destroy();
-                grid_[tank1->position().first][tank1->position().second].remove_object(tank1);
+                grid_[tank1->position().first][tank1->position().second].removeObject(tank1);
 
                 tank2->destroy();
-                grid_[tank2->position().first][tank2->position().second].remove_object(tank2);
+                grid_[tank2->position().first][tank2->position().second].removeObject(tank2);
             }
         }
     }
@@ -589,26 +590,26 @@ void Board::update()
     // Resolve collisions for all the cells from this turn
     for (auto& cell_pos : cells_to_update_)
     {
-        resolve_collisions(grid_[cell_pos.first][cell_pos.second]);
+        resolveCollisions(grid_[cell_pos.first][cell_pos.second]);
     }
 
     // Clear the cells to update set for the next turn
     cells_to_update_.clear();
 }
 
-const Cell& Board::get_cell(Position position) const
+const Cell& Board::getCell(Position position) const
 {
     int x = position.first % width_;
     int y = position.second % height_;
     return grid_[x][y];
 }
 
-size_t Board::get_height() const
+size_t Board::getHeight() const
 {
     return height_;
 }
 
-size_t Board::get_width() const
+size_t Board::getWidth() const
 {
     return width_;
 }

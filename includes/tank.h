@@ -13,21 +13,20 @@ public:
 
     Position& position();
     const Position& position() const;
-    int id() const;  // Keeping just for compatibility with the old code, should replace with player_id() as this is just confusing
-    int player_id() const { return player_id_; }
-    int tank_id() const { return tank_id_; }
-    bool is_alive() const;
+    int playerId() const { return player_id_; }
+    int tankId() const { return tank_id_; }
+    bool isAlive() const;
     size_t ammo() const;
     void destroy();
-    void decrease_cooldown();
-    bool can_shoot() const;
+    void decreaseCooldown();
+    bool canShoot() const;
     void shoot();
-    bool is_backing() const;
-    void start_backwait();
-    void tick_backwait();
-    void reset_backwait();
-    void continue_backing();
-    bool ready_to_move_back() const;
+    bool isBacking() const;
+    void startBackwait();
+    void tickBackwait();
+    void resetBackwait();
+    void continueBacking();
+    bool readyToMoveBack() const;
     void copyRuntimeStateFrom(const Tank& other);
 
 private:

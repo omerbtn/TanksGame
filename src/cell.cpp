@@ -21,7 +21,7 @@ const Position& Cell::position() const
     return position_;
 }
 
-void Cell::add_object(std::shared_ptr<GameObjectInterface> object) 
+void Cell::addObject(std::shared_ptr<GameObjectInterface> object) 
 {
     if (object) 
     {
@@ -29,7 +29,7 @@ void Cell::add_object(std::shared_ptr<GameObjectInterface> object)
     }
 }
 
-void Cell::remove_object(std::shared_ptr<GameObjectInterface> object) 
+void Cell::removeObject(std::shared_ptr<GameObjectInterface> object) 
 {
     if (object) 
     {
@@ -51,13 +51,13 @@ void Cell::remove_object(std::shared_ptr<GameObjectInterface> object)
 }
 
 // Remove all objects of the specified type, can be usable sometimes
-void Cell::remove_objects_by_type(ObjectType type) 
+void Cell::removeObjectsByType(ObjectType type) 
 {
     objects_.erase(type);
 }
 
 // Return the first object of the specified type, don't use unless you know what you're doing
-std::shared_ptr<GameObjectInterface> Cell::get_object_by_type(ObjectType type) const 
+std::shared_ptr<GameObjectInterface> Cell::getObjectByType(ObjectType type) const 
 {
     auto it = objects_.find(type);
     if (it != objects_.end() && !it->second.empty()) 
@@ -77,7 +77,7 @@ bool Cell::empty() const
     return objects_.empty();
 }
 
-const std::vector<std::shared_ptr<GameObjectInterface>>& Cell::get_objects_by_type(ObjectType type) const
+const std::vector<std::shared_ptr<GameObjectInterface>>& Cell::getObjectsByType(ObjectType type) const
 {
     static const std::vector<std::shared_ptr<GameObjectInterface>> empty_vector;
     auto it = objects_.find(type);
@@ -88,7 +88,7 @@ const std::vector<std::shared_ptr<GameObjectInterface>>& Cell::get_objects_by_ty
     return empty_vector;  // Return an empty vector if the type is not found
 }
 
-size_t Cell::get_objects_count() const
+size_t Cell::getObjectsCount() const
 {
     size_t count = 0;
     for (const auto& [type, objects] : objects_) 

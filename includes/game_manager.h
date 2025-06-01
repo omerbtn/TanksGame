@@ -22,10 +22,10 @@ public:
     void run();
 
 private:
-    static std::pair<std::string, std::string> split_filename(const std::string& filename);
-    bool is_game_over() const;
-    void do_tanks_step();
-    std::string generate_result_message() const;
+    static std::pair<std::string, std::string> splitFilename(const std::string& filename);
+    bool isGameOver() const;
+    void doTanksStep();
+    std::string generateResultMessage() const;
 
     std::unique_ptr<Board> board_;
     std::vector<std::shared_ptr<Tank>> ordered_tanks_;

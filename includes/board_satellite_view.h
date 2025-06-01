@@ -34,9 +34,9 @@ public:
         
         if (cell.has(ObjectType::Tank)) 
         {
-            const auto tank_obj = cell.get_object_by_type(ObjectType::Tank);
+            const auto tank_obj = cell.getObjectByType(ObjectType::Tank);
             auto tank_ptr = std::static_pointer_cast<Tank>(tank_obj);
-            return '0' + tank_ptr->player_id();
+            return '0' + tank_ptr->playerId();
         }
         
         return ' ';

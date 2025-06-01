@@ -6,7 +6,7 @@ void Wall::weaken()
     hit_count++;
 }
 
-bool Wall::is_destroyed() const 
+bool Wall::isDestroyed() const 
 {
     return hit_count >= 2;
 }

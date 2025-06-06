@@ -232,7 +232,7 @@ void AlgorithmBase::updateBattleInfo(BattleInfo& info)
     }
     tank_ = new_tank;
 
-    concrete_info.setTankInformation(tank_->tankId(), tank_->direction());
+    extendBattleInfoProcessing(concrete_info);
 }
 
 void AlgorithmBase::handleTankMovement(const ActionRequest action) 
@@ -285,23 +285,33 @@ void AlgorithmBase::handleTankMovement(const ActionRequest action)
     }
 }
 
+void AlgorithmBase::printTankInfo() const
+{
+    // Print grid
+    std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known grid:" << std::endl;
+    printGrid();
+
+    // Print shells possible directions
+    std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known shell directions:" << std::endl;
+    for (const auto& [pos, directions] : shell_possible_directions_) 
+    {
+        std::cout << "Shell at " << pos << ": ";
+        for (const auto& dir : directions) 
+        {
+            std::cout << directionToString(dir) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // Print additional information
+    extendPrintTankInfo();
+}
+
 ActionRequest AlgorithmBase::getAction() 
 {    
     if constexpr (config::get<bool>("verbose_debug"))
     {
-        std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known grid:" << std::endl;
-        printGrid();
-
-        std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known shell directions:" << std::endl;
-        for (const auto& [pos, directions] : shell_possible_directions_) 
-        {
-            std::cout << "Shell at " << pos << ": ";
-            for (const auto& dir : directions) 
-            {
-                std::cout << directionToString(dir) << " ";
-            }
-            std::cout << std::endl;
-        }
+        printTankInfo();
     }
     
     if (turns_till_next_battle_info_ == 0) 

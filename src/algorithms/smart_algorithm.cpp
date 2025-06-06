@@ -15,31 +15,119 @@
 SmartAlgorithm::SmartAlgorithm(int player_index, int tank_index) 
     : AlgorithmBase(player_index, tank_index) {}
 
-// Currently unused, see 'AlgorithmBase::isShellIncoming'
-// Checks whether there is a dangerous shell approaching the given position
-bool SmartAlgorithm::isShellInPathDangerous(const Position& pos)
+void SmartAlgorithm::extendBattleInfoProcessing(SmartBattleInfo& info)
 {
-    for (int d = 0; d < 8; ++d)
+    // Merge all other tanks' reserved positions into one set
+    other_tanks_reserved_positions_.clear();
+    const auto& tanks_reserved_positions = info.getTanksReservedPositions();
+    for (const auto& [tank_id, positions] : tanks_reserved_positions)
     {
-        // Check all directions
-        Direction dir = static_cast<Direction>(d);
-        Position current = pos;
-        
-        for (int i = 0; i < 4; ++i)
+        if (tank_id != tank_index_) // Skip our own tank
         {
-            // Check 4 steps in each direction, as we might need time to evade
-            current = forwardPosition(current, dir, width_, height_);
-            const Cell& cell = grid_[current.first][current.second];
-
-            // Check for a shell moving towards the current position
-            if (cell.has(ObjectType::Shell) &&
-                static_pointer_cast<Shell>(cell.getObjectByType(ObjectType::Shell))->direction() == getOppositeDirection(dir))
-            {
-                return true;
-            }
+            other_tanks_reserved_positions_.insert(positions.begin(), positions.end());
         }
     }
-    return false;
+
+    // Invalidate cached path if it intersects with any reserved positions
+    auto our_reserved_positions = computeReservedPositions(false);
+    for (const auto& pos : our_reserved_positions)
+    {
+        if (other_tanks_reserved_positions_.count(pos))
+        {
+            // If our reserved positions intersects with other tanks' reserved positions, invalidate the cached path
+            cached_path_ = {};
+            break;
+        }
+    }
+    
+    // Update the player with our reserved positions
+    info.setTankReservedPositions(tank_index_, computeReservedPositions(true));
+}
+
+std::unordered_set<Position> SmartAlgorithm::computeReservedPositions(bool include_shooting_lane)
+{
+    if (cached_path_.empty()) return {}; // No cached path, nothing to reserve
+
+    std::unordered_set<Position> reserved_positions;
+    Position pos = tank_->position();
+    Direction dir = tank_->direction();
+    std::queue<ActionRequest> path_copy = cached_path_;
+
+    // Simulate the path to shooting position
+    while (!path_copy.empty())
+    {
+        auto action = path_copy.front();
+        path_copy.pop();
+        switch (action)
+        {
+            case ActionRequest::MoveForward:
+                pos = forwardPosition(pos, dir, width_, height_);
+                reserved_positions.insert(pos);
+                break;
+            case ActionRequest::RotateLeft90:
+            case ActionRequest::RotateRight90:
+            case ActionRequest::RotateLeft45:
+            case ActionRequest::RotateRight45:
+                dir = getDirectionAfterRotation(dir, action);
+                break;
+            default:
+                break; // Do nothing for other actions
+            // We currently don't handle MoveBackward as algorithm doesn't use it
+        }
+    }
+
+    if (include_shooting_lane)
+    {
+        // Add the shooting lane
+        pos = forwardPosition(pos, dir, width_, height_);
+        while (pos != cached_target_)
+        {
+            reserved_positions.insert(pos);
+            pos = forwardPosition(pos, dir, width_, height_);
+        }
+    }
+
+    return reserved_positions;
+}
+
+void SmartAlgorithm::extendPrintTankInfo() const
+{
+    // Print other tanks' reserved positions
+    std::cout << "[SmartAlgorithm] Player " << player_index_ 
+              << " Tank " << tank_index_ 
+              << " other tanks' reserved positions: ";
+    
+    size_t pos_count = 0;
+    size_t total_pos = other_tanks_reserved_positions_.size();
+    
+    for (const auto& pos : other_tanks_reserved_positions_)
+    {
+        std::cout << pos;
+        if (++pos_count < total_pos)
+            std::cout << ", ";
+    }
+    std::cout << std::endl;
+
+    // Print cached path
+    if (!cached_path_.empty())
+    {
+        std::cout << "[SmartAlgorithm] Player " << player_index_ 
+                  << " Tank " << tank_index_ 
+                  << " cached path: ";
+
+        std::queue<ActionRequest> path_copy = cached_path_;
+        size_t action_count = 0;
+        size_t total_actions = path_copy.size();
+        
+        while (!path_copy.empty())
+        {
+            std::cout << tankActionToString(path_copy.front());
+            path_copy.pop();
+            if (++action_count < total_actions)
+                std::cout << " -> ";
+        }
+        std::cout << std::endl;
+    }
 }
 
 std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
@@ -79,14 +167,6 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
         }
 
         BFSState current = q.front();
-
-        // if constexpr (config::get<bool>("verbose_debug"))
-        // {
-        //     // For debugging purposes
-        //     std::cout << "[SmartAlgorithm] Visiting state: Pos" << current.pos
-        //               << " Dir=" << directionToString(current.dir) << std::endl;
-        // }
-
         q.pop();
         
         // If we have line of sight to target, reconstruct the first move.
@@ -144,29 +224,15 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
         Position next_pos = forwardPosition(current.pos, current.dir, width_, height_);
         const Cell& nextCell = grid_[next_pos.first][next_pos.second];
 
-        // Check if the next cell is empty and not threatened by a shell
-        if (nextCell.empty() && !isShellIncoming(next_pos))
+        // Check if the next cell is empty, not threatened by a shell, and not reserved by another tank
+        if (nextCell.empty() && !isShellIncoming(next_pos) &&
+            !other_tanks_reserved_positions_.count(next_pos))
         {
             BFSState next_state{next_pos, current.dir};
-
-            // if constexpr (config::get<bool>("verbose_debug"))
-            // {
-            //     // For debugging purposes
-            //     std::cout << "[SmartAlgorithm] Considering move forward to Pos" << next_pos
-            //               << " Dir=" << directionToString(current.dir)
-            //               << " -> visited? " << (visited.count(next_state) ? "yes" : "no") << std::endl;
-            // }
 
             // Check if the next state has already been visited
             if (visited.find(next_state) == visited.end())
             {
-                // if constexpr (config::get<bool>("verbose_debug"))
-                // {
-                //     // For debugging purposes
-                //     std::cout << "[SmartAlgorithm] Pushing state: Pos" << next_state.pos
-                //               << " Dir=" << directionToString(next_state.dir) << std::endl;
-                // }
-
                 visited.insert(next_state);
                 parent[next_state] = {current, ActionRequest::MoveForward};
                 q.push(next_state);
@@ -179,24 +245,9 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
             Direction new_dir = getDirectionAfterRotation(current.dir, action);
             BFSState rotated_state{current.pos, new_dir};
 
-            // if constexpr (config::get<bool>("verbose_debug"))
-            // {
-            //     // For debugging purposes
-            //     std::cout << "[SmartAlgorithm] Considering rotation to Dir="
-            //               << directionToString(new_dir) << " from Pos" << current.pos
-            //               << " -> visited? " << (visited.count(rotated_state) ? "yes" : "no") << std::endl;
-            // }
-
             // Check if the next state has already been visited
             if (visited.find(rotated_state) == visited.end())
             {
-                // if constexpr (config::get<bool>("verbose_debug"))
-                // {
-                //     // For debugging purposes
-                //     std::cout << "[SmartAlgorithm] Pushing state: Pos" << rotated_state.pos
-                //     << " Dir=" << directionToString(rotated_state.dir) << std::endl;
-                // }
-
                 visited.insert(rotated_state);
                 parent[rotated_state] = {current, action};
                 q.push(rotated_state);
@@ -248,7 +299,7 @@ ActionRequest SmartAlgorithm::getActionImpl()
         // If the oppnent moved, invalidate path
         const Cell& target_cell = grid_[cached_target_.first][cached_target_.second];
         if (!target_cell.has(ObjectType::Tank) ||
-            static_pointer_cast<Tank>(target_cell.getObjectByType(ObjectType::Tank))->tankId() == player_index_)
+            static_pointer_cast<Tank>(target_cell.getObjectByType(ObjectType::Tank))->playerId() == player_index_)
         {
             if constexpr (config::get<bool>("verbose_debug"))
             {

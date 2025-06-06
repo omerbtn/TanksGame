@@ -20,13 +20,13 @@ public:
     Position& position();
     const Position& position() const;
 
-    void add_object(std::shared_ptr<GameObjectInterface> obj);
-    void remove_object(std::shared_ptr<GameObjectInterface> obj);
-    void remove_objects_by_type(ObjectType type);
+    void addObject(std::shared_ptr<GameObjectInterface> obj);
+    void removeObject(std::shared_ptr<GameObjectInterface> obj);
+    void removeObjectsByType(ObjectType type);
 
-    std::shared_ptr<GameObjectInterface> get_object_by_type(ObjectType type) const;
-    const std::vector<std::shared_ptr<GameObjectInterface>>& get_objects_by_type(ObjectType type) const;
-    size_t get_objects_count() const;
+    std::shared_ptr<GameObjectInterface> getObjectByType(ObjectType type) const;
+    const std::vector<std::shared_ptr<GameObjectInterface>>& getObjectsByType(ObjectType type) const;
+    size_t getObjectsCount() const;
     
     bool has(ObjectType type) const;
     bool empty() const;

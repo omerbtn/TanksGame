@@ -14,17 +14,22 @@ Arbel Katzir - 322647603
 
 1. **Create a build directory**:
 
+   ```sh
    mkdir build
-
    cd build
+   ```
 
 2. **Run CMake to configure the project**:
 
+   ```sh
    cmake ..
+   ```
 
 3. **Build the project**:
 
+   ```sh
    cmake --build .
+   ```
 
    This will generate the `tanks_game` executable in the root of the repository.
 
@@ -32,15 +37,19 @@ Arbel Katzir - 322647603
 
 From the root of the project (not inside `build/`), run:
 
+```sh
 ./tanks_game <path_to_board_file>
+```
 
 ## Input files
 
 The structure of the input files is as following:
 
+```
 Width Height 
 
 BOARD INFO
+```
 
 So the first line is used for indicating the dimensions of the board.
 The next lines are the board itself.

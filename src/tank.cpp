@@ -2,86 +2,93 @@
 
 #include "global_config.h"
 
-Tank::Tank(size_t id, Position position, Direction direction)
-    : MovableObject{direction}, id_{id}, position_{position}, shells_{config::get<size_t>("shell_per_tank")} {}
+Tank::Tank() : MovableObject(Direction::R) {}
 
-ObjectType Tank::type() const 
+Tank::Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
+    : MovableObject(direction), player_id_(player_id), tank_id_(tank_id), position_(position), shells_(num_shells) {}
+
+ObjectType Tank::type() const
 {
     return ObjectType::Tank;
 }
 
-Position& Tank::position() 
+Position& Tank::position()
 {
     return position_;
 }
 
-const Position& Tank::position() const 
+const Position& Tank::position() const
 {
     return position_;
 }
 
-size_t Tank::id() const 
-{
-    return id_;
-}
-
-bool Tank::is_alive() const 
+bool Tank::isAlive() const
 {
     return alive_;
 }
 
-size_t Tank::ammo() const 
+size_t Tank::ammo() const
 {
     return shells_;
 }
 
-void Tank::destroy() 
+void Tank::destroy()
 {
     alive_ = false;
 }
 
-void Tank::decrease_cooldown() 
+void Tank::decreaseCooldown()
 {
     if (cooldown_ > 0) cooldown_--;
 }
 
-bool Tank::can_shoot() const 
+bool Tank::canShoot() const
 {
     return cooldown_ == 0 && shells_ > 0 && backwait_ == 0;
 }
 
-void Tank::shoot() 
+void Tank::shoot()
 {
     cooldown_ = 4;
     shells_--;
 }
 
-bool Tank::is_backing() const 
+bool Tank::isBacking() const
 {
     return backwait_ > 0;
 }
 
-void Tank::start_backwait() 
+void Tank::startBackwait()
 {
     backwait_ = 2;
 }
 
-void Tank::tick_backwait() 
+void Tank::tickBackwait()
 {
     if (backwait_ > 0) --backwait_;
 }
 
-void Tank::reset_backwait() 
+void Tank::resetBackwait()
 {
     backwait_ = 0;
 }
 
-void Tank::continue_backing() 
+void Tank::continueBacking()
 {
     backwait_ = 1;
 }
 
-bool Tank::ready_to_move_back() const 
+bool Tank::readyToMoveBack() const
 {
     return backwait_ == 0;
+}
+
+void Tank::copyRuntimeStateFrom(const Tank& other)
+{
+    position_ = other.position_;
+    direction_ = other.direction_;
+    shells_ = other.shells_;
+    cooldown_ = other.cooldown_;
+    backwait_ = other.backwait_;
+    alive_ = other.alive_;
 }

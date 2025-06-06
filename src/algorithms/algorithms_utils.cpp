@@ -1,53 +1,30 @@
 #include "algorithms/algorithm_utils.h"
 
-
-bool hasLineOfSight(const Position& from, const Position& to, Direction dir, const Board& board)
-{
-    Position current = board.forward_position(from, dir);
-
-    for (size_t steps = 0; steps < std::max(board.get_width(), board.get_height()); ++steps)
-    {
-        if (current == to)
-            return true;
-
-        if (current == from)
-            return false; // We are back to the starting position
-
-        const Cell& cell = board.get_cell(current);
-        if (cell.has(ObjectType::Wall))
-            return false;
-
-        current = board.forward_position(current, dir);
-    }
-
-    return false;
-}
-
 Direction getOppositeDirection(Direction dir)
 {
     return static_cast<Direction>((static_cast<int>(dir) + 4) % 8);
 }
 
-Direction getDirectionAfterRotation(Direction dir, TankAction action)
+Direction getDirectionAfterRotation(Direction dir, ActionRequest action)
 {
     int offset = 0;
 
     switch (action)
     {
-        case TankAction::RotateLeft_1_8:
+        case ActionRequest::RotateLeft45:
             offset = -1;
             break;
-        case TankAction::RotateLeft_1_4:
+        case ActionRequest::RotateLeft90:
             offset = -2;
             break;
-        case TankAction::RotateRight_1_8:
+        case ActionRequest::RotateRight45:
             offset = 1;
             break;
-        case TankAction::RotateRight_1_4:
+        case ActionRequest::RotateRight90:
             offset = 2;
             break;
         default:
-            return dir; // No rotation
+            break; // No rotation
     }
 
     return static_cast<Direction>((static_cast<int>(dir) + offset + 8) % 8);
@@ -69,18 +46,19 @@ std::string directionToString(Direction dir)
     }
 }
 
-std::string tank_action_to_string(TankAction action)
+std::string tankActionToString(ActionRequest action)
 {
     switch (action)
     {
-        case TankAction::MoveForward: return "MoveForward";
-        case TankAction::MoveBackward: return "MoveBackward";
-        case TankAction::RotateLeft_1_8: return "RotateLeft_1_8";
-        case TankAction::RotateRight_1_8: return "RotateRight_1_8";
-        case TankAction::RotateLeft_1_4: return "RotateLeft_1_4";
-        case TankAction::RotateRight_1_4: return "RotateRight_1_4";
-        case TankAction::Shoot: return "Shoot";
-        case TankAction::Idle: return "Idle";
+        case ActionRequest::MoveForward: return "MoveForward";
+        case ActionRequest::MoveBackward: return "MoveBackward";
+        case ActionRequest::RotateLeft90: return "RotateLeft90";
+        case ActionRequest::RotateRight90: return "RotateRight90";
+        case ActionRequest::RotateLeft45: return "RotateLeft45";
+        case ActionRequest::RotateRight45: return "RotateRight45";
+        case ActionRequest::Shoot: return "Shoot";
+        case ActionRequest::GetBattleInfo: return "GetBattleInfo";
+        case ActionRequest::DoNothing: return "DoNothing";
         default: return "Unknown Action";
     }
 }
@@ -99,4 +77,69 @@ std::string directionToArrow(Direction dir)
         case Direction::UL: return "↖";
         default: return "?"; // Unknown direction
     }
+}
+
+Position forwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+{
+    static const std::unordered_map<Direction, std::pair<int, int>> deltas = {
+        {Direction::U, {0, -1}}, {Direction::UR, {1, -1}}, {Direction::R, {1, 0}},  {Direction::DR, {1, 1}},
+        {Direction::D, {0, 1}},  {Direction::DL, {-1, 1}}, {Direction::L, {-1, 0}}, {Direction::UL, {-1, -1}}};
+
+    auto [dx, dy] = deltas.at(dir);
+    int new_x = (pos.first + (dx + width) * steps) % width;
+    int new_y = (pos.second + (dy + height) * steps) % height;
+
+    return Position(new_x, new_y);
+}
+
+Position backwardPosition(const Position& pos, Direction dir, size_t width, size_t height, size_t steps) 
+{
+    return forwardPosition(pos, getOppositeDirection(dir), width, height, steps);
+}
+
+Direction getSeedDirection(int player_index)
+{
+    return (player_index % 2 == 1) ? Direction::L : Direction::R;
+}
+
+size_t getNumberOfShellsInGrid(const std::vector<std::vector<Cell>>& grid)
+{
+    size_t count = 0;
+    for (const auto& row : grid)
+    {
+        for (const auto& cell : row)
+        {
+            if (cell.has(ObjectType::Shell))
+            {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+// Moving *backward* from a position in a given direction, checking if there are walls blocking the path
+bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position& from, Direction dir, size_t steps)
+{
+    size_t width = grid[0].size();
+    size_t height = grid.size();
+    Position pos = from;
+    for (size_t i = 0; i < steps; ++i)
+    {
+        pos = backwardPosition(pos, dir, width, height);
+        if (grid[pos.first][pos.second].has(ObjectType::Wall))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+const std::vector<Direction>& getAllDirections()
+{
+    static const std::vector<Direction> all_directions = {
+        Direction::U, Direction::UR, Direction::R, Direction::DR,
+        Direction::D, Direction::DL, Direction::L, Direction::UL
+    };
+    return all_directions;
 }

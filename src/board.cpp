@@ -11,7 +11,7 @@
 #include "wall.h"
 #include "mine.h"
 #include "shell.h"
-#include "player.h"
+#include "Player.h"
 
 #include "algorithms/simple_algorithm.h"
 #include "algorithms/smart_algorithm.h"
@@ -182,7 +182,7 @@ const std::shared_ptr<Tank> Board::getTank(int player_id, int tank_id) const
     if (auto it = player_tanks_.find(player_id); it != player_tanks_.end())
     {
         const auto& tanks = it->second.second;
-        if (tank_id < tanks.size())
+        if (static_cast<size_t>(tank_id) < tanks.size())
         {
             return tanks[tank_id];
         }
@@ -216,177 +216,238 @@ bool Board::executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action)
     tank->decreaseCooldown();
 
     Position current_pos = tank->position();
-    Position new_pos;
 
-    // TODO: Should fix MoveBackward, if backwait is over we should move backward unless we're in MoveForward.
-    // Currently, we move backward just if we are in MoveBackward.
-    // Also, after performing the move backward other actions are ignored for one turn with no reason.
+    if (tank->waitingBackMove() && !tank->isBacking())
+    {
+        if (action == ActionRequest::MoveForward)
+        {
+            tank->resetBackwait();
+            return true;
+        }
+
+        tank->setWaitingBackMove(false);
+        return moveTankBackward(tank, current_pos);
+    }
+
     switch (action)
     {
         case ActionRequest::MoveForward:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing MoveForward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            if (tank->isBacking()) 
-            {
-                // Only move forward action is able to reset the back movement
-                tank->resetBackwait();
-                return true;
-            }
-
-            new_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
-
-            Cell& current_cell = grid_[current_pos.first][current_pos.second];
-            Cell& new_cell = grid_[new_pos.first][new_pos.second];
-
-            if (new_cell.has(ObjectType::Wall))
-            {
-                // Illegal move, can't move into walls
-                return false;
-            }
-
-            new_cell.addObject(tank);
-            current_cell.removeObject(tank);
-            tank->position() = new_pos;
-            cells_to_update_.insert(new_pos);
-
-            // Store the old position of the tank
-            // Should never be two tanks in the same position in a valid game state, so should be ok
-            old_tanks_positions_[current_pos] = tank;
-
-            return true;
+            return moveTankForward(tank, current_pos);
         }
 
         case ActionRequest::MoveBackward:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing MoveBackward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            if (!tank->isBacking())
-            {
-                tank->startBackwait();
-                return true;
-            }
-            else
-            {
-                tank->tickBackwait();  // keep counting
-                if (tank->readyToMoveBack())
-                {
-                    tank->continueBacking();
-                    new_pos = backwardPosition(tank->position(), tank->direction(), width_, height_);
-
-                    Cell& current_cell = grid_[current_pos.first][current_pos.second];
-                    Cell& new_cell = grid_[new_pos.first][new_pos.second];
-
-                    if (new_cell.has(ObjectType::Wall)) {
-                        // Illegal move, can't move into walls
-                        return false;
-                    }
-
-                    new_cell.addObject(tank);
-                    current_cell.removeObject(tank);
-                    tank->position() = new_pos;
-                    cells_to_update_.insert(new_pos);
-
-                    // Store the old position of the tank
-                    // Should never be two tanks in the same position in a valid game state, so should be ok
-                    old_tanks_positions_[current_pos] = tank;
-
-                    return true;
-                }
-            }
-
-            return true;  // still waiting
+            return handleBackMovement(tank, current_pos);
         }
 
-        case ActionRequest::RotateLeft45:   [[fallthrough]];
-        case ActionRequest::RotateRight45:  [[fallthrough]];
-        case ActionRequest::RotateLeft90:   [[fallthrough]];
+        case ActionRequest::RotateLeft45:
+            [[fallthrough]];
+        case ActionRequest::RotateRight45:
+            [[fallthrough]];
+        case ActionRequest::RotateLeft90:
+            [[fallthrough]];
         case ActionRequest::RotateRight90:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing " << tankActionToString(action) << " for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            bool is_backing = tank->isBacking();
-            tank->tickBackwait();
-            if (is_backing) {
-                return false;
-            }
-
-            tank->direction() = getDirectionAfterRotation(tank->direction(), action);
-            return true;
+            return rotateTank(tank, action);
         }
 
         case ActionRequest::Shoot:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing Shoot for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            tank->tickBackwait();
-
-            if (tank->canShoot())
-            {
-                Position shell_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
-                auto& cell = grid_[shell_pos.first][shell_pos.second];
-                tank->shoot();
-                std::shared_ptr<Shell> shell = std::make_shared<Shell>(tank->direction());
-                cell.addObject(shell);
-                active_shells_.emplace_back(shell_pos, shell);
-                cells_to_update_.insert(shell_pos);
-                return true;
-            }
-
-            return false;
+            return shoot(tank, current_pos);
         }
 
         case ActionRequest::GetBattleInfo:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            tank->tickBackwait();
-
-            auto player_it = player_tanks_.find(tank->playerId());
-            if (player_it == player_tanks_.end()) 
-            {
-                // Player not found, return false
-                if constexpr (config::get<bool>("verbose_debug"))
-                    std::cerr << "[Board] Player " << tank->playerId() << " not found for GetBattleInfo." << std::endl;
-                return false;
-            }
-
-            // Provide satellite view to the player
-            BoardSatelliteView satelliteView(prev_grid_, tank->position());
-            auto algorithm = getAlgorithm(tank->playerId(), tank->tankId());
-            if (!algorithm) 
-            {
-                // Algorithm not found, return false
-                if constexpr (config::get<bool>("verbose_debug"))
-                    std::cerr << "[Board] Algorithm not found for Player " << tank->playerId() 
-                              << " Tank " << tank->tankId() << " for GetBattleInfo." << std::endl;
-                return false;
-            }
-
-            player_it->second.first->updateTankWithBattleInfo(*algorithm, satelliteView);
-
-            return true;
+            return getBattleInfo(tank);
         }
 
         case ActionRequest::DoNothing:
         {
-            if constexpr (config::get<bool>("verbose_debug"))
-                std::cout << "[Board] Executing DoNothing for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
-
-            tank->tickBackwait();
-
-            // Do nothing is always legal
-            return true;
+            return doNothing(tank);
         }
 
         default:
             return false;
+        }
+}
+
+bool Board::moveTankForward(std::shared_ptr<Tank> tank, const Position &current_pos)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing MoveForward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    if (tank->isBacking())
+    {
+        // Only move forward action is able to reset the back movement
+        tank->resetBackwait();
+        return true;
     }
+
+    Position new_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
+
+    Cell &current_cell = grid_[current_pos.first][current_pos.second];
+    Cell &new_cell = grid_[new_pos.first][new_pos.second];
+
+    if (new_cell.has(ObjectType::Wall))
+    {
+        // Illegal move, can't move into walls
+        return false;
+    }
+
+    new_cell.addObject(tank);
+    current_cell.removeObject(tank);
+    tank->position() = new_pos;
+    cells_to_update_.insert(new_pos);
+
+    // Store the old position of the tank
+    // Should never be two tanks in the same position in a valid game state, so should be ok
+    old_tanks_positions_[current_pos] = tank;
+
+    return true;
+}
+
+bool Board::shoot(std::shared_ptr<Tank> tank, const Position &current_pos)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing Shoot for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    tank->tickBackwait();
+
+    if (tank->canShoot())
+    {
+        Position shell_pos = forwardPosition(current_pos, tank->direction(), width_, height_);
+        auto &cell = grid_[shell_pos.first][shell_pos.second];
+        tank->shoot();
+        std::shared_ptr<Shell> shell = std::make_shared<Shell>(tank->direction());
+        cell.addObject(shell);
+        active_shells_.emplace_back(shell_pos, shell);
+        cells_to_update_.insert(shell_pos);
+        return true;
+    }
+
+    return false;
+}
+
+bool Board::getBattleInfo(std::shared_ptr<Tank> tank)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing GetBattleInfo for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    bool is_backing = tank->isBacking();
+    tank->tickBackwait();
+    if (is_backing)
+    {
+        return false;
+    }
+
+    auto player_it = player_tanks_.find(tank->playerId());
+    if (player_it == player_tanks_.end())
+    {
+        // Player not found, return false
+        if constexpr (config::get<bool>("verbose_debug"))
+            std::cerr << "[Board] Player " << tank->playerId() << " not found for GetBattleInfo." << std::endl;
+        return false;
+    }
+
+    // Provide satellite view to the player
+    BoardSatelliteView satelliteView(prev_grid_, tank->position());
+    auto algorithm = getAlgorithm(tank->playerId(), tank->tankId());
+    if (!algorithm)
+    {
+        // Algorithm not found, return false
+        if constexpr (config::get<bool>("verbose_debug"))
+            std::cerr << "[Board] Algorithm not found for Player " << tank->playerId()
+                      << " Tank " << tank->tankId() << " for GetBattleInfo." << std::endl;
+        return false;
+    }
+
+    player_it->second.first->updateTankWithBattleInfo(*algorithm, satelliteView);
+
+    return true;
+}
+
+bool Board::doNothing(std::shared_ptr<Tank> tank)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing DoNothing for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    bool is_backing = tank->isBacking();
+    tank->tickBackwait();
+    return !is_backing;
+}
+
+bool Board::moveTankBackward(std::shared_ptr<Tank> tank, const Position &current_pos)
+{
+    Position new_pos = backwardPosition(tank->position(), tank->direction(), width_, height_);
+
+    Cell &current_cell = grid_[current_pos.first][current_pos.second];
+    Cell &new_cell = grid_[new_pos.first][new_pos.second];
+
+    if (new_cell.has(ObjectType::Wall))
+    {
+        // Illegal move, can't move into walls
+        return false;
+    }
+
+    new_cell.addObject(tank);
+    current_cell.removeObject(tank);
+    tank->position() = new_pos;
+    cells_to_update_.insert(new_pos);
+
+    // Store the old position of the tank
+    // Should never be two tanks in the same position in a valid game state, so should be ok
+    old_tanks_positions_[current_pos] = tank;
+
+    return true;
+}
+
+bool Board::handleBackMovement(std::shared_ptr<Tank> tank, const Position &current_pos)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing MoveBackward for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    if (!tank->isBacking() && tank->lastAction() != ActionRequest::MoveBackward)
+    {
+        tank->startBackwait();
+        tank->setWaitingBackMove(true);
+        return true;
+    }
+    else
+    {
+        if (tank->lastAction() != ActionRequest::MoveBackward)
+        {
+            tank->tickBackwait(); // keep counting
+        }
+
+        if (tank->readyToMoveBack())
+        {
+            return moveTankBackward(tank, current_pos);
+        }
+
+        if (tank->lastAction() == ActionRequest::MoveBackward)
+        {
+            tank->tickBackwait();
+        }
+    }
+
+    return true; // still waiting
+}
+
+bool Board::rotateTank(std::shared_ptr<Tank> tank, ActionRequest action)
+{
+    if constexpr (config::get<bool>("verbose_debug"))
+        std::cout << "[Board] Executing " << tankActionToString(action) << " for Tank " << tank->tankId() << " of Player " << tank->playerId() << std::endl;
+
+    bool is_backing = tank->isBacking();
+    tank->tickBackwait();
+    if (is_backing)
+    {
+        return false;
+    }
+
+    tank->direction() = getDirectionAfterRotation(tank->direction(), action);
+    return true;
 }
 
 // Moves all the shells one step forward, does not resolve collisions (besides crossing shells)

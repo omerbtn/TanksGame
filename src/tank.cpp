@@ -5,7 +5,7 @@
 Tank::Tank() : MovableObject(Direction::R) {}
 
 Tank::Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
-    : MovableObject(direction), player_id_(player_id), tank_id_(tank_id), position_(position), shells_(num_shells) {}
+    : MovableObject(direction), tank_id_(tank_id), player_id_(player_id), position_(position), shells_(num_shells) {}
 
 ObjectType Tank::type() const
 {
@@ -44,7 +44,7 @@ void Tank::decreaseCooldown()
 
 bool Tank::canShoot() const
 {
-    return cooldown_ == 0 && shells_ > 0 && backwait_ == 0;
+    return cooldown_ == 0 && shells_ > 0 && backwait_ == 0 && !waiting_back_move_;
 }
 
 void Tank::shoot()
@@ -60,7 +60,8 @@ bool Tank::isBacking() const
 
 void Tank::startBackwait()
 {
-    backwait_ = 2;
+    backwait_ = 1;
+    waiting_back_move_ = true;
 }
 
 void Tank::tickBackwait()
@@ -71,11 +72,7 @@ void Tank::tickBackwait()
 void Tank::resetBackwait()
 {
     backwait_ = 0;
-}
-
-void Tank::continueBacking()
-{
-    backwait_ = 1;
+    waiting_back_move_ = false;
 }
 
 bool Tank::readyToMoveBack() const
@@ -91,4 +88,24 @@ void Tank::copyRuntimeStateFrom(const Tank& other)
     cooldown_ = other.cooldown_;
     backwait_ = other.backwait_;
     alive_ = other.alive_;
+}
+
+bool Tank::waitingBackMove() const
+{
+    return waiting_back_move_;
+}
+
+void Tank::setWaitingBackMove(bool waiting_back_move)
+{
+    waiting_back_move_ = waiting_back_move;
+}
+
+ActionRequest Tank::lastAction() const
+{
+    return last_action_;
+}
+
+void Tank::setLastAction(ActionRequest action)
+{
+    last_action_ = action;
 }

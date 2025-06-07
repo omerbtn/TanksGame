@@ -14,8 +14,8 @@ public:
     SmartBattleInfo(const std::vector<std::vector<Cell>>& grid, Position tank_position, size_t max_steps, size_t num_shells,
                     const std::unordered_map<Position, std::unordered_set<Direction>>& shell_possible_directions = {},
                     const std::unordered_map<int, std::unordered_set<Position>>& tanks_reserved_positions = {})
-        : grid_(grid), tank_position_(tank_position), max_steps_(max_steps), num_shells_(num_shells), 
-          shell_possible_drections_(shell_possible_directions), tanks_reserved_positions_(tanks_reserved_positions) {}
+        : grid_(grid), shell_possible_drections_(shell_possible_directions), tanks_reserved_positions_(tanks_reserved_positions),
+          tank_position_(tank_position), max_steps_(max_steps), num_shells_(num_shells) {}
 
     const std::vector<std::vector<Cell>>& getGrid() const { return grid_; }
     const Position& getTankPosition() const { return tank_position_; }

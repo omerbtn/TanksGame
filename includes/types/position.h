@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <memory>
+#include <iostream>
 
 using Position = std::pair<size_t, size_t>;
 

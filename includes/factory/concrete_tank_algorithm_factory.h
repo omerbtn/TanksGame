@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cassert>
+
 #include "TankAlgorithmFactory.h"
 #include "simple_algorithm.h"
 #include "smart_algorithm.h"
 #include "seed_algorithm.h"
 #include "user_algorithm.h"
-
 
 class ConcreteTankAlgorithmFactory : public TankAlgorithmFactory
 {
@@ -19,13 +20,33 @@ public:
             throw std::invalid_argument("Invalid player index");
         }
 
-        if (player_index % 2 == 0)
+        switch (player_index)
+        {
+        case 1:
+        {
+            return std::make_unique<SmartAlgorithm>(player_index, tank_index);
+        }
+        case 2:
         {
             return std::make_unique<SimpleAlgorithm>(player_index, tank_index);
         }
-        else
-        {
+        case 3:
+            return std::make_unique<UserAlgorithm>(player_index, tank_index);
+        case 4:
+            [[fallthrough]];
+        case 5:
+            [[fallthrough]];
+        case 6:
+            [[fallthrough]];
+        case 7:
+            [[fallthrough]];
+        case 8:
+            [[fallthrough]];
+        case 9:
             return std::make_unique<SmartAlgorithm>(player_index, tank_index);
+        default:
+            assert(false);
+            throw std::invalid_argument("Invalid player index");
         }
     }
 };

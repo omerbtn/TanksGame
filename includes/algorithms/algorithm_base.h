@@ -24,7 +24,7 @@ public:
 protected:
     virtual ActionRequest getActionImpl() = 0;
 
-    virtual void extendBattleInfoProcessing(SmartBattleInfo& info) {}
+    virtual void extendBattleInfoProcessing(SmartBattleInfo&) {}
     void handleTankMovement(const ActionRequest action);
 
     bool hasLineOfSightToOpponent(const Position& start_pos, Direction dir, Position& r_opponent_pos) const;

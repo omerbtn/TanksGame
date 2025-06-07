@@ -21,7 +21,7 @@ public:
 
     bool is_valid() const;
 
-    void logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool is_alive);
+    void logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool was_alive_at_start, bool died_this_round);
     void logResult(std::string&& result);
     std::string action_to_string(ActionRequest action) const;
 

@@ -29,7 +29,7 @@ public:
         auto grid = reconstructGridFromSatelliteView(satellite_view, PlayerIndex, tank_position);
         Direction dir = getSeedDirection(PlayerIndex);
 
-        BoardBattleInfo info(grid, PlayerIndex, tank_id_, tank_position, dir, maxSteps_, numShells_);
+        BoardBattleInfo info(grid, PlayerIndex, tank_id_, tank_position, dir, numShells_);
         tank.updateBattleInfo(info);
     }
 

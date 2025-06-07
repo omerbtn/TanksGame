@@ -121,6 +121,10 @@ size_t getNumberOfShellsInGrid(const std::vector<std::vector<Cell>>& grid)
 // Moving *backward* from a position in a given direction, checking if there are walls blocking the path
 bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position& from, Direction dir, size_t steps)
 {
+    if (grid.empty() || grid[0].empty()) {
+        return true;  // If grid is empty, assume walls are blocking
+    }
+
     size_t width = grid[0].size();
     size_t height = grid.size();
     Position pos = from;

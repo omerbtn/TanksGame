@@ -23,10 +23,12 @@ public:
     PlayerBase& operator=(const PlayerBase&) = delete; // Disable copy assignment
 
     // Implemented in the derived classes
-    virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) = 0;
+    virtual void updateTankWithBattleInfo(TankAlgorithm &tank, SatelliteView &satellite_view) override = 0;
 
 protected:
     std::vector<std::vector<Cell>> reconstructGridFromSatelliteView(const SatelliteView& satellite_view, Position& r_tank_pos);
+
+    void setShellsAsNew(const std::vector<std::vector<Cell>> &grid);
 
     void updateShellPossibleDirections(const std::vector<std::vector<Cell>>& prev_grid,
                                        const std::vector<std::vector<Cell>>& curr_grid);

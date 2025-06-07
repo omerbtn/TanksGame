@@ -22,7 +22,7 @@ protected:
     {}
 
     void SetUp() override {
-        ASSERT_TRUE(board.loadFromFile("../test/board.txt").is_valid);
+        ASSERT_TRUE(board.loadFromFile("board.txt").is_valid);
     }
 };
 
@@ -96,12 +96,15 @@ TEST_F(BoardTest, TankStartsBackwardMoveWithDelay)
     Position oldPos = tank->position();
 
     board.executeTankAction(tank, ActionRequest::MoveBackward);
+    tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_TRUE(tank->isBacking());
     EXPECT_EQ(tank->position(), oldPos);
 
     board.executeTankAction(tank, ActionRequest::MoveBackward);
+    tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_EQ(tank->position(), oldPos);
     board.executeTankAction(tank, ActionRequest::MoveBackward);
+    tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_NE(tank->position(), oldPos);  // Now it moved
 }
 

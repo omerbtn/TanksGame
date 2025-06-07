@@ -17,29 +17,33 @@ bool OutputLogger::is_valid() const {
     return valid_;
 }
 
-void OutputLogger::logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool is_alive)
+void OutputLogger::logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool was_alive_at_start, bool died_this_round)
 {
     if (!valid_)
     {
         return;
     }
 
-    if (!action) {
+    if (!was_alive_at_start) {
+        // Tank was already dead before this round started
         out_ << "killed";
-        valid = true; // To skip the ignored message
-        is_alive = true; // To skip the killed message
     } else {
-        out_ << action_to_string(*action);
-    }
+        // Tank was alive at start, so show its action
+        if (action) {
+            out_ << action_to_string(*action);
+        } else {
+            out_ << "DoNothing";  // Fallback, though this shouldn't happen for alive tanks
+        }
 
-    if (!valid)
-    {
-        out_ << " (ignored)";
-    }
+        // Add (ignored) if action was invalid
+        if (!valid) {
+            out_ << " (ignored)";
+        }
 
-    if (!is_alive)
-    {
-        out_ << " (killed)";
+        // Add (killed) if tank died during this round
+        if (died_this_round) {
+            out_ << " (killed)";
+        }
     }
 
     if (tank_no < total_tanks_ - 1)

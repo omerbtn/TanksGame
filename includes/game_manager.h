@@ -25,7 +25,11 @@ private:
     static std::pair<std::string, std::string> splitFilename(const std::string& filename);
     bool isGameOver() const;
     void doTanksStep();
+    void getTanksActions();
+    void checkActionsValidity();
+    void handleTie();
     std::string generateResultMessage() const;
+    void logTankActions();
 
     std::unique_ptr<Board> board_;
     std::vector<std::shared_ptr<Tank>> ordered_tanks_;
@@ -33,4 +37,7 @@ private:
     OutputLogger logger_;
     std::optional<std::size_t> tie_countdown_;
     size_t half_steps_count_ = 0;
+    std::vector<bool> was_alive_before_shells_;
+    std::vector<std::optional<ActionRequest>> actions_to_execute_;
+    std::vector<bool> actions_validity_;
 };

@@ -43,6 +43,13 @@ private:
     void updateActiveShells();
     void resolveCollisions(Cell& cell);
     void onExplosion(Cell& cell);
+    bool moveTankBackward(std::shared_ptr<Tank> tank, const Position &current_pos);
+    bool rotateTank(std::shared_ptr<Tank> tank, ActionRequest action);
+    bool shoot(std::shared_ptr<Tank> tank, const Position &current_pos);
+    bool getBattleInfo(std::shared_ptr<Tank> tank);
+    bool doNothing(std::shared_ptr<Tank> tank);
+    bool moveTankForward(std::shared_ptr<Tank> tank, const Position &current_pos);
+    bool handleBackMovement(std::shared_ptr<Tank> tank, const Position &current_pos);
 
     const PlayerFactory& playerFactory_;
     const TankAlgorithmFactory& algorithmFactory_;

@@ -3,7 +3,7 @@
 #include "movable_object.h"
 #include "types/direction.h"
 #include "types/position.h"
-
+#include "ActionRequest.h"
 
 class Tank : public MovableObject
 {
@@ -25,9 +25,12 @@ public:
     void startBackwait();
     void tickBackwait();
     void resetBackwait();
-    void continueBacking();
     bool readyToMoveBack() const;
+    bool waitingBackMove() const;
+    void setWaitingBackMove(bool waiting_back_move);
     void copyRuntimeStateFrom(const Tank& other);
+    ActionRequest lastAction() const;
+    void setLastAction(ActionRequest action);
 
 private:
     virtual ObjectType type() const override;
@@ -39,4 +42,6 @@ private:
     size_t cooldown_ = 0;
     size_t backwait_ = 0;
     bool alive_ = true;
+    bool waiting_back_move_ = false;
+    ActionRequest last_action_ = ActionRequest::DoNothing;
 };

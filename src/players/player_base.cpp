@@ -6,58 +6,9 @@ PlayerBase::PlayerBase(int player_index, size_t x, size_t y, size_t max_steps, s
     : Player(player_index, x, y, max_steps, num_shells),
       player_index_(player_index), width_(x), height_(y), max_steps_(max_steps), num_shells_(num_shells) {}
 
-std::vector<std::vector<Cell>> PlayerBase::reconstructGridFromSatelliteView(const SatelliteView &satellite_view, Position &r_tank_pos)
+void PlayerBase::setShellsAsNew(const std::vector<std::vector<Cell>>& grid)
 {
-    std::vector<std::vector<Cell>> grid(height_, std::vector<Cell>(width_));
-
-    for (size_t y = 0; y < height_; ++y)
-    {
-        for (size_t x = 0; x < width_; ++x)
-        {
-            char ch = satellite_view.getObjectAt(x, y);
-            Position pos{x, y};
-            Cell cell(pos);
-
-            switch (ch)
-            {
-            case '#':
-                cell.addObject(std::make_shared<Wall>());
-                break;
-            case '@':
-                cell.addObject(std::make_shared<Mine>());
-                break;
-            case '*':
-                cell.addObject(std::make_shared<Shell>(Direction::U)); // Direction is unreliable
-                break;
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                cell.addObject(std::make_shared<Tank>(ch - '0', 0, pos, getSeedDirection(ch - '0'), num_shells_)); // Direction is unreliable unless it's first turn
-                break;
-            case '%':
-                cell.addObject(std::make_shared<Tank>(player_index_, 0, pos, getSeedDirection(player_index_), num_shells_)); // Direction is unreliable unless it's first turn
-                r_tank_pos = pos;
-                break;
-            default:
-                break;
-            }
-
-            grid[x][y] = std::move(cell);
-        }
-    }
-
-    return grid;
-}
-
-void PlayerBase::setShellsAsNew(const std::vector<std::vector<Cell>> &grid)
-{
-    const auto &all_directions = getAllDirections();
+    const auto& all_directions = getAllDirections();
     for (size_t x = 0; x < width_; ++x)
     {
         for (size_t y = 0; y < height_; ++y)
@@ -71,17 +22,18 @@ void PlayerBase::setShellsAsNew(const std::vector<std::vector<Cell>> &grid)
 }
 
 // Derives all possible directions for shells based on the previous and current grid states.
-void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cell>> &prev_grid,
-                                               const std::vector<std::vector<Cell>> &curr_grid)
+void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cell>>& prev_grid,
+                                               const std::vector<std::vector<Cell>>& curr_grid)
 {
     // Save previous possible directions for narrowing down the possible directions
     auto prev_shell_possible_directions = shell_possible_directions_;
     shell_possible_directions_.clear();
 
+    size_t interval = config::get<size_t>("battle_info_interval"); // Maximum number of turns passed since the last GetBattleInfo request
     size_t num_shells = getNumberOfShellsInGrid(curr_grid);
 
     // Try to find possible directions for as many shells as possible, when the number of unexplainable shells is from 0 to num_shells
-    for (size_t max_unexplainable = 0; max_unexplainable < num_shells; ++max_unexplainable)
+    for (size_t max_unexplainable = 0; max_unexplainable <= num_shells; ++max_unexplainable)
     {
         bool found_valid = false;
 
@@ -89,7 +41,7 @@ void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cel
         std::unordered_map<Position, std::unordered_set<Direction>> accumulated_directions;
 
         // Try to find valid number of turns passed that match all shells' movements
-        for (size_t turns_passed = 0; turns_passed <= config::get<size_t>("battle_info_interval"); ++turns_passed)
+        for (size_t turns_passed = 0; turns_passed <= interval; ++turns_passed)
         {
             std::unordered_map<Position, std::unordered_set<Direction>> candidate_map;
             std::vector<Position> unexplainable_shells;
@@ -120,33 +72,33 @@ void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cel
     setShellsAsNew(curr_grid);
 }
 
-void PlayerBase::accumulateDirections(std::unordered_map<Position, std::unordered_set<Direction>> &accumulated_directions,
-                                      std::unordered_map<Position, std::unordered_set<Direction>> &candidate_map,
-                                      const std::vector<Position> &unexplainable_shells)
+void PlayerBase::accumulateDirections(std::unordered_map<Position, std::unordered_set<Direction>>& accumulated_directions,
+                                      std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                                      const std::vector<Position>& unexplainable_shells)
 {
-    const auto &all_directions = getAllDirections();
+    const auto& all_directions = getAllDirections();
 
     // For unexplainable shells, treat as new with all directions possible
-    for (const auto &pos : unexplainable_shells)
+    for (const auto& pos : unexplainable_shells)
     {
         candidate_map[pos] = std::unordered_set<Direction>(all_directions.begin(), all_directions.end());
     }
 
     // Accumulate possible directions for all shells
-    for (const auto &[pos, dirs] : candidate_map)
+    for (const auto& [pos, dirs] : candidate_map)
     {
         accumulated_directions[pos].insert(dirs.begin(), dirs.end());
     }
 }
 
-void PlayerBase::getShellPossibleDirectionsForTurnsPassed(const std::vector<std::vector<Cell>> &prev_grid,
-                                                          const std::vector<std::vector<Cell>> &curr_grid,
-                                                          const std::unordered_map<Position, std::unordered_set<Direction>> &prev_shell_possible_directions,
+void PlayerBase::getShellPossibleDirectionsForTurnsPassed(const std::vector<std::vector<Cell>>& prev_grid,
+                                                          const std::vector<std::vector<Cell>>& curr_grid,
+                                                          const std::unordered_map<Position, std::unordered_set<Direction>>& prev_shell_possible_directions,
                                                           size_t turns_passed,
-                                                          std::unordered_map<Position, std::unordered_set<Direction>> &candidate_map,
-                                                          std::vector<Position> &unexplainable_shells)
+                                                          std::unordered_map<Position, std::unordered_set<Direction>>& candidate_map,
+                                                          std::vector<Position>& unexplainable_shells)
 {
-    const auto &all_directions = getAllDirections();
+    const auto& all_directions = getAllDirections();
 
     for (size_t x = 0; x < width_; ++x)
     {
@@ -193,15 +145,14 @@ void PlayerBase::getShellPossibleDirectionsForTurnsPassed(const std::vector<std:
     }
 }
 
-SmartBattleInfo PlayerBase::createBattleInfo(const SatelliteView &satellite_view)
+SmartBattleInfo PlayerBase::createBattleInfo(const SatelliteView& satellite_view)
 {
     Position tank_position;
     auto prev_grid = grid_;
-    grid_ = reconstructGridFromSatelliteView(satellite_view, tank_position);
+    grid_ = reconstructGridFromSatelliteView(satellite_view, height_, width_, player_index_, num_shells_, tank_position);
 
     // Update shell directions before constructing info
     updateShellPossibleDirections(prev_grid, grid_);
 
-    SmartBattleInfo info(grid_, tank_position, max_steps_, num_shells_, shell_possible_directions_);
-    return info;
+    return SmartBattleInfo(satellite_view, height_, width_, max_steps_, num_shells_, shell_possible_directions_);
 }

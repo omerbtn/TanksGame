@@ -1,9 +1,9 @@
 #pragma once
 
-#include "types/direction.h"
-#include "types/position.h"
 #include "ActionRequest.h"
 #include "board.h"
+#include "types/direction.h"
+#include "types/position.h"
 
 
 // Represents a state in BFS with position and direction
@@ -26,15 +26,15 @@ struct BFSState
 // Hash specialization for BFSState to use in unordered containers
 namespace std
 {
-    template <>
-    struct hash<BFSState>
+template <>
+struct hash<BFSState>
+{
+    size_t operator()(const BFSState& state) const
     {
-        size_t operator()(const BFSState& state) const
-        {
-            return hash<Position>()(state.pos) ^ (hash<int>()(static_cast<int>(state.dir)) << 1);
-        }
-    };
-}
+        return hash<Position>()(state.pos) ^ (hash<int>()(static_cast<int>(state.dir)) << 1);
+    }
+};
+} // namespace std
 
 const std::vector<Direction>& getAllDirections();
 
@@ -50,3 +50,6 @@ Position backwardPosition(const Position& pos, Direction dir, size_t width, size
 
 size_t getNumberOfShellsInGrid(const std::vector<std::vector<Cell>>& grid);
 bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position& from, Direction dir, size_t steps);
+
+std::vector<std::vector<Cell>> reconstructGridFromSatelliteView(const SatelliteView& satellite_view, size_t height, size_t width,
+                                                                int player_index, size_t num_shells, Position& r_tank_pos);

@@ -4,13 +4,13 @@
 #include <map>
 #include <optional>
 
+#include "ActionRequest.h"
 #include "Player.h"
 #include "TankAlgorithm.h"
 #include "board.h"
-#include "tank.h"
-#include "output_logger.h"
 #include "game_info.h"
-#include "ActionRequest.h"
+#include "output_logger.h"
+#include "tank.h"
 
 
 class GameManager
@@ -37,7 +37,7 @@ private:
     OutputLogger logger_;
     std::optional<std::size_t> tie_countdown_;
     size_t half_steps_count_ = 0;
-    std::vector<bool> was_alive_before_shells_;
+    std::vector<bool> was_alive_at_round_start_;
     std::vector<std::optional<ActionRequest>> actions_to_execute_;
     std::vector<bool> actions_validity_;
 };

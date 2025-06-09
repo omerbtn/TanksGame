@@ -1,21 +1,19 @@
 #include "game_manager.h"
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
-#include "board.h"
-#include "tank.h"
 #include "Player.h"
-#include "output_logger.h"
 #include "algorithms/algorithm_utils.h"
+#include "board.h"
 #include "global_config.h"
+#include "output_logger.h"
+#include "tank.h"
 
-GameManager::GameManager(const PlayerFactory &playerFactory, const TankAlgorithmFactory &algorithmFactory)
-    : board_(std::make_unique<Board>(playerFactory, algorithmFactory))
-{
-}
+GameManager::GameManager(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory)
+    : board_(std::make_unique<Board>(playerFactory, algorithmFactory)) {}
 
-std::pair<std::string, std::string> GameManager::splitFilename(const std::string &filename)
+std::pair<std::string, std::string> GameManager::splitFilename(const std::string& filename)
 {
     size_t last_slash_pos = filename.find_last_of("/\\");
 
@@ -40,7 +38,7 @@ std::string GameManager::generateResultMessage() const
 {
     std::unordered_map<int, int> alive_counts;
 
-    for (const auto &tank : ordered_tanks_)
+    for (const auto& tank : ordered_tanks_)
     {
         if (tank->isAlive())
         {
@@ -50,7 +48,7 @@ std::string GameManager::generateResultMessage() const
 
     std::vector<std::pair<int, int>> players_alive; // {player_id, alive_count}
 
-    for (const auto &[player_id, count] : alive_counts)
+    for (const auto& [player_id, count] : alive_counts)
     {
         players_alive.emplace_back(player_id, count);
     }
@@ -74,12 +72,12 @@ std::string GameManager::generateResultMessage() const
     {
         summary = "Tie, reached max steps = " + std::to_string(half_steps_count_ / 2);
         std::map<int, int> full_counts;
-        for (const auto &tank : ordered_tanks_)
+        for (const auto& tank : ordered_tanks_)
         {
             full_counts[tank->playerId()] += tank->isAlive() ? 1 : 0;
         }
 
-        for (const auto &[player_id, count] : full_counts)
+        for (const auto& [player_id, count] : full_counts)
         {
             summary += ", player " + std::to_string(player_id) + " has " + std::to_string(count) + " tanks";
         }
@@ -88,7 +86,7 @@ std::string GameManager::generateResultMessage() const
     return summary;
 }
 
-bool GameManager::readBoard(const std::string &filename)
+bool GameManager::readBoard(const std::string& filename)
 {
     GameInfo game_info = board_->loadFromFile(filename);
 
@@ -119,16 +117,16 @@ void GameManager::logTankActions()
     // Capture final alive status (after all actions and updates)
     std::vector<bool> is_alive_at_end;
     is_alive_at_end.reserve(ordered_tanks_.size());
-    for (const auto &tank : ordered_tanks_)
+    for (const auto& tank : ordered_tanks_)
     {
         is_alive_at_end.push_back(tank->isAlive());
     }
     // Log actions with proper death detection
     for (size_t i = 0; i < ordered_tanks_.size(); ++i)
     {
-        bool died_this_round = was_alive_before_shells_[i] && !is_alive_at_end[i];
+        bool died_this_round = was_alive_at_round_start_[i] && !is_alive_at_end[i];
         logger_.logAction(i, actions_to_execute_[i], actions_validity_[i],
-                          was_alive_before_shells_[i], died_this_round);
+                          was_alive_at_round_start_[i], died_this_round);
     }
 }
 
@@ -137,10 +135,10 @@ void GameManager::run()
     std::cout << "[GameManager] Starting game with the board:" << std::endl;
     board_->print();
 
-    was_alive_before_shells_.reserve(ordered_tanks_.size());
-    for (const auto &tank : ordered_tanks_)
+    was_alive_at_round_start_.reserve(ordered_tanks_.size());
+    for (const auto& tank : ordered_tanks_)
     {
-        was_alive_before_shells_.push_back(tank->isAlive());
+        was_alive_at_round_start_.push_back(tank->isAlive());
     }
 
     while (true)
@@ -149,13 +147,15 @@ void GameManager::run()
         {
             std::cout << "[GameManager] Do tanks and shells step, half_steps_count = " << half_steps_count_ << std::endl;
 
+            for (size_t i = 0; i < ordered_tanks_.size(); ++i)
+            {
+                was_alive_at_round_start_[i] = ordered_tanks_[i]->isAlive();
+            }
+
             board_->doShellsStep(false);
             doTanksStep();
 
-            for (size_t i = 0; i < ordered_tanks_.size(); ++i)
-            {
-                was_alive_before_shells_[i] = ordered_tanks_[i]->isAlive();
-            }
+            board_->print();
         }
         else
         {
@@ -164,12 +164,13 @@ void GameManager::run()
 
             logTankActions();
 
+            board_->print();
+
             if (isGameOver())
             {
                 break;
             }
         }
-        board_->print();
         half_steps_count_++;
     }
 
@@ -182,7 +183,7 @@ void GameManager::getTanksActions()
     actions_to_execute.reserve(ordered_tanks_.size());
 
     // Get actions from all algorithms
-    for (const auto &tank : ordered_tanks_)
+    for (const auto& tank : ordered_tanks_)
     {
         if (!tank->isAlive())
         {
@@ -222,7 +223,7 @@ void GameManager::checkActionsValidity()
     // Execute actions and check validity
     for (size_t i = 0; i < ordered_tanks_.size(); ++i)
     {
-        const auto &tank = ordered_tanks_[i];
+        const auto& tank = ordered_tanks_[i];
         auto action = actions_to_execute_[i];
 
         if (!tank || !tank->isAlive() || !action)
@@ -260,9 +261,9 @@ void GameManager::handleTie()
 
         for (int player_index = 1; player_index <= 9; ++player_index)
         {
-            const auto &tanks = board_->getPlayerTanks(player_index);
+            const auto& tanks = board_->getPlayerTanks(player_index);
 
-            for (const auto &tank : tanks)
+            for (const auto& tank : tanks)
             {
                 if (tank->isAlive() && tank->ammo() > 0)
                 {
@@ -304,8 +305,8 @@ bool GameManager::isGameOver() const
 
     for (int player_index = 1; player_index <= 9; ++player_index)
     {
-        const auto &tanks = board_->getPlayerTanks(player_index);
-        if (std::any_of(tanks.begin(), tanks.end(), [](const auto &tank)
+        const auto& tanks = board_->getPlayerTanks(player_index);
+        if (std::any_of(tanks.begin(), tanks.end(), [](const auto& tank)
                         { return tank->isAlive(); }))
         {
             ++alive_players;

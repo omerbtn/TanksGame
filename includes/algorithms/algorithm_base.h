@@ -1,18 +1,18 @@
 #pragma once
 
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <optional>
 
 #include "TankAlgorithm.h"
-#include "smart_battle_info.h"
 #include "cell.h"
+#include "smart_battle_info.h"
 #include "tank.h"
 
 class BattleInfo;
 
-class AlgorithmBase : public TankAlgorithm 
+class AlgorithmBase : public TankAlgorithm
 {
 public:
     virtual ~AlgorithmBase() = default;
@@ -29,10 +29,10 @@ protected:
 
     bool hasLineOfSightToOpponent(const Position& start_pos, Direction dir, Position& r_opponent_pos) const;
     bool isShellIncoming(const Position& pos, Position* r_shell_pos = nullptr, Direction* r_shell_possible_dir = nullptr, size_t shell_max_distance = 8) const;
-    std::optional<ActionRequest> getEvadeActionIfShellIncoming(size_t shell_max_distance = 8) const;  // 8 because our grid may be outdated, and we might need time to evade
+    std::optional<ActionRequest> getEvadeActionIfShellIncoming(size_t shell_max_distance = 8) const; // 8 because our grid may be outdated, and we might need time to evade
 
-    virtual void printTankInfo() const;  // Print tank's known information, for debugging purposes
-    virtual void extendPrintTankInfo() const {}  // Extend the tank info printing, for derived classes
+    virtual void printTankInfo() const;         // Print tank's known information, for debugging purposes
+    virtual void extendPrintTankInfo() const {} // Extend the tank info printing, for derived classes
     void printGrid() const;
 
     int player_index_;

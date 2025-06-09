@@ -1,15 +1,15 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "Player.h"
-#include "TankAlgorithm.h"
 #include "SatelliteView.h"
-#include "smart_battle_info.h"
+#include "TankAlgorithm.h"
 #include "cell.h"
+#include "smart_battle_info.h"
 
 
 class PlayerBase : public Player
@@ -19,16 +19,14 @@ public:
 
     virtual ~PlayerBase() override = default;
 
-    PlayerBase(const PlayerBase&) = delete; // Disable copy constructor
+    PlayerBase(const PlayerBase&) = delete;            // Disable copy constructor
     PlayerBase& operator=(const PlayerBase&) = delete; // Disable copy assignment
 
     // Implemented in the derived classes
-    virtual void updateTankWithBattleInfo(TankAlgorithm &tank, SatelliteView &satellite_view) override = 0;
+    virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override = 0;
 
 protected:
-    std::vector<std::vector<Cell>> reconstructGridFromSatelliteView(const SatelliteView& satellite_view, Position& r_tank_pos);
-
-    void setShellsAsNew(const std::vector<std::vector<Cell>> &grid);
+    void setShellsAsNew(const std::vector<std::vector<Cell>>& grid);
 
     void updateShellPossibleDirections(const std::vector<std::vector<Cell>>& prev_grid,
                                        const std::vector<std::vector<Cell>>& curr_grid);
@@ -50,7 +48,7 @@ protected:
     size_t width_, height_;
     size_t max_steps_;
     size_t num_shells_;
-    std::vector<std::vector<Cell>> grid_;  // Update every time a tank asks for battle info
+    std::vector<std::vector<Cell>> grid_; // Updates every time a tank asks for battle info
     std::unordered_map<Position, std::unordered_set<Direction>> shell_possible_directions_;
     // shell_possible_directions_[pos] = set of possible directions for shell at pos
 };

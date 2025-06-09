@@ -12,7 +12,7 @@ void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& s
 
     // Extend the battle info with reserved positions
     info.setTanksReservedPositions(tanks_reserved_positions_);
-    
+
     tank.updateBattleInfo(info);
 
     // Update the tanks reserved positions

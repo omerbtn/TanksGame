@@ -17,20 +17,26 @@ public:
     virtual ActionRequest getActionImpl() override;
 
 protected:
-    virtual void extendBattleInfoProcessing(SmartBattleInfo &info) override;
+    virtual void extendBattleInfoProcessing(SmartBattleInfo& info) override;
     virtual void extendPrintTankInfo() const override;
 
 private:
-    bool isShellInPathDangerous(const Position &pos);
     std::optional<ActionRequest> findFirstSafeActionToOpponent();
-    void tryForwardMove(std::queue<BFSState> &q,
-                        std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>> &parent,
-                        std::unordered_set<BFSState> &visited,
-                        const BFSState &current);
 
-    std::optional<ActionRequest> handleLineOfSightToOpponent(BFSState &current,
-                                                             std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>> &parent,
-                                                             const BFSState &start_state);
+    void tryForwardMove(std::queue<BFSState>& q,
+                        std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                        std::unordered_set<BFSState>& visited,
+                        const BFSState& current);
+
+    void tryRotations(std::queue<BFSState>& q,
+                      std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                      std::unordered_set<BFSState>& visited,
+                      const BFSState& current);
+
+    ActionRequest handleLineOfSightToOpponent(BFSState& current,
+                                              std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                              const BFSState& start_state,
+                                              const Position& opponent_pos);
 
     std::unordered_set<Position> computeReservedPositions(bool include_shooting_lane = true);
 

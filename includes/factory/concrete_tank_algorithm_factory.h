@@ -3,9 +3,9 @@
 #include <cassert>
 
 #include "TankAlgorithmFactory.h"
+#include "seed_algorithm.h"
 #include "simple_algorithm.h"
 #include "smart_algorithm.h"
-#include "seed_algorithm.h"
 #include "user_algorithm.h"
 
 class ConcreteTankAlgorithmFactory : public TankAlgorithmFactory

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "algorithm_utils.h"
 #include "board.h"
 #include "tank.h"
-#include "algorithm_utils.h"
 
 // Used mostly for tests purposes.
 class SeedAlgorithm : public TankAlgorithm

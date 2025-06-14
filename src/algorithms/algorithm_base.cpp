@@ -220,11 +220,13 @@ void AlgorithmBase::updateBattleInfo(BattleInfo& info)
 
     height_ = concrete_info.getHeight();
     width_ = concrete_info.getWidth();
+    size_t num_shells = concrete_info.getNumShells();
 
-    grid_ = concrete_info.getGrid();
+    Position tank_pos;
+    const SatelliteView& satellite_view = concrete_info.getSatelliteView();
+    grid_ = reconstructGridFromSatelliteView(satellite_view, height_, width_, player_index_, num_shells, tank_pos);
     shell_possible_directions_ = concrete_info.getShellPossibleDirections();
 
-    const auto& tank_pos = concrete_info.getTankPosition(); 
     auto tank_obj = grid_[tank_pos.first][tank_pos.second].getObjectByType(ObjectType::Tank);
     auto new_tank = std::static_pointer_cast<Tank>(tank_obj);
 

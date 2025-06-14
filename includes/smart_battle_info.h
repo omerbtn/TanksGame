@@ -12,6 +12,7 @@
 class SmartBattleInfo : public BattleInfo
 {
 public:
+    ~SmartBattleInfo() = default;
     SmartBattleInfo(const SatelliteView& satellite_view, size_t height, size_t width,
                     size_t max_steps, size_t num_shells,
                     const std::unordered_map<Position, std::unordered_set<Direction>>& shell_possible_directions = {},
@@ -20,6 +21,11 @@ public:
           max_steps_(max_steps), num_shells_(num_shells),
           shell_possible_drections_(shell_possible_directions),
           tanks_reserved_positions_(tanks_reserved_positions) {}
+
+    SmartBattleInfo(const SmartBattleInfo&) = delete;
+    SmartBattleInfo& operator=(const SmartBattleInfo&) = delete;
+    SmartBattleInfo(SmartBattleInfo&&) = delete;
+    SmartBattleInfo& operator=(SmartBattleInfo&&) = delete;
 
     const SatelliteView& getSatelliteView() const { return satellite_view_; }
     size_t getHeight() const { return height_; }

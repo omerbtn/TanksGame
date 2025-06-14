@@ -8,9 +8,15 @@
 class SeedAlgorithm : public TankAlgorithm
 {
 public:
+    virtual ~SeedAlgorithm() = default;
     SeedAlgorithm(const std::vector<ActionRequest>& seed) : seed_{seed} {}
 
-    ActionRequest getAction() override
+    SeedAlgorithm(const SeedAlgorithm&) = delete;
+    SeedAlgorithm& operator=(const SeedAlgorithm&) = delete;
+    SeedAlgorithm(SeedAlgorithm&&) = delete;
+    SeedAlgorithm& operator=(SeedAlgorithm&&) = delete;
+
+    virtual ActionRequest getAction() override
     {
         if (current_step_ < seed_.size())
         {
@@ -20,7 +26,7 @@ public:
         return ActionRequest::DoNothing;
     }
 
-    void updateBattleInfo(BattleInfo& info) override
+    virtual void updateBattleInfo(BattleInfo& info) override
     {
         // No-op for seed algorithm
         (void)info;

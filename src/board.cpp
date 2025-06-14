@@ -13,10 +13,6 @@
 #include "shell.h"
 #include "Player.h"
 
-#include "algorithms/simple_algorithm.h"
-#include "algorithms/smart_algorithm.h"
-#include "algorithms/seed_algorithm.h"
-#include "algorithms/algorithm_utils.h"
 #include "input_errors_logger.h"
 #include "board_satellite_view.h"
 #include "printers/ansi_printer.h"
@@ -203,7 +199,7 @@ const std::vector<std::shared_ptr<Tank>>& Board::getPlayerTanks(int player_id) c
     return empty_vector;  // Return empty vector if invalid player id
 }
 
-bool Board::executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action)
+bool Board::executeTankAction(std::shared_ptr<Tank> tank, ActionRequest& action)
 {
     if (!tank || !tank->isAlive())
     {
@@ -226,6 +222,7 @@ bool Board::executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action)
         }
 
         tank->setWaitingBackMove(false);
+        action = ActionRequest::MoveBackward;
         return moveTankBackward(tank, current_pos);
     }
 
@@ -431,7 +428,7 @@ bool Board::handleBackMovement(std::shared_ptr<Tank> tank, const Position &curre
         }
     }
 
-    return true; // still waiting
+    return false; // still waiting (Asking moving back while waiting for a move back should be ignored)
 }
 
 bool Board::rotateTank(std::shared_ptr<Tank> tank, ActionRequest action)

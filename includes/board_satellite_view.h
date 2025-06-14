@@ -8,10 +8,16 @@
 class BoardSatelliteView : public SatelliteView 
 {
 public:
+    virtual ~BoardSatelliteView() = default;
     BoardSatelliteView(const std::vector<std::vector<Cell>>& grid, const Position tank_position)
         : grid_(grid), tank_position_{tank_position} {}
 
-    ~BoardSatelliteView() = default;
+    BoardSatelliteView(const BoardSatelliteView&) = delete;
+    BoardSatelliteView& operator=(const BoardSatelliteView&) = delete;
+
+    BoardSatelliteView(BoardSatelliteView&&) = delete;
+    BoardSatelliteView& operator=(BoardSatelliteView&&) = delete;
+
 
     char getObjectAt(size_t x, size_t y) const override 
     {

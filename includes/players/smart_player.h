@@ -5,9 +5,14 @@
 class SmartPlayer : public PlayerBase
 {
 public:
+    virtual ~SmartPlayer() override = default;
     SmartPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells);
 
-    virtual ~SmartPlayer() override = default;
+    SmartPlayer(const SmartPlayer&) = delete;
+    SmartPlayer& operator=(const SmartPlayer&) = delete;
+
+    SmartPlayer(SmartPlayer&&) = delete;
+    SmartPlayer& operator=(SmartPlayer&&) = delete;
 
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PlayerFactory.h"
-#include "concrete_player.h"
 #include "simple_player.h"
 #include "smart_player.h"
 

@@ -19,8 +19,11 @@ public:
 
     virtual ~PlayerBase() override = default;
 
-    PlayerBase(const PlayerBase&) = delete;            // Disable copy constructor
-    PlayerBase& operator=(const PlayerBase&) = delete; // Disable copy assignment
+    PlayerBase(const PlayerBase&) = delete;
+    PlayerBase& operator=(const PlayerBase&) = delete;
+    
+    PlayerBase(PlayerBase&&) = delete;
+    PlayerBase& operator=(PlayerBase&&) = delete;
 
     // Implemented in the derived classes
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override = 0;

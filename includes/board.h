@@ -23,6 +23,11 @@ class Board
 public:
     Board(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory);
 
+    Board(const Board&) = delete;
+    Board& operator=(const Board&) = delete;
+    Board(Board&&) = delete;
+    Board& operator=(Board&&) = delete;
+
     GameInfo loadFromFile(const std::string& filename);
     void print() const;
 
@@ -34,7 +39,7 @@ public:
     size_t getWidth() const;
     std::vector<std::vector<Cell>>& grid();
     const std::vector<std::vector<Cell>>& getGrid() const;
-    bool executeTankAction(std::shared_ptr<Tank> tank, ActionRequest action);
+    bool executeTankAction(std::shared_ptr<Tank> tank, ActionRequest& action);
     void doShellsStep(bool shells_only = true);
     void update();
     TankAlgorithm* getAlgorithm(int player_id, int tank_id);

@@ -9,6 +9,11 @@ public:
     InputErrorLogger() = default;
     ~InputErrorLogger();
 
+    InputErrorLogger(const InputErrorLogger&) = delete;
+    InputErrorLogger& operator=(const InputErrorLogger&) = delete;
+    InputErrorLogger(InputErrorLogger&&) = delete;
+    InputErrorLogger& operator=(InputErrorLogger&&) = delete;
+
     template <typename... Args>
     void log(Args&&... args) {
         std::stringstream ss;

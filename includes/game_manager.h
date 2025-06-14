@@ -18,6 +18,11 @@ class GameManager
 public:
     GameManager(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory);
 
+    GameManager(const GameManager&) = delete;
+    GameManager& operator=(const GameManager&) = delete;
+    GameManager(GameManager&&) = delete;
+    GameManager& operator=(GameManager&&) = delete;
+
     bool readBoard(const std::string& filename);
     void run();
 

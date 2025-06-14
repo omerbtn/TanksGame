@@ -7,8 +7,15 @@
 
 class BoardBattleInfo : public BattleInfo {
 public:
+    virtual ~BoardBattleInfo() = default;
     BoardBattleInfo(const std::vector<std::vector<Cell>>& grid, int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
         : grid_(grid), tank_(player_id, tank_id, position, direction, num_shells) {}
+
+    BoardBattleInfo(const BoardBattleInfo&) = delete;
+    BoardBattleInfo& operator=(const BoardBattleInfo&) = delete;
+
+    BoardBattleInfo(BoardBattleInfo&&) = delete;
+    BoardBattleInfo& operator=(BoardBattleInfo&&) = delete;
 
     std::vector<std::vector<Cell>> getGrid() const {
         return grid_;

@@ -11,6 +11,11 @@ public:
     Tank();
     Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells);
 
+    Tank(const Tank&) = delete;
+    Tank& operator=(const Tank&) = delete;
+    Tank(Tank&&) = delete;
+    Tank& operator=(Tank&&) = delete;
+
     Position& position();
     const Position& position() const;
     int playerId() const { return player_id_; }

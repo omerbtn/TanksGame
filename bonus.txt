@@ -15,7 +15,7 @@ This improves the scalability and flexibility of the game engine and allows for 
 
 2. Printer Class Abstraction
 -------------------------------
-I introduced a `Printer` base class using CRTP (Curiously Recurring Template Pattern) to standardize the way boards are printed. This will allow easy extension in the future to various output modes:
+We introduced a `Printer` base class using CRTP (Curiously Recurring Template Pattern) to standardize the way boards are printed. This will allow easy extension in the future to various output modes:
 
 - Text-based CLI output
 - ANSI-colored CLI output
@@ -25,7 +25,7 @@ By separating the printing logic from the game logic, the code becomes easier to
 
 3. Human Player / User Interaction Algorithm
 -----------------------------------------------
-I implemented a custom `UserAlgorithm` that allows a user to control a tank interactively from the command line.
+We implemented a custom `UserAlgorithm` that allows a user to control a tank interactively from the command line.
 
 Features:
 - Supports intuitive command inputs like `f`, `forward`, `shoot`, `left45`, etc.
@@ -33,6 +33,22 @@ Features:
 - Input is normalized and validated to prevent crashes or invalid commands.
 
 This makes the game playable by a human, and demonstrates the flexibility of the algorithm interface.
+
+
+4. Support for Non-Consecutive and Sparse Player Maps
+--------------------------------------------------------
+As part of the multi-player extension, the system now gracefully handles scenarios where some player IDs are unused. 
+For example, the game correctly operates even if only players 1 and 3 have tanks on the board.
+In a standard assignment setup, the appearance of player '3' without a corresponding player '2' would have been treated as invalid input, and the game would terminate immediately in favor of player 1.
+In this bonus version, such a configuration is fully supported and considered legal:
+
+The game initializes properly with only the specified players who have tanks.
+
+The game continues as long as more than one player remains active, regardless of player ID continuity.
+
+This behavior is consistent across the entire codebase and works generically with any subset of player IDs from 1 to 9.
+
+Reference for the forum stating it is a bonus: https://moodle.tau.ac.il/mod/forum/discuss.php?d=90396
 
 ----
 Note:

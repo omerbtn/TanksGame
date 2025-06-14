@@ -14,6 +14,12 @@ public:
     virtual ~SmartAlgorithm() = default;
     SmartAlgorithm(int player_index, int tank_index);
 
+    SmartAlgorithm(const SmartAlgorithm&) = delete;
+    SmartAlgorithm& operator=(const SmartAlgorithm&) = delete;
+
+    SmartAlgorithm(SmartAlgorithm&&) = delete;
+    SmartAlgorithm& operator=(SmartAlgorithm&&) = delete;
+
     virtual ActionRequest getActionImpl() override;
 
 protected:

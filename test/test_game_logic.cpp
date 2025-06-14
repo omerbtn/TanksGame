@@ -36,7 +36,8 @@ TEST_F(BoardTest, TankStepsOnMineAndDies)
 
     // Move forward into the mine
     tank->direction() = Direction::R;
-    bool result = board.executeTankAction(tank, ActionRequest::MoveForward);
+    auto action = ActionRequest::MoveForward;
+    bool result = board.executeTankAction(tank, action);
     board.update();
 
     EXPECT_TRUE(result);
@@ -51,7 +52,8 @@ TEST_F(BoardTest, TankCannotPassThroughWall)
     board.grid()[5][0] = Cell({5, 0}, tank);
 
     tank->direction() = Direction::L;
-    bool result = board.executeTankAction(tank, ActionRequest::MoveForward);
+    auto action = ActionRequest::MoveForward;
+    bool result = board.executeTankAction(tank, action);
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(tank->isAlive());                // Tank is still alive
@@ -73,7 +75,8 @@ TEST_F(BoardTest, TankShootsAndHitsOtherTank)
     board.grid()[5][5] = Cell({5, 5}, tank2);
 
     // Tank1 shoots
-    bool result = board.executeTankAction(tank1, ActionRequest::Shoot);
+    auto action = ActionRequest::Shoot;
+    bool result = board.executeTankAction(tank1, action);
     board.update();
 
     EXPECT_TRUE(result);
@@ -85,7 +88,8 @@ TEST_F(BoardTest, TankMovesForwardCorrectly)
     auto tank = board.getTank(1, 0);  // Get the first tank of player 1
     Position oldPos = tank->position();
 
-    board.executeTankAction(tank, ActionRequest::MoveForward);
+    auto action = ActionRequest::MoveForward;
+    board.executeTankAction(tank, action);
 
     EXPECT_NE(tank->position(), oldPos);
 }
@@ -95,15 +99,16 @@ TEST_F(BoardTest, TankStartsBackwardMoveWithDelay)
     auto tank = board.getTank(1, 0);  // Get the first tank of player 1
     Position oldPos = tank->position();
 
-    board.executeTankAction(tank, ActionRequest::MoveBackward);
+    auto action = ActionRequest::MoveBackward;
+    board.executeTankAction(tank, action);
     tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_TRUE(tank->isBacking());
     EXPECT_EQ(tank->position(), oldPos);
 
-    board.executeTankAction(tank, ActionRequest::MoveBackward);
+    board.executeTankAction(tank, action);
     tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_EQ(tank->position(), oldPos);
-    board.executeTankAction(tank, ActionRequest::MoveBackward);
+    board.executeTankAction(tank, action);
     tank->setLastAction(ActionRequest::MoveBackward);
     EXPECT_NE(tank->position(), oldPos);  // Now it moved
 }
@@ -113,7 +118,8 @@ TEST_F(BoardTest, TankRotateEighthLeft)
     auto tank = board.getTank(2, 0);  // Get the first tank of player 2
     Direction oldDir = tank->direction();
 
-    board.executeTankAction(tank, ActionRequest::RotateLeft45);
+    auto action = ActionRequest::RotateLeft45;
+    board.executeTankAction(tank, action);
 
     EXPECT_EQ(static_cast<int>(tank->direction()), (static_cast<int>(oldDir) + 7) % 8);
 }
@@ -123,7 +129,8 @@ TEST_F(BoardTest, TankRotateQuarterRight)
     auto tank = board.getTank(2, 0);  // Get the first tank of player 2
     Direction oldDir = tank->direction();
 
-    board.executeTankAction(tank, ActionRequest::RotateRight90);
+    auto action = ActionRequest::RotateRight90;
+    board.executeTankAction(tank, action);
 
     EXPECT_EQ(static_cast<int>(tank->direction()), (static_cast<int>(oldDir) + 2) % 8);
 }
@@ -132,8 +139,9 @@ TEST_F(BoardTest, TankShootCooldownPreventsImmediateSecondShot)
 {
     auto tank = board.getTank(1, 0);  // Get the first tank of player 1
 
-    board.executeTankAction(tank, ActionRequest::Shoot);
-    bool secondShot = board.executeTankAction(tank, ActionRequest::Shoot);
+    auto action = ActionRequest::Shoot;
+    board.executeTankAction(tank, action);
+    bool secondShot = board.executeTankAction(tank, action);
 
     EXPECT_FALSE(secondShot);  // Shooting should be blocked
 }
@@ -142,12 +150,14 @@ TEST_F(BoardTest, TankCanShootAgainAfterCooldown)
 {
     auto tank = board.getTank(1, 0);  // Get the first tank of player 1
 
-    board.executeTankAction(tank, ActionRequest::Shoot);
+    auto action = ActionRequest::Shoot;
+    board.executeTankAction(tank, action);
     for (int i = 0; i < 4; ++i) {
-        board.executeTankAction(tank, ActionRequest::DoNothing);
+        auto action = ActionRequest::DoNothing;
+        board.executeTankAction(tank, action);
     }
 
-    bool secondShot = board.executeTankAction(tank, ActionRequest::Shoot);
+    bool secondShot = board.executeTankAction(tank, action);
 
     EXPECT_TRUE(secondShot);
 }
@@ -157,7 +167,8 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick)
     auto tank = board.getTank(1, 0);  // Get the first tank of player 1
     tank->direction() = Direction::R;
 
-    board.executeTankAction(tank, ActionRequest::Shoot);
+    auto action = ActionRequest::Shoot;
+    board.executeTankAction(tank, action);
 
     Position oldPos;
     for (size_t x = 0; x < board.getHeight(); ++x) 
@@ -204,12 +215,14 @@ TEST_F(BoardTest, WallDestroyedAfterTwoShellHits)
     tank->position() = std::make_pair(4, 5);
     tank->direction() = Direction::R;
 
-    board.executeTankAction(tank, ActionRequest::Shoot);
+    auto shoot = ActionRequest::Shoot;
+    board.executeTankAction(tank, shoot);
     board.update();
-    board.executeTankAction(tank, ActionRequest::DoNothing);
-    board.executeTankAction(tank, ActionRequest::DoNothing);
-    board.executeTankAction(tank, ActionRequest::DoNothing);
-    board.executeTankAction(tank, ActionRequest::Shoot);
+    auto do_nothing = ActionRequest::DoNothing;
+    board.executeTankAction(tank, do_nothing);
+    board.executeTankAction(tank, do_nothing);
+    board.executeTankAction(tank, do_nothing);
+    board.executeTankAction(tank, shoot);
     board.update();
 
     EXPECT_FALSE(board.grid()[wallPos.second][wallPos.first].has(ObjectType::Wall));
@@ -225,8 +238,9 @@ TEST_F(BoardTest, ShellCollisionDestroysBothShells)
     tank1->direction() = Direction::R;
     tank2->direction() = Direction::L;
 
-    board.executeTankAction(tank1, ActionRequest::Shoot);
-    board.executeTankAction(tank2, ActionRequest::Shoot);
+    auto shoot = ActionRequest::Shoot;
+    board.executeTankAction(tank1, shoot);
+    board.executeTankAction(tank2, shoot);
 
     board.update();
     board.update();
@@ -247,27 +261,9 @@ TEST_F(BoardTest, TankWrapsAroundBoardEdges)
     tank->position() = std::make_pair(9, 9);  // Right edge
     tank->direction() = Direction::R;
 
-    board.executeTankAction(tank, ActionRequest::MoveForward);
+    auto action = ActionRequest::MoveForward;
+    board.executeTankAction(tank, action);
 
     EXPECT_EQ(tank->position().first, 0);  // Wrapped around horizontally
     EXPECT_EQ(tank->position().second, 9);
 }
-
-// Should fix this test, GameManager ctor no longer takes a Board
-/*
-TEST_F(BoardTest, BothTanksDestroyedLeadsToTie) 
-{
-    GameManager gm(&board);
-
-    auto& player1 = board.players()[1];
-    auto& player2 = board.players()[2];
-
-    auto tank1 = player1.tank();
-    auto tank2 = player2.tank();
-
-    tank1->destroy();
-    tank2->destroy();
-
-    EXPECT_TRUE(gm.isGameOver());
-}
-*/

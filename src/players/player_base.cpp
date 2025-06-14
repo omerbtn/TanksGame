@@ -154,5 +154,5 @@ SmartBattleInfo PlayerBase::createBattleInfo(const SatelliteView& satellite_view
     // Update shell directions before constructing info
     updateShellPossibleDirections(prev_grid, grid_);
 
-    return SmartBattleInfo(satellite_view, height_, width_, max_steps_, num_shells_, shell_possible_directions_);
+    return SmartBattleInfo(satellite_view, height_, width_, max_steps_, num_shells_, player_index_, shell_possible_directions_);
 }

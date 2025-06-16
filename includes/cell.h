@@ -5,11 +5,11 @@
 #include <vector>
 
 #include "game_object_interface.h"
-#include "tank.h"
-#include "shell.h"
-#include "wall.h"
 #include "mine.h"
-#include "types/position.h"
+#include "position.h"
+#include "shell.h"
+#include "tank.h"
+#include "wall.h"
 
 class Cell
 {
@@ -27,7 +27,7 @@ public:
     std::shared_ptr<GameObjectInterface> getObjectByType(ObjectType type) const;
     const std::vector<std::shared_ptr<GameObjectInterface>>& getObjectsByType(ObjectType type) const;
     size_t getObjectsCount() const;
-    
+
     bool has(ObjectType type) const;
     bool empty() const;
 

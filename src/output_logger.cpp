@@ -1,5 +1,6 @@
 #include "output_logger.h"
 
+
 OutputLogger::OutputLogger(const std::string& filename, const size_t total_tanks) : out_(filename), total_tanks_(total_tanks)
 {
     if (!out_)

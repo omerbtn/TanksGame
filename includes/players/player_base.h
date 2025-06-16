@@ -21,7 +21,7 @@ public:
 
     PlayerBase(const PlayerBase&) = delete;
     PlayerBase& operator=(const PlayerBase&) = delete;
-    
+
     PlayerBase(PlayerBase&&) = delete;
     PlayerBase& operator=(PlayerBase&&) = delete;
 
@@ -54,4 +54,5 @@ protected:
     std::vector<std::vector<Cell>> grid_; // Updates every time a tank asks for battle info
     std::unordered_map<Position, std::unordered_set<Direction>> shell_possible_directions_;
     // shell_possible_directions_[pos] = set of possible directions for shell at pos
+    std::unordered_set<size_t> possible_turns_passed_; // Set of possible turns passed since the last GetBattleInfo request
 };

@@ -1,5 +1,17 @@
 #include "algorithms/algorithm_utils.h"
 
+#include "global_config.h"
+#include "printers/ansi_printer.h"
+#include "printers/default_printer.h"
+
+
+void printGrid(const std::vector<std::vector<Cell>>& grid)
+{
+    using SelectedPrinter = std::conditional_t<config::get<bool>("use_ansi_printer"), AnsiPrinter, DefaultPrinter>;
+    SelectedPrinter printer(grid);
+    printer.print();
+}
+
 Direction getOppositeDirection(Direction dir)
 {
     return static_cast<Direction>((static_cast<int>(dir) + 4) % 8);
@@ -126,6 +138,20 @@ Position backwardPosition(const Position& pos, Direction dir, size_t width, size
     return forwardPosition(pos, getOppositeDirection(dir), width, height, steps);
 }
 
+size_t getDistance(const Position& from, const Position& to, Direction dir, size_t width, size_t height)
+{
+    Position current = from;
+    size_t distance = 0;
+
+    while (current != to)
+    {
+        current = forwardPosition(current, dir, width, height);
+        ++distance;
+    }
+
+    return distance;
+}
+
 Direction getSeedDirection(int player_index)
 {
     return (player_index % 2 == 1) ? Direction::L : Direction::R;
@@ -155,8 +181,8 @@ bool isBlockedByWall(const std::vector<std::vector<Cell>>& grid, const Position&
         return true; // If grid is empty, assume walls are blocking
     }
 
-    size_t width = grid[0].size();
     size_t height = grid.size();
+    size_t width = grid[0].size();
     Position pos = from;
     for (size_t i = 0; i < steps; ++i)
     {

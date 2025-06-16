@@ -1,7 +1,7 @@
 #include "shell.h"
 
 
-ObjectType Shell::type() const 
+ObjectType Shell::type() const
 {
     return ObjectType::Shell;
 }

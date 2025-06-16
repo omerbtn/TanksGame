@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "cell.h"
 #include "SatelliteView.h"
+#include "cell.h"
 
-class BoardSatelliteView : public SatelliteView 
+class BoardSatelliteView : public SatelliteView
 {
 public:
     virtual ~BoardSatelliteView() = default;
@@ -19,32 +19,32 @@ public:
     BoardSatelliteView& operator=(BoardSatelliteView&&) = delete;
 
 
-    char getObjectAt(size_t x, size_t y) const override 
+    char getObjectAt(size_t x, size_t y) const override
     {
-        if (x >= grid_.size() || y >= grid_[0].size()) 
+        if (x >= grid_.size() || y >= grid_[0].size())
             return '&';
-        
-        if (Position(x, y) == tank_position_) 
+
+        if (Position(x, y) == tank_position_)
             return '%';
-        
+
         const auto& cell = grid_[x][y];
-        
-        if (cell.has(ObjectType::Wall)) 
+
+        if (cell.has(ObjectType::Wall))
             return '#';
-        
-        if (cell.has(ObjectType::Shell)) 
+
+        if (cell.has(ObjectType::Shell))
             return '*';
-        
-        if (cell.has(ObjectType::Mine)) 
+
+        if (cell.has(ObjectType::Mine))
             return '@';
-        
-        if (cell.has(ObjectType::Tank)) 
+
+        if (cell.has(ObjectType::Tank))
         {
             const auto tank_obj = cell.getObjectByType(ObjectType::Tank);
             auto tank_ptr = std::static_pointer_cast<Tank>(tank_obj);
             return '0' + tank_ptr->playerId();
         }
-        
+
         return ' ';
     }
 

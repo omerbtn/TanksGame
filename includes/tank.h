@@ -1,9 +1,9 @@
 #pragma once
 
+#include "ActionRequest.h"
 #include "movable_object.h"
 #include "types/direction.h"
 #include "types/position.h"
-#include "ActionRequest.h"
 
 class Tank : public MovableObject
 {
@@ -22,6 +22,7 @@ public:
     int tankId() const { return tank_id_; }
     bool isAlive() const;
     size_t ammo() const;
+    size_t cooldown() const;
     void destroy();
     void decreaseCooldown();
     bool canShoot() const;

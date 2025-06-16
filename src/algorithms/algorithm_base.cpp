@@ -1,9 +1,6 @@
 #include "algorithms/algorithm_base.h"
 
-#include <cassert>
-
 #include "algorithms/algorithm_utils.h"
-#include "board_battle_info.h"
 #include "global_config.h"
 #include "printers/ansi_printer.h"
 #include "printers/default_printer.h"
@@ -11,13 +8,6 @@
 
 
 AlgorithmBase::AlgorithmBase(int player_index, int tank_index) : player_index_(player_index), tank_index_(tank_index) {}
-
-void AlgorithmBase::printGrid() const
-{
-    using SelectedPrinter = std::conditional_t<config::get<bool>("use_ansi_printer"), AnsiPrinter, DefaultPrinter>;
-    SelectedPrinter printer(grid_);
-    printer.print();
-}
 
 bool AlgorithmBase::hasLineOfSightToOpponent(const Position& start, Direction dir, Position& r_opponent_pos) const
 {
@@ -70,7 +60,7 @@ bool AlgorithmBase::isShellIncoming(const Position& pos,
                                                   Direction::D, Direction::DL, Direction::L, Direction::UL};
 
     // Check up to `shell_max_distance` steps
-    for (size_t steps = 0; steps < shell_max_distance; ++steps)
+    for (size_t steps = 1; steps <= shell_max_distance; ++steps)
     {
         std::vector<Direction> next_to_check;
         // Check all directions
@@ -129,8 +119,9 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
 
         if constexpr (config::get<bool>("verbose_debug"))
         {
-            std::cout << "[AlgorithmBase] Shell incoming from " << shell_pos << " with possible direction "
-                      << directionToString(shell_possible_dir) << " towards tank at " << tank_pos << std::endl;
+            std::cout << "[AlgorithmBase] Shell incoming from " << shell_pos
+                      << " with possible direction " << directionToString(shell_possible_dir)
+                      << " towards tank at " << tank_pos << std::endl;
         }
 
         // We don't want to run towards the shell, or at the opposite direction (because the shell
@@ -191,8 +182,7 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
             if constexpr (config::get<bool>("verbose_debug"))
             {
                 std::cout << "[AlgorithmBase] Didn't find a safe action to evade the shell, "
-                             "requesting BattleInfo to "
-                             "get more information."
+                             "requesting BattleInfo to get more information."
                           << std::endl;
             }
             return ActionRequest::GetBattleInfo;
@@ -276,6 +266,7 @@ void AlgorithmBase::handleTankMovement(const ActionRequest action)
         if (tank_->canShoot())
         {
             tank_->shoot();
+            extendShootActionHandling();
         }
 
         // We don't keep track of the shells inside the algorithm. Too complicated and error-prone.
@@ -289,10 +280,7 @@ void AlgorithmBase::handleTankMovement(const ActionRequest action)
     case ActionRequest::MoveBackward:
         [[fallthrough]];
     default:
-    {
-        assert(false);
         break;
-    }
     }
 }
 
@@ -300,7 +288,14 @@ void AlgorithmBase::printTankInfo() const
 {
     // Print grid
     std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_ << " known grid:" << std::endl;
-    printGrid();
+    printGrid(grid_);
+
+    // Print tank's position
+    if (tank_)
+    {
+        std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_
+                  << " position: " << tank_->position() << std::endl;
+    }
 
     // Print shells possible directions
     std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_

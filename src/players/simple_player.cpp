@@ -1,4 +1,5 @@
 #include "simple_player.h"
+
 #include "algorithm_utils.h"
 #include "smart_battle_info.h"
 

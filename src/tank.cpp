@@ -2,6 +2,7 @@
 
 #include "global_config.h"
 
+
 Tank::Tank() : MovableObject(Direction::R) {}
 
 Tank::Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
@@ -32,6 +33,11 @@ size_t Tank::ammo() const
     return shells_;
 }
 
+size_t Tank::cooldown() const
+{
+    return cooldown_;
+}
+
 void Tank::destroy()
 {
     alive_ = false;
@@ -39,7 +45,8 @@ void Tank::destroy()
 
 void Tank::decreaseCooldown()
 {
-    if (cooldown_ > 0) cooldown_--;
+    if (cooldown_ > 0)
+        cooldown_--;
 }
 
 bool Tank::canShoot() const
@@ -66,7 +73,8 @@ void Tank::startBackwait()
 
 void Tank::tickBackwait()
 {
-    if (backwait_ > 0) --backwait_;
+    if (backwait_ > 0)
+        --backwait_;
 }
 
 void Tank::resetBackwait()

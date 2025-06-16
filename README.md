@@ -43,15 +43,4 @@ From the root of the project (not inside `build/`), run:
 
 ## Input files
 
-The structure of the input files is as following:
-
-```
-Width Height 
-
-BOARD INFO
-```
-
-So the first line is used for indicating the dimensions of the board.
-The next lines are the board itself.
-
 The input and output files for demonstration are located in the resources folder.

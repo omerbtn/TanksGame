@@ -18,7 +18,7 @@ public:
     virtual ~AlgorithmBase() = default;
     AlgorithmBase(int player_index, int tank_index);
 
-    AlgorithmBase(const AlgorithmBase& ) = delete;
+    AlgorithmBase(const AlgorithmBase&) = delete;
     AlgorithmBase& operator=(const AlgorithmBase&) = delete;
 
     AlgorithmBase(AlgorithmBase&&) = delete;
@@ -32,14 +32,14 @@ protected:
 
     virtual void extendBattleInfoProcessing(SmartBattleInfo&) {}
     void handleTankMovement(const ActionRequest action);
+    virtual void extendShootActionHandling() {}
 
     bool hasLineOfSightToOpponent(const Position& start_pos, Direction dir, Position& r_opponent_pos) const;
-    bool isShellIncoming(const Position& pos, Position *r_shell_pos = nullptr, Direction* r_shell_possible_dir = nullptr, size_t shell_max_distance = 8) const;
+    bool isShellIncoming(const Position& pos, Position* r_shell_pos = nullptr, Direction* r_shell_possible_dir = nullptr, size_t shell_max_distance = 8) const;
     std::optional<ActionRequest> getEvadeActionIfShellIncoming(size_t shell_max_distance = 8) const; // 8 because our grid may be outdated, and we might need time to evade
 
     virtual void printTankInfo() const;         // Print tank's known information, for debugging purposes
     virtual void extendPrintTankInfo() const {} // Extend the tank info printing, for derived classes
-    void printGrid() const;
 
     int player_index_;
     int tank_index_;

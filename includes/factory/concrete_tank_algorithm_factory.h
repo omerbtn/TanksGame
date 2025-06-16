@@ -20,33 +20,13 @@ public:
             throw std::invalid_argument("Invalid player index");
         }
 
-        switch (player_index)
-        {
-        case 1:
-        {
-            return std::make_unique<SmartAlgorithm>(player_index, tank_index);
-        }
-        case 2:
+        if (player_index % 2 == 0)
         {
             return std::make_unique<SimpleAlgorithm>(player_index, tank_index);
         }
-        case 3:
-            return std::make_unique<UserAlgorithm>(player_index, tank_index);
-        case 4:
-            [[fallthrough]];
-        case 5:
-            [[fallthrough]];
-        case 6:
-            [[fallthrough]];
-        case 7:
-            [[fallthrough]];
-        case 8:
-            [[fallthrough]];
-        case 9:
+        else
+        {
             return std::make_unique<SmartAlgorithm>(player_index, tank_index);
-        default:
-            assert(false);
-            throw std::invalid_argument("Invalid player index");
         }
     }
 };

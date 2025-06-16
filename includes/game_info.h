@@ -1,8 +1,8 @@
 #pragma once
 
+#include "tank.h"
 #include <cstddef>
 #include <vector>
-#include "tank.h"
 
 class GameInfo
 {
@@ -12,7 +12,6 @@ public:
     size_t height = 0;
     size_t max_steps = 0;
     size_t num_shells = 0;
-
     std::vector<std::shared_ptr<Tank>> ordered_tanks;
 
     GameInfo() = default;
@@ -22,6 +21,5 @@ public:
           height(height),
           max_steps(max_steps),
           num_shells(num_shells),
-          ordered_tanks(std::move(ordered_tanks)) {
-    }
+          ordered_tanks(std::move(ordered_tanks)) {}
 };

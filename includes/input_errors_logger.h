@@ -1,10 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <sstream>
+#include <string>
+#include <vector>
 
-class InputErrorLogger {
+class InputErrorLogger
+{
 public:
     InputErrorLogger() = default;
     ~InputErrorLogger();
@@ -15,7 +16,8 @@ public:
     InputErrorLogger& operator=(InputErrorLogger&&) = delete;
 
     template <typename... Args>
-    void log(Args&&... args) {
+    void log(Args&&... args)
+    {
         std::stringstream ss;
         (ss << ... << args);
         errors_.push_back(ss.str());
@@ -24,5 +26,5 @@ public:
 private:
     void save_to_file(const std::string& filename) const;
 
-    std::vector<std::string> errors_;  // Accumulate error messages
+    std::vector<std::string> errors_; // Accumulate error messages
 };

@@ -1,6 +1,8 @@
 #include "player_base.h"
+
 #include "algorithm_utils.h"
 #include "global_config.h"
+
 
 PlayerBase::PlayerBase(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells)
     : Player(player_index, x, y, max_steps, num_shells),
@@ -28,6 +30,7 @@ void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cel
     // Save previous possible directions for narrowing down the possible directions
     auto prev_shell_possible_directions = shell_possible_directions_;
     shell_possible_directions_.clear();
+    possible_turns_passed_.clear();
 
     size_t interval = config::get<size_t>("battle_info_interval"); // Maximum number of turns passed since the last GetBattleInfo request
     size_t num_shells = getNumberOfShellsInGrid(curr_grid);
@@ -55,6 +58,7 @@ void PlayerBase::updateShellPossibleDirections(const std::vector<std::vector<Cel
                 // If we have less unexplainable shells than allowed, we can consider this a valid number of turns passed
                 // and accumulate possible directions for each shell
                 found_valid = true;
+                possible_turns_passed_.insert(turns_passed);
                 accumulateDirections(accumulated_directions, candidate_map, unexplainable_shells);
             }
         }

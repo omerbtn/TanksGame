@@ -10,6 +10,7 @@
 #include "output_logger.h"
 #include "tank.h"
 
+
 GameManager::GameManager(const PlayerFactory& playerFactory, const TankAlgorithmFactory& algorithmFactory)
     : board_(std::make_unique<Board>(playerFactory, algorithmFactory)) {}
 
@@ -152,14 +153,16 @@ void GameManager::run()
                 was_alive_at_round_start_[i] = ordered_tanks_[i]->isAlive();
             }
 
-            board_->doShellsStep(false);
             doTanksStep();
-
+            board_->print();
+            
+            board_->doShellsStep(false);
             board_->print();
         }
         else
         {
             std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
+            
             board_->doShellsStep(true);
 
             logTankActions();

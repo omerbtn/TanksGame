@@ -4,7 +4,7 @@
 #include "board.h"
 #include "tank.h"
 
-// Used mostly for tests purposes.
+// Used for testing purposes.
 class SeedAlgorithm : public TankAlgorithm
 {
 public:

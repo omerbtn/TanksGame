@@ -17,5 +17,11 @@ public:
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override;
 
 private:
-    std::unordered_map<int, std::unordered_set<Position>> tanks_reserved_positions_;  // tank_id -> reserved positions
+    void updateWallsDamage();
+    bool isShellCloseToWall(const Position& shell_pos, Direction shell_dir, Position& r_wall_pos) const;
+
+private:
+    std::unordered_map<int, std::unordered_set<Position>> tanks_reserved_positions_; // tank_id -> reserved positions
+    std::unordered_map<Position, size_t> walls_damage_;                              // Wall's position -> number of hits it has taken
+    std::unordered_set<std::pair<Position, Position>> reported_shell_wall_hits_;     // (shell_pos, wall_pos)
 };

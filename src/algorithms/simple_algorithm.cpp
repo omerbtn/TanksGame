@@ -1,16 +1,18 @@
 #include "algorithms/simple_algorithm.h"
+
+#include <iostream>
+
 #include "algorithms/algorithm_utils.h"
 #include "global_config.h"
-#include <iostream>
 
 
 SimpleAlgorithm::SimpleAlgorithm(int player_index, int tank_index)
     : AlgorithmBase(player_index, tank_index) {}
 
-ActionRequest SimpleAlgorithm::getActionImpl() 
+ActionRequest SimpleAlgorithm::getActionImpl()
 {
     // If a shell is coming, run away
-    if (auto evade = getEvadeActionIfShellIncoming(std::max(width_, height_)))  // Be more conservative
+    if (auto evade = getEvadeActionIfShellIncoming(std::max(width_, height_))) // Be more conservative
     {
         if constexpr (config::get<bool>("verbose_debug"))
         {
@@ -26,7 +28,7 @@ ActionRequest SimpleAlgorithm::getActionImpl()
         // He is just in front of us, shoot him!
         if constexpr (config::get<bool>("verbose_debug"))
         {
-            std::cout << "[SimpleAlgorithm] Shooting opponent at " << opponent_pos 
+            std::cout << "[SimpleAlgorithm] Shooting opponent at " << opponent_pos
                       << " from " << tank_->position() << std::endl;
         }
         return ActionRequest::Shoot;

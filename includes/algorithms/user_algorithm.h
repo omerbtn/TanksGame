@@ -2,6 +2,8 @@
 
 #include "TankAlgorithm.h"
 
+// Algorithm that allows the user to control his tanks manually.
+// Used for testing purposes.
 class UserAlgorithm : public TankAlgorithm
 {
 public:

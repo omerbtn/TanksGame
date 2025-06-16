@@ -1,0 +1,75 @@
+RotateRight90, GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveBackward (ignored), GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward (ignored), GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveBackward (ignored), GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+MoveBackward (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveForward, GetBattleInfo
+MoveBackward, GetBattleInfo
+DoNothing (ignored), GetBattleInfo
+DoNothing, GetBattleInfo
+RotateRight90, GetBattleInfo
+RotateLeft90, GetBattleInfo

@@ -4,11 +4,11 @@ project(tanks_game)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Enable strict compiler warnings
 add_compile_options(-Wall -Wextra -Werror -pedantic)
 
-# TODO: remove
 # Enable debug symbols and set the debug type to gdb
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
@@ -22,6 +22,7 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 
 # Make it available
@@ -44,7 +45,7 @@ add_custom_command(
 add_custom_target(generate_config DEPENDS ${CONFIG_OUTPUT})
 
 # Include header files
-include_directories(includes includes/algorithms includes/types)
+include_directories(${CMAKE_SOURCE_DIR} common includes includes/algorithms includes/types includes/factory includes/players)
 
 # Collect all .cpp files in the main folder
 file(GLOB_RECURSE SOURCES "src/*.cpp")

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ActionRequest.h"
 #include "movable_object.h"
 #include "types/direction.h"
 #include "types/position.h"
@@ -7,32 +8,46 @@
 class Tank : public MovableObject
 {
 public:
-    Tank(size_t id, Position position, Direction direction);
+    Tank();
+    Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells);
+
+    Tank(const Tank&) = delete;
+    Tank& operator=(const Tank&) = delete;
+    Tank(Tank&&) = delete;
+    Tank& operator=(Tank&&) = delete;
 
     Position& position();
     const Position& position() const;
-
-    size_t id() const;
-    bool is_alive() const;
+    int playerId() const { return player_id_; }
+    int tankId() const { return tank_id_; }
+    bool isAlive() const;
     size_t ammo() const;
+    size_t cooldown() const;
     void destroy();
-    void decrease_cooldown();
-    bool can_shoot() const;
+    void decreaseCooldown();
+    bool canShoot() const;
     void shoot();
-    bool is_backing() const;
-    void start_backwait();
-    void tick_backwait();
-    void reset_backwait();
-    void continue_backing();
-    bool ready_to_move_back() const;
+    bool isBacking() const;
+    void startBackwait();
+    void tickBackwait();
+    void resetBackwait();
+    bool readyToMoveBack() const;
+    bool waitingBackMove() const;
+    void setWaitingBackMove(bool waiting_back_move);
+    void copyRuntimeStateFrom(const Tank& other);
+    ActionRequest lastAction() const;
+    void setLastAction(ActionRequest action);
 
 private:
     virtual ObjectType type() const override;
 
-    size_t id_;
+    int tank_id_;
+    int player_id_;
     Position position_;
     size_t shells_;
     size_t cooldown_ = 0;
     size_t backwait_ = 0;
     bool alive_ = true;
+    bool waiting_back_move_ = false;
+    ActionRequest last_action_ = ActionRequest::DoNothing;
 };

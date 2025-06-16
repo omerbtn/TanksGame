@@ -1,30 +1,38 @@
 #pragma once
 
-#include "algorithm_interface.h"
-
+#include "algorithm_utils.h"
 #include "board.h"
 #include "tank.h"
-#include "algorithm_utils.h"
 
-// Used mostly for tests purposes.
-class SeedAlgorithm : public AlgorithmInterface 
+// Used for testing purposes.
+class SeedAlgorithm : public TankAlgorithm
 {
 public:
-    SeedAlgorithm(const std::vector<TankAction>& seed) : seed_{seed} {}
+    virtual ~SeedAlgorithm() = default;
+    SeedAlgorithm(const std::vector<ActionRequest>& seed) : seed_{seed} {}
 
-    TankAction decideAction(const Tank &self, const Board &board) override 
+    SeedAlgorithm(const SeedAlgorithm&) = delete;
+    SeedAlgorithm& operator=(const SeedAlgorithm&) = delete;
+    SeedAlgorithm(SeedAlgorithm&&) = delete;
+    SeedAlgorithm& operator=(SeedAlgorithm&&) = delete;
+
+    virtual ActionRequest getAction() override
     {
-        // Only to ignore the warning about unused variables, anyway this code is just for testing
-        board.forward_position(self.position(), self.direction());
-
-        if (current_step_ < seed_.size()) 
+        if (current_step_ < seed_.size())
         {
             return seed_[current_step_++];
         }
 
-        return TankAction::Idle;
+        return ActionRequest::DoNothing;
     }
+
+    virtual void updateBattleInfo(BattleInfo& info) override
+    {
+        // No-op for seed algorithm
+        (void)info;
+    }
+
 private:
-    const std::vector<TankAction> seed_;
+    const std::vector<ActionRequest> seed_;
     size_t current_step_ = 0;
 };

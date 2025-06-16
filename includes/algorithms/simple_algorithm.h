@@ -1,13 +1,18 @@
 #pragma once
 
-#include "algorithm_interface.h"
+#include "algorithms/algorithm_base.h"
 
-#include "board.h"
-#include "tank.h"
-#include "algorithm_utils.h"
-
-class SimpleAlgorithm : public AlgorithmInterface
+class SimpleAlgorithm : public AlgorithmBase
 {
 public:
-    TankAction decideAction(const Tank &tank, const Board &board) override;
+    virtual ~SimpleAlgorithm() = default;
+    SimpleAlgorithm(int player_index, int tank_index);
+
+    SimpleAlgorithm(const SimpleAlgorithm&) = delete;
+    SimpleAlgorithm& operator=(const SimpleAlgorithm&) = delete;
+
+    SimpleAlgorithm(SimpleAlgorithm&&) = delete;
+    SimpleAlgorithm& operator=(SimpleAlgorithm&&) = delete;
+
+    virtual ActionRequest getActionImpl() override;
 };

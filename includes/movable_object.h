@@ -3,7 +3,7 @@
 #include "game_object_interface.h"
 #include "types/direction.h"
 
-class MovableObject : public GameObjectInterface 
+class MovableObject : public GameObjectInterface
 {
 public:
     MovableObject(Direction direction);
@@ -14,5 +14,6 @@ public:
 private:
     virtual ObjectType type() const override = 0;
 
+protected:
     Direction direction_;
 };

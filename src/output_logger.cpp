@@ -1,59 +1,105 @@
 #include "output_logger.h"
 
 
-OutputLogger::OutputLogger(const std::string& filename) : out_(filename) 
+OutputLogger::OutputLogger(const std::string& filename, const size_t total_tanks) : out_(filename), total_tanks_(total_tanks)
 {
-    if (!out_) 
+    if (!out_)
     {
         valid_ = false;
-        std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
-    } 
-    else 
+        if (!filename.empty())
+            std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
+    }
+    else
     {
         valid_ = true;
     }
 }
 
-void OutputLogger::logAction(int player, int step, TankAction action, bool valid) 
+bool OutputLogger::is_valid() const
 {
-    if (!valid_) 
-    {
-        return;
-    }
-
-    out_ << "Step " << step << " | Player " << player << " | Action: " << action_to_string(action) << " | "
-         << (valid ? " OK" : " BAD") << std::endl;
+    return valid_;
 }
 
-void OutputLogger::logResult(const Tank &t1, const Tank &t2, int step) 
+void OutputLogger::logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool was_alive_at_start, bool died_this_round)
 {
-    if (!valid_) 
+    if (!valid_)
     {
         return;
     }
 
-    if (!t1.is_alive() && !t2.is_alive())
-        out_ << "Result: Tie - Both tanks destroyed at step " << step << std::endl;
-    else if (!t1.is_alive())
-        out_ << "Result: Player 2 wins - Tank 1 destroyed" << std::endl;
-    else if (!t2.is_alive())
-        out_ << "Result: Player 1 wins - Tank 2 destroyed" << std::endl;
+    if (!was_alive_at_start)
+    {
+        // Tank was already dead before this round started
+        out_ << "killed";
+    }
     else
-        out_ << "Result: Tie - Time expired" << std::endl;
+    {
+        // Tank was alive at start, so show its action
+        if (action)
+        {
+            out_ << action_to_string(*action);
+        }
+        else
+        {
+            out_ << "DoNothing"; // Fallback, though this shouldn't happen for alive tanks
+        }
+
+        // Add (ignored) if action was invalid
+        if (!valid)
+        {
+            out_ << " (ignored)";
+        }
+
+        // Add (killed) if tank died during this round
+        if (died_this_round)
+        {
+            out_ << " (killed)";
+        }
+    }
+
+    if (tank_no < total_tanks_ - 1)
+    {
+        out_ << ", ";
+    }
+    else
+    {
+        out_ << std::endl;
+    }
 }
 
-std::string OutputLogger::action_to_string(TankAction action) const 
+void OutputLogger::logResult(std::string&& result)
+{
+    if (!valid_)
+    {
+        return;
+    }
+
+    out_ << std::move(result) << std::endl;
+}
+
+std::string OutputLogger::action_to_string(ActionRequest action) const
 {
     switch (action)
     {
-        case TankAction::MoveForward: return "MoveForward";
-        case TankAction::MoveBackward: return "MoveBackward";
-        case TankAction::RotateLeft_1_8: return "RotateLeft_1_8";
-        case TankAction::RotateRight_1_8: return "RotateRight_1_8";
-        case TankAction::RotateLeft_1_4: return "RotateLeft_1_4";
-        case TankAction::RotateRight_1_4: return "RotateRight_1_4";
-        case TankAction::Shoot: return "Shoot";
-        case TankAction::Idle: return "Idle";
-        default: return "Unknown Action";
+    case ActionRequest::MoveForward:
+        return "MoveForward";
+    case ActionRequest::MoveBackward:
+        return "MoveBackward";
+    case ActionRequest::RotateLeft90:
+        return "RotateLeft90";
+    case ActionRequest::RotateRight90:
+        return "RotateRight90";
+    case ActionRequest::RotateLeft45:
+        return "RotateLeft45";
+    case ActionRequest::RotateRight45:
+        return "RotateRight45";
+    case ActionRequest::Shoot:
+        return "Shoot";
+    case ActionRequest::GetBattleInfo:
+        return "GetBattleInfo";
+    case ActionRequest::DoNothing:
+        return "DoNothing";
+    default:
+        return "Unknown Action";
     }
 }

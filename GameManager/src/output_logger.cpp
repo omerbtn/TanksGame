@@ -1,0 +1,80 @@
+#include "output_logger.h"
+
+#include "utils.h"
+
+
+OutputLogger::OutputLogger(const std::string& filename, const size_t total_tanks) : out_(filename), total_tanks_(total_tanks)
+{
+    if (!out_)
+    {
+        valid_ = false;
+        if (!filename.empty())
+            std::cerr << "Warning: Failed to open log file: " << filename << std::endl;
+    }
+    else
+    {
+        valid_ = true;
+    }
+}
+
+bool OutputLogger::is_valid() const
+{
+    return valid_;
+}
+
+void OutputLogger::logAction(size_t tank_no, std::optional<ActionRequest> action, bool valid, bool was_alive_at_start, bool died_this_round)
+{
+    if (!valid_)
+    {
+        return;
+    }
+
+    if (!was_alive_at_start)
+    {
+        // Tank was already dead before this round started
+        out_ << "killed";
+    }
+    else
+    {
+        // Tank was alive at start, so show its action
+        if (action)
+        {
+            out_ << tankActionToString(*action);
+        }
+        else
+        {
+            out_ << "DoNothing"; // Fallback, though this shouldn't happen for alive tanks
+        }
+
+        // Add (ignored) if action was invalid
+        if (!valid)
+        {
+            out_ << " (ignored)";
+        }
+
+        // Add (killed) if tank died during this round
+        if (died_this_round)
+        {
+            out_ << " (killed)";
+        }
+    }
+
+    if (tank_no < total_tanks_ - 1)
+    {
+        out_ << ", ";
+    }
+    else
+    {
+        out_ << std::endl;
+    }
+}
+
+void OutputLogger::logResult(std::string&& result)
+{
+    if (!valid_)
+    {
+        return;
+    }
+
+    out_ << std::move(result) << std::endl;
+}

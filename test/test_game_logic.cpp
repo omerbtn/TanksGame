@@ -174,9 +174,9 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick)
     board.executeTankAction(tank, action);
 
     Position oldPos;
-    for (size_t x = 0; x < board.getHeight(); ++x)
+    for (size_t x = 0; x < board.getWidth(); ++x)
     {
-        for (size_t y = 0; y < board.getWidth(); ++y)
+        for (size_t y = 0; y < board.getHeight(); ++y)
         {
             const auto& cell = board.getCell(Position(x, y));
             if (cell.has(ObjectType::Shell))
@@ -192,9 +192,9 @@ TEST_F(BoardTest, ShellMovesTwoStepsPerTick)
     board.doShellsStep(); // Move shells another step forward
 
     Position newPos;
-    for (size_t x = 0; x < board.getHeight(); ++x)
+    for (size_t x = 0; x < board.getWidth(); ++x)
     {
-        for (size_t y = 0; y < board.getWidth(); ++y)
+        for (size_t y = 0; y < board.getHeight(); ++y)
         {
             const auto& cell = board.getCell(Position(x, y));
             if (cell.has(ObjectType::Shell))
@@ -248,9 +248,9 @@ TEST_F(BoardTest, ShellCollisionDestroysBothShells)
     board.update();
     board.update();
 
-    for (size_t x = 0; x < board.getHeight(); ++x)
+    for (size_t x = 0; x < board.getWidth(); ++x)
     {
-        for (size_t y = 0; y < board.getWidth(); ++y)
+        for (size_t y = 0; y < board.getHeight(); ++y)
         {
             const auto& cell = board.getCell(Position(x, y));
             ASSERT_FALSE(cell.has(ObjectType::Shell)); // Validate no shells remaining.

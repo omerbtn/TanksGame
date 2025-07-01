@@ -383,9 +383,14 @@ lib
 # Ignore executable files
 *.a
 *.exe
+*.dll
+*.so
 
 # Ignore generated config files
 includes/config_generated.h
 
 # Ignore testing directory
 Testing/
+
+# Ignore simulator executable
+Simulator/simulator_*

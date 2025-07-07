@@ -22,6 +22,7 @@ void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& s
     info.setTanksReservedPositions(tanks_reserved_positions_);
     info.setWallsDamage(walls_damage_, true);
 
+    // Update the tank with the battle info
     tank.updateBattleInfo(info);
 
     // Update the tanks reserved positions
@@ -29,6 +30,9 @@ void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& s
 
     // Update the walls damage
     walls_damage_ = info.getWallsDamage();
+
+    // Update the shell position offset
+    shell_pos_offset_ = info.getShellPosOffset();
 }
 
 // Derives damage made to walls by shells that are close to them, we are certain about their direction,

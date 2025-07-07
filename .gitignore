@@ -394,3 +394,6 @@ Testing/
 
 # Ignore simulator executable
 Simulator/simulator_*
+
+# Ignore input errors files
+input_errors.txt

@@ -12,4 +12,7 @@ void SimplePlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& 
 {
     SmartBattleInfo info = createBattleInfo(satellite_view);
     tank.updateBattleInfo(info);
+
+    // Update the shell position offset
+    shell_pos_offset_ = info.getShellPosOffset();
 }

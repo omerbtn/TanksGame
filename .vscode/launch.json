@@ -1,26 +1,32 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Run TanksGame",
-        "type": "cppdbg",
-        "request": "launch",
-        "program": "${workspaceFolder}/tanks_game.exe",
-        "args": ["resources/input.txt"],
-        "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
-        "environment": [],
-        "externalConsole": true,
-        "preLaunchTask": "Build Project",
-        "miDebuggerPath": "C:/mingw64/bin/gdb.exe",  // Path to gdb
-        "setupCommands": [
-            {
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": true
-            }
-        ]
-      }
-    ]
-  }
-  
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Simulator (Linux)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/Simulator/simulator_322573304_322647603",
+      "args": [
+        "-comparative",
+        "game_map=resources/input_c.txt",
+        "game_managers_folder=GameManager/",
+        "algorithm1=Algorithm/Algorithm_322573304_322647603.so",
+        "algorithm2=Algorithm/Algorithm_322573304_322647603.so",
+        "-verbose"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "preLaunchTask": "Build Project",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

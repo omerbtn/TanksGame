@@ -25,7 +25,7 @@ public:
 protected:
     virtual void extendBattleInfoProcessing(SmartBattleInfo& info) override;
     virtual void extendPrintTankInfo() const override;
-    virtual void extendShootActionHandling() override;
+    virtual void extendShootActionHandling(const Cell& next_cell) override;
 
 private:
     std::optional<ActionRequest> findFirstSafeActionToOpponent();

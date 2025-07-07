@@ -204,18 +204,53 @@ std::optional<ActionRequest> AlgorithmBase::getEvadeActionIfShellIncoming(size_t
     return std::nullopt;
 }
 
+size_t AlgorithmBase::calculateShellPosOffset() const
+{
+    // Calculate the offset based on the last shell fired position and direction
+    if (!last_shell_fired_)
+        return 0; // No shell fired, can't calculate offset
+
+    Position shooting_pos = last_shell_fired_->first;
+    Direction shooting_dir = last_shell_fired_->second;
+
+    // Possible options are 1, 2, or 3 cells ahead of the tank
+    std::vector<size_t> found_offsets;
+    for (size_t offset = 1; offset <= 3; ++offset)
+    {
+        Position pos = forwardPosition(shooting_pos, shooting_dir, width_, height_, offset);
+        const Cell& cell = grid_[pos.first][pos.second];
+
+        // If there is a tank or wall in this cell, the shell may have exploded, so skip this offset
+        if (cell.has(ObjectType::Tank) || cell.has(ObjectType::Wall))
+            continue;
+
+        if (cell.has(ObjectType::Shell))
+        {
+            // If the cell has a shell, we found a valid offset
+            found_offsets.push_back(offset);
+        }
+    }
+
+    // Only return the offset if exactly one shell was found
+    if (found_offsets.size() == 1)
+    {
+        return found_offsets.front();
+    }
+
+    return 0; // No valid offset found
+}
+
 void AlgorithmBase::updateBattleInfo(BattleInfo& info)
 {
-    auto& concrete_info = static_cast<SmartBattleInfo&>(info);
+    auto& smart_info = static_cast<SmartBattleInfo&>(info);
 
-    height_ = concrete_info.getHeight();
-    width_ = concrete_info.getWidth();
-    size_t num_shells = concrete_info.getNumShells();
+    height_ = smart_info.getHeight();
+    width_ = smart_info.getWidth();
+    size_t num_shells = smart_info.getNumShells();
 
     Position tank_pos;
-    const SatelliteView& satellite_view = concrete_info.getSatelliteView();
+    const SatelliteView& satellite_view = smart_info.getSatelliteView();
     grid_ = reconstructGridFromSatelliteView(satellite_view, height_, width_, player_index_, num_shells, tank_pos);
-    shell_possible_directions_ = concrete_info.getShellPossibleDirections();
 
     auto tank_obj = grid_[tank_pos.first][tank_pos.second].getObjectByType(ObjectType::Tank);
     auto new_tank = std::static_pointer_cast<Tank>(tank_obj);
@@ -227,7 +262,23 @@ void AlgorithmBase::updateBattleInfo(BattleInfo& info)
     }
     tank_ = new_tank;
 
-    extendBattleInfoProcessing(concrete_info);
+    // Update the player with our last shell fired, if any
+    if (last_shell_fired_)
+    {
+        size_t shell_pos_offset = smart_info.getShellPosOffset();
+        if (shell_pos_offset != 0 || (shell_pos_offset = calculateShellPosOffset()) != 0)
+        {
+            // We know the offset, can update the player and update our shell possible directions
+            Position current_shell_pos = forwardPosition(last_shell_fired_->first, last_shell_fired_->second, width_, height_, shell_pos_offset);
+            Direction shell_dir = last_shell_fired_->second;
+            smart_info.setShellPosOffset(shell_pos_offset);
+            smart_info.reportShellDirection(current_shell_pos, shell_dir);
+            last_shell_fired_.reset(); // Reset the last shell fired, as we reported it to the player
+        }
+    }
+    shell_possible_directions_ = smart_info.getShellPossibleDirections();
+
+    extendBattleInfoProcessing(smart_info);
 }
 
 void AlgorithmBase::handleTankMovement(const ActionRequest action)
@@ -266,11 +317,26 @@ void AlgorithmBase::handleTankMovement(const ActionRequest action)
         if (tank_->canShoot())
         {
             tank_->shoot();
-            extendShootActionHandling();
+
+            Position next_pos = forwardPosition(tank_->position(), tank_->direction(), width_, height_);
+            const Cell& next_cell = grid_[next_pos.first][next_pos.second];
+
+            if (!next_cell.has(ObjectType::Wall))
+            {
+                // We shot towards an opponent, need to update the player about this shell direction
+                last_shell_fired_ = std::make_pair(tank_->position(), tank_->direction());
+            }
+
+            extendShootActionHandling(next_cell);
         }
 
-        // We don't keep track of the shells inside the algorithm. Too complicated and error-prone.
-        // Player will keep track on shells and their directions.
+        // We keep track only of the last shell we shot inside the algorithm, and report it only if the
+        // next GetBattleInfo is called right after it.
+        // Keeping track of the shells more than that is too complicated and error-prone.
+        // Either way, the algorithm always asks for BattleInfo right after shooting, because it has line
+        // of sight to the opponent (as far as it knows) but can't shoot because of the cooldown,
+        // so it asks for BattleInfo to "kill time".
+        // Player will keep track on all the shells and their directions.
         break;
     }
     case ActionRequest::DoNothing:
@@ -281,6 +347,15 @@ void AlgorithmBase::handleTankMovement(const ActionRequest action)
         [[fallthrough]];
     default:
         break;
+    }
+
+    if (action != ActionRequest::Shoot && action != ActionRequest::GetBattleInfo)
+    {
+        // When doing anything but shooting, reset the last shell fired,
+        // as we report it only in the next turn after shooting, and report it only once.
+        // Shooting because we just set the last shell fired,
+        // GetBattleInfo because we want to report it, and reset it while we do.
+        last_shell_fired_.reset();
     }
 }
 
@@ -308,6 +383,14 @@ void AlgorithmBase::printTankInfo() const
             std::cout << directionToString(dir) << " ";
         }
         std::cout << std::endl;
+    }
+
+    // Print last shell fired, if any
+    if (last_shell_fired_)
+    {
+        std::cout << "[AlgorithmBase] Player " << player_index_ << " Tank " << tank_index_
+                  << " last shell fired from " << last_shell_fired_->first << " in direction "
+                  << directionToString(last_shell_fired_->second) << std::endl;
     }
 
     // Print additional information
@@ -344,5 +427,6 @@ ActionRequest AlgorithmBase::getAction()
     }
 
     handleTankMovement(action);
+
     return action;
 }

@@ -55,4 +55,7 @@ protected:
     std::unordered_map<Position, std::unordered_set<Direction>> shell_possible_directions_;
     // shell_possible_directions_[pos] = set of possible directions for shell at pos
     std::unordered_set<size_t> possible_turns_passed_; // Set of possible turns passed since the last GetBattleInfo request
+    size_t shell_pos_offset_ = 0;                      // Offset from the shell's shooting position to the position it will be seen in the next BattleInfo.
+                                                       // May be different according to GameManagers implementation.
+                                                       // 0 means unknown.
 };

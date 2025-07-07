@@ -191,7 +191,7 @@ Simulator::sortComparativeGroups(
         std::make_move_iterator(grouped.begin()),
         std::make_move_iterator(grouped.end())};
 
-    // Sort bt group size (descending)
+    // Sort by group size (descending)
     std::sort(sorted.begin(), sorted.end(),
               [](const auto& a, const auto& b)
               {

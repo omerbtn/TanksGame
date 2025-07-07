@@ -16,13 +16,11 @@ public:
     SmartBattleInfo(const SatelliteView& satellite_view, size_t height, size_t width,
                     size_t max_steps, size_t num_shells,
                     const std::unordered_map<Position, std::unordered_set<Direction>>& shell_possible_directions = {},
-                    const std::unordered_map<int, std::unordered_set<Position>>& tanks_reserved_positions = {},
-                    const std::unordered_map<Position, size_t>& walls_damage = {})
+                    size_t shell_pos_offset = 0)
         : satellite_view_(satellite_view), height_(height), width_(width),
           max_steps_(max_steps), num_shells_(num_shells),
-          shell_possible_drections_(shell_possible_directions),
-          tanks_reserved_positions_(tanks_reserved_positions),
-          walls_damage_(walls_damage) {}
+          shell_possible_directions_(shell_possible_directions),
+          shell_pos_offset_(shell_pos_offset) {}
 
     SmartBattleInfo(const SmartBattleInfo&) = delete;
     SmartBattleInfo& operator=(const SmartBattleInfo&) = delete;
@@ -34,9 +32,10 @@ public:
     size_t getWidth() const { return width_; }
     size_t getMaxSteps() const { return max_steps_; }
     size_t getNumShells() const { return num_shells_; }
-    const std::unordered_map<Position, std::unordered_set<Direction>>& getShellPossibleDirections() const { return shell_possible_drections_; }
+    const std::unordered_map<Position, std::unordered_set<Direction>>& getShellPossibleDirections() const { return shell_possible_directions_; }
     const std::unordered_map<int, std::unordered_set<Position>>& getTanksReservedPositions() const { return tanks_reserved_positions_; }
     const std::unordered_map<Position, size_t>& getWallsDamage() const { return walls_damage_; }
+    size_t getShellPosOffset() const { return shell_pos_offset_; }
 
     void setTankReservedPositions(int tank_id, const std::unordered_set<Position>& reserved_positions) // To be used by the tanks
     {
@@ -60,13 +59,27 @@ public:
         }
     }
 
+    void reportShellDirection(const Position& pos, Direction direction)
+    {
+        // Validate the position really contains a shell
+        if (satellite_view_.getObjectAt(pos.first, pos.second) == '*')
+        {
+            shell_possible_directions_[pos] = {direction};
+        }
+    }
+    void setShellPosOffset(size_t offset)
+    {
+        shell_pos_offset_ = offset;
+    }
+
 private:
     const SatelliteView& satellite_view_;
     size_t height_;
     size_t width_;
     size_t max_steps_;
     size_t num_shells_;
-    std::unordered_map<Position, std::unordered_set<Direction>> shell_possible_drections_;
+    std::unordered_map<Position, std::unordered_set<Direction>> shell_possible_directions_;
     std::unordered_map<int, std::unordered_set<Position>> tanks_reserved_positions_;
     std::unordered_map<Position, size_t> walls_damage_; // Wall's position -> number of hits it has taken
+    size_t shell_pos_offset_ = 0;
 };

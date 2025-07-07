@@ -48,7 +48,17 @@ ActionRequest UserAlgorithm::getAction()
         }
 
         static const std::unordered_map<std::string, ActionRequest> input_map = {
-            {"f", ActionRequest::MoveForward}, {"forward", ActionRequest::MoveForward}, {"b", ActionRequest::MoveBackward}, {"back", ActionRequest::MoveBackward}, {"l", ActionRequest::RotateLeft90}, {"left90", ActionRequest::RotateLeft90}, {"r", ActionRequest::RotateRight90}, {"right90", ActionRequest::RotateRight90}, {"l45", ActionRequest::RotateLeft45}, {"left45", ActionRequest::RotateLeft45}, {"r45", ActionRequest::RotateRight45}, {"right45", ActionRequest::RotateRight45}, {"s", ActionRequest::Shoot}, {"shoot", ActionRequest::Shoot}, {"i", ActionRequest::GetBattleInfo}, {"info", ActionRequest::GetBattleInfo}, {"x", ActionRequest::DoNothing}, {"skip", ActionRequest::DoNothing}, {"nothing", ActionRequest::DoNothing}};
+            {"f", ActionRequest::MoveForward}    , {"forward", ActionRequest::MoveForward},
+            {"b", ActionRequest::MoveBackward}   , {"back", ActionRequest::MoveBackward},
+            {"l", ActionRequest::RotateLeft90}   , {"left90", ActionRequest::RotateLeft90},
+            {"r", ActionRequest::RotateRight90}  , {"right90", ActionRequest::RotateRight90},
+            {"l45", ActionRequest::RotateLeft45} , {"left45", ActionRequest::RotateLeft45},
+            {"r45", ActionRequest::RotateRight45}, {"right45", ActionRequest::RotateRight45},
+            {"s", ActionRequest::Shoot}          , {"shoot", ActionRequest::Shoot},
+            {"i", ActionRequest::GetBattleInfo}  , {"info", ActionRequest::GetBattleInfo},
+            {"x", ActionRequest::DoNothing}      , {"skip", ActionRequest::DoNothing},
+            {"nothing", ActionRequest::DoNothing}
+        };
 
         auto it = input_map.find(input);
         if (it != input_map.end())

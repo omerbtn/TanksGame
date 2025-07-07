@@ -192,14 +192,12 @@ void SmartAlgorithm::extendPrintTankInfo() const
     }
 }
 
-void SmartAlgorithm::extendShootActionHandling()
+void SmartAlgorithm::extendShootActionHandling(const Cell& next_cell)
 {
     // If we shoot a wall, we need to update the walls damage map
-    Position next_pos = forwardPosition(tank_->position(), tank_->direction(), width_, height_);
-    const Cell& next_cell = grid_[next_pos.first][next_pos.second];
-
     if (next_cell.has(ObjectType::Wall))
     {
+        Position next_pos = next_cell.position();
         local_walls_damage_[next_pos]++; // Increment the wall damage count
         total_walls_damage_[next_pos]++; // For easier planning
     }

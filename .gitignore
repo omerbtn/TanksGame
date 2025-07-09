@@ -397,3 +397,7 @@ Simulator/simulator_*
 
 # Ignore input errors files
 input_errors.txt
+
+# Do not ignore .so files inside resorces, used for testing
+!resources/game_managers/*.so
+!resources/algorithms/*.so

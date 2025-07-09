@@ -12,6 +12,9 @@
 #include "types/position.h"
 
 
+namespace UserCommon_322573304_322647603
+{
+
 // Represents a state in BFS with position and direction
 struct BFSState
 {
@@ -34,16 +37,20 @@ struct BFSState
     }
 };
 
+} // namespace UserCommon_322573304_322647603
+
+
 // Hash specialization for BFSState to use in unordered containers
 namespace std
 {
+
 template <>
-struct hash<BFSState>
+struct hash<UserCommon_322573304_322647603::BFSState>
 {
-    size_t operator()(const BFSState& state) const
+    size_t operator()(const UserCommon_322573304_322647603::BFSState& state) const
     {
         size_t h = 0;
-        h ^= hash<Position>()(state.pos);
+        h ^= hash<UserCommon_322573304_322647603::Position>()(state.pos);
         h ^= (hash<int>()(static_cast<int>(state.dir)) << 1);
         h ^= (hash<size_t>()(state.shells_left) << 2);
         h ^= (hash<size_t>()(state.cooldown) << 3);
@@ -52,14 +59,19 @@ struct hash<BFSState>
         size_t wall_hash = 0;
         for (const auto& [pos, dmg] : state.walls_damage)
         {
-            wall_hash ^= (hash<Position>()(pos) ^ (hash<size_t>()(dmg) << 1));
+            wall_hash ^= (hash<UserCommon_322573304_322647603::Position>()(pos) ^ (hash<size_t>()(dmg) << 1));
         }
         h ^= (wall_hash << 4);
 
         return h;
     }
 };
+
 } // namespace std
+
+
+namespace UserCommon_322573304_322647603
+{
 
 // Concept to check if a triple of (Map, Key, Value) is compatible with a map interface
 template <typename Map, typename Key, typename Value>
@@ -111,3 +123,5 @@ std::vector<std::vector<Cell>> reconstructGridFromSatelliteView(const SatelliteV
 
 std::string resultToString(const GameResult& result);
 std::string satelliteViewToString(const SatelliteView& satellite_view, size_t width, size_t height);
+
+} // namespace UserCommon_322573304_322647603

@@ -5,13 +5,21 @@
 #include <unordered_set>
 #include <vector>
 
+#include "BattleInfo.h"
 #include "TankAlgorithm.h"
 #include "cell.h"
 #include "smart_battle_info.h"
 #include "tank.h"
 
-class BattleInfo;
 
+namespace Algorithm_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Cell;
+using UserCommon_322573304_322647603::Direction;
+using UserCommon_322573304_322647603::Position;
+using UserCommon_322573304_322647603::Tank;
 
 class AlgorithmBase : public TankAlgorithm
 {
@@ -53,3 +61,5 @@ protected:
     size_t height_;
     size_t turns_till_next_battle_info_ = 0; // Turns until the next GetBattleInfo request
 };
+
+} // namespace Algorithm_322573304_322647603

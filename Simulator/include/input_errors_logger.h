@@ -4,16 +4,16 @@
 #include <string>
 #include <vector>
 
-class InputErrorLogger
+class InputErrorsLogger
 {
 public:
-    InputErrorLogger() = default;
-    ~InputErrorLogger();
+    InputErrorsLogger() = default;
+    ~InputErrorsLogger();
 
-    InputErrorLogger(const InputErrorLogger&) = delete;
-    InputErrorLogger& operator=(const InputErrorLogger&) = delete;
-    InputErrorLogger(InputErrorLogger&&) = delete;
-    InputErrorLogger& operator=(InputErrorLogger&&) = delete;
+    InputErrorsLogger(const InputErrorsLogger&) = delete;
+    InputErrorsLogger& operator=(const InputErrorsLogger&) = delete;
+    InputErrorsLogger(InputErrorsLogger&&) = delete;
+    InputErrorsLogger& operator=(InputErrorsLogger&&) = delete;
 
     template <typename... Args>
     void log(Args&&... args)

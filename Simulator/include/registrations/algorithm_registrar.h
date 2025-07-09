@@ -10,14 +10,14 @@
 
 class AlgorithmRegistrar
 {
-    class AlgorithmAndPlayerFactories
+    class AlgorithmEntry
     {
         std::string name_;
         TankAlgorithmFactory tank_algorithm_factory_;
         PlayerFactory player_factory_;
 
     public:
-        AlgorithmAndPlayerFactories(const std::string& name) : name_(name) {}
+        AlgorithmEntry(const std::string& name) : name_(name) {}
 
         // Setters
         void setTankAlgorithmFactory(TankAlgorithmFactory&& factory)
@@ -56,7 +56,7 @@ class AlgorithmRegistrar
         }
     };
 
-    std::vector<AlgorithmAndPlayerFactories> algorithms_;
+    std::vector<AlgorithmEntry> algorithms_;
     static AlgorithmRegistrar registrar;
 
 public:
@@ -106,6 +106,12 @@ public:
     // Iterators
     auto begin() { return algorithms_.begin(); }
     auto end() { return algorithms_.end(); }
+
+    const AlgorithmEntry& getEntry(size_t i) const
+    {
+        assert(i < algorithms_.size() && "Index out of bounds");
+        return algorithms_[i];
+    }
 
     size_t count() const { return algorithms_.size(); }
     void clear() { algorithms_.clear(); }

@@ -6,9 +6,16 @@
 #include <sstream>
 
 #include "global_config.h"
+#include "mine.h"
 #include "printers/ansi_printer.h"
 #include "printers/default_printer.h"
+#include "shell.h"
+#include "tank.h"
+#include "wall.h"
 
+
+namespace UserCommon_322573304_322647603
+{
 
 void printGrid(const std::vector<std::vector<Cell>>& grid)
 {
@@ -346,3 +353,5 @@ std::string satelliteViewToString(const SatelliteView& satellite_view, size_t wi
     }
     return oss.str();
 }
+
+} // namespace UserCommon_322573304_322647603

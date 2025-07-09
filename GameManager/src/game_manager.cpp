@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 #include "GameManagerRegistration.h"
 #include "Player.h"
@@ -12,12 +13,17 @@
 #include "tank.h"
 #include "utils.h"
 
-REGISTER_GAME_MANAGER(GameManager)
+using namespace UserCommon_322573304_322647603;
 
 
-GameManager::GameManager(bool verbose) : board_(std::make_unique<Board>()), verbose_(verbose) {}
+namespace GameManager_322573304_322647603
+{
 
-GameResult GameManager::generateResult() const
+REGISTER_GAME_MANAGER(MyGameManager_322573304_322647603)
+
+MyGameManager_322573304_322647603::MyGameManager_322573304_322647603(bool verbose) : board_(std::make_unique<Board>()), verbose_(verbose) {}
+
+GameResult MyGameManager_322573304_322647603::generateResult() const
 {
     std::map<int, size_t> alive_counts;
     GameResult game_result;
@@ -72,38 +78,12 @@ GameResult GameManager::generateResult() const
     return game_result;
 }
 
-// bool GameManager::readBoard(const std::string& filename)
-// {
-//     GameInfo game_info = board_->loadFromFile(filename);
-
-//     if (!game_info.is_valid)
-//     {
-//         return false;
-//     }
-
-//     total_max_steps_ = game_info.max_steps;
-//     ordered_tanks_ = game_info.ordered_tanks;
-
-//     auto [directory, input_filename] = splitFilename(filename);
-//     std::string output_filename = directory + static_cast<std::string>(config::get<std::string_view>("output_file_prefix")) + input_filename;
-
-//     logger_ = OutputLogger(output_filename, ordered_tanks_.size());
-
-//     if (!logger_.is_valid())
-//     {
-//         std::cerr << "Logger is invalid!" << std::endl;
-//         return false;
-//     }
-
-//     return true;
-// }
-
-bool GameManager::readBoard(size_t map_width, size_t map_height,
-                            const SatelliteView& map,
-                            size_t max_steps, size_t num_shells,
-                            Player& player1, Player& player2,
-                            TankAlgorithmFactory player1_tank_algo_factory,
-                            TankAlgorithmFactory player2_tank_algo_factory)
+bool MyGameManager_322573304_322647603::readBoard(size_t map_width, size_t map_height,
+                                                  const SatelliteView& map,
+                                                  size_t max_steps, size_t num_shells,
+                                                  Player& player1, Player& player2,
+                                                  TankAlgorithmFactory player1_tank_algo_factory,
+                                                  TankAlgorithmFactory player2_tank_algo_factory)
 {
     GameInfo game_info = board_->loadFromSatelliteView(map_width, map_height, map,
                                                        max_steps, num_shells,
@@ -119,22 +99,10 @@ bool GameManager::readBoard(size_t map_width, size_t map_height,
     total_max_steps_ = game_info.max_steps;
     ordered_tanks_ = std::move(game_info.ordered_tanks);
 
-    if (verbose_)
-    {
-        std::string output_filename = std::string(config::get<std::string_view>("output_file_prefix")) + getUniqueTimeString() + ".log";
-        logger_ = OutputLogger(output_filename, ordered_tanks_.size());
-
-        if (!logger_.is_valid())
-        {
-            std::cerr << "Logger is invalid!" << std::endl;
-            return false;
-        }
-    }
-
     return true;
 }
 
-void GameManager::logTankActions()
+void MyGameManager_322573304_322647603::logTankActions()
 {
     // Capture final alive status (after all actions and updates)
     std::vector<bool> is_alive_at_end;
@@ -152,12 +120,13 @@ void GameManager::logTankActions()
     }
 }
 
-GameResult GameManager::run(size_t map_width, size_t map_height,
-                            const SatelliteView& map,
-                            size_t max_steps, size_t num_shells,
-                            Player& player1, Player& player2,
-                            TankAlgorithmFactory player1_tank_algo_factory,
-                            TankAlgorithmFactory player2_tank_algo_factory)
+GameResult MyGameManager_322573304_322647603::run(size_t map_width, size_t map_height,
+                                                  const SatelliteView& map,
+                                                  std::string map_name,
+                                                  size_t max_steps, size_t num_shells,
+                                                  Player& player1, std::string name1, Player& player2, std::string name2,
+                                                  TankAlgorithmFactory player1_tank_algo_factory,
+                                                  TankAlgorithmFactory player2_tank_algo_factory)
 {
     if (!readBoard(map_width, map_height, map, max_steps, num_shells,
                    player1, player2,
@@ -165,6 +134,18 @@ GameResult GameManager::run(size_t map_width, size_t map_height,
     {
         std::cerr << "[GameManager] Failed to read board from satellite view." << std::endl;
         return GameResult{0, GameResult::Reason::ALL_TANKS_DEAD, {}, nullptr, 0};
+    }
+
+    if (verbose_)
+    {
+        std::ostringstream oss;
+        oss << map_name << '_' << name1 << "_vs_" << name2 << '_' << getUniqueTimeString() << ".txt";
+        logger_ = OutputLogger(oss.str(), ordered_tanks_.size());
+
+        if (!logger_.is_valid())
+        {
+            std::cerr << "Logger is invalid!" << std::endl;
+        }
     }
 
     runGameLoop();
@@ -176,10 +157,16 @@ GameResult GameManager::run(size_t map_width, size_t map_height,
     return result;
 }
 
-void GameManager::runGameLoop()
+void MyGameManager_322573304_322647603::runGameLoop()
 {
-    std::cout << "[GameManager] Starting game with the board:" << std::endl;
-    board_->print();
+    constexpr bool print = config::get<bool>("print_board") ||
+                           config::get<bool>("verbose_debug");
+
+    if constexpr (print)
+    {
+        std::cout << "[GameManager] Starting game with the board:" << std::endl;
+        board_->print();
+    }
 
     was_alive_at_round_start_.reserve(ordered_tanks_.size());
     for (const auto& tank : ordered_tanks_)
@@ -191,7 +178,8 @@ void GameManager::runGameLoop()
     {
         if (half_steps_count_ % 2 == 0)
         {
-            std::cout << "[GameManager] Do tanks and shells step, half_steps_count = " << half_steps_count_ << std::endl;
+            if constexpr (print)
+                std::cout << "[GameManager] Do tanks and shells step, half_steps_count = " << half_steps_count_ << std::endl;
 
             for (size_t i = 0; i < ordered_tanks_.size(); ++i)
             {
@@ -199,20 +187,26 @@ void GameManager::runGameLoop()
             }
 
             doTanksStep();
-            board_->print();
+            
+            if constexpr (print)
+                board_->print();
 
             board_->doShellsStep(false);
-            board_->print();
+    
+            if constexpr (print)
+                board_->print();
         }
         else
         {
-            std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
+            if constexpr (print)
+                std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
 
             board_->doShellsStep(true);
 
             logTankActions();
 
-            board_->print();
+            if constexpr (print)
+                board_->print();
 
             if (isGameOver())
             {
@@ -223,7 +217,7 @@ void GameManager::runGameLoop()
     }
 }
 
-void GameManager::getTanksActions()
+void MyGameManager_322573304_322647603::getTanksActions()
 {
     std::vector<std::optional<ActionRequest>> actions_to_execute;
     actions_to_execute.reserve(ordered_tanks_.size());
@@ -261,7 +255,7 @@ void GameManager::getTanksActions()
     actions_to_execute_ = std::move(actions_to_execute);
 }
 
-void GameManager::checkActionsValidity()
+void MyGameManager_322573304_322647603::checkActionsValidity()
 {
     std::vector<bool> actions_validity;
     actions_validity.reserve(ordered_tanks_.size());
@@ -293,7 +287,7 @@ void GameManager::checkActionsValidity()
     actions_validity_ = std::move(actions_validity);
 }
 
-void GameManager::handleTie()
+void MyGameManager_322573304_322647603::handleTie()
 {
     if (tie_countdown_.has_value())
     {
@@ -331,7 +325,7 @@ void GameManager::handleTie()
     }
 }
 
-void GameManager::doTanksStep()
+void MyGameManager_322573304_322647603::doTanksStep()
 {
     getTanksActions();
 
@@ -345,7 +339,7 @@ void GameManager::doTanksStep()
     handleTie();
 }
 
-bool GameManager::isGameOver() const
+bool MyGameManager_322573304_322647603::isGameOver() const
 {
     int alive_players = 0;
 
@@ -362,3 +356,5 @@ bool GameManager::isGameOver() const
     // Check if the game is over
     return alive_players <= 1 || total_max_steps_ == 0 || (tie_countdown_.has_value() && *tie_countdown_ == 0);
 }
+
+} // namespace GameManager_322573304_322647603

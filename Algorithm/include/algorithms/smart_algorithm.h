@@ -8,17 +8,24 @@
 #include "utils.h"
 
 
-class SmartAlgorithm : public AlgorithmBase
+namespace Algorithm_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::BFSState;
+
+// Used to be SmartAlgorithm
+class TankAlgorithm_322573304_322647603 : public AlgorithmBase
 {
 public:
-    virtual ~SmartAlgorithm() = default;
-    SmartAlgorithm(int player_index, int tank_index);
+    virtual ~TankAlgorithm_322573304_322647603() = default;
+    TankAlgorithm_322573304_322647603(int player_index, int tank_index);
 
-    SmartAlgorithm(const SmartAlgorithm&) = delete;
-    SmartAlgorithm& operator=(const SmartAlgorithm&) = delete;
+    TankAlgorithm_322573304_322647603(const TankAlgorithm_322573304_322647603&) = delete;
+    TankAlgorithm_322573304_322647603& operator=(const TankAlgorithm_322573304_322647603&) = delete;
 
-    SmartAlgorithm(SmartAlgorithm&&) = delete;
-    SmartAlgorithm& operator=(SmartAlgorithm&&) = delete;
+    TankAlgorithm_322573304_322647603(TankAlgorithm_322573304_322647603&&) = delete;
+    TankAlgorithm_322573304_322647603& operator=(TankAlgorithm_322573304_322647603&&) = delete;
 
     virtual ActionRequest getActionImpl() override;
 
@@ -65,3 +72,5 @@ private:
     std::unordered_map<Position, size_t> total_walls_damage_; // Wall's position -> number of hits it has taken
     std::unordered_map<Position, size_t> local_walls_damage_; // Wall's position -> number of hits we made to it since last GetBattleInfo
 };
+
+} // namespace Algorithm_322573304_322647603

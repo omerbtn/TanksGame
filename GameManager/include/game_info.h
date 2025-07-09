@@ -6,6 +6,12 @@
 #include "tank.h"
 
 
+namespace GameManager_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Tank;
+
 class GameInfo
 {
 public:
@@ -25,3 +31,5 @@ public:
           num_shells(num_shells),
           ordered_tanks(std::move(ordered_tanks)) {}
 };
+
+} // namespace GameManager_322573304_322647603

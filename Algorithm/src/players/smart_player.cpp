@@ -5,13 +5,18 @@
 #include "smart_battle_info.h"
 #include "utils.h"
 
-REGISTER_PLAYER(SmartPlayer)
+using namespace UserCommon_322573304_322647603;
 
 
-SmartPlayer::SmartPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells)
+namespace Algorithm_322573304_322647603
+{
+
+REGISTER_PLAYER(Player_322573304_322647603)
+
+Player_322573304_322647603::Player_322573304_322647603(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells)
     : PlayerBase(player_index, x, y, max_steps, num_shells) {}
 
-void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view)
+void Player_322573304_322647603::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view)
 {
     SmartBattleInfo info = createBattleInfo(satellite_view);
 
@@ -38,7 +43,7 @@ void SmartPlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& s
 // Derives damage made to walls by shells that are close to them, we are certain about their direction,
 // and we can tell with high confidence that they will hit the wall.
 // Also makes sure we don't report the same shell hitting the wall multiple times, even after shell moves.
-void SmartPlayer::updateWallsDamage()
+void Player_322573304_322647603::updateWallsDamage()
 {
     for (const auto& [shell_pos, directions] : shell_possible_directions_)
     {
@@ -88,7 +93,7 @@ void SmartPlayer::updateWallsDamage()
     }
 }
 
-bool SmartPlayer::isShellCloseToWall(const Position& shell_pos, Direction shell_dir, Position& r_wall_pos) const
+bool Player_322573304_322647603::isShellCloseToWall(const Position& shell_pos, Direction shell_dir, Position& r_wall_pos) const
 {
     if (grid_.empty() || grid_[0].empty())
     {
@@ -125,3 +130,5 @@ bool SmartPlayer::isShellCloseToWall(const Position& shell_pos, Direction shell_
 
     return false; // No wall found
 }
+
+} // namespace Algorithm_322573304_322647603

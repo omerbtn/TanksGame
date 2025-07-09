@@ -7,6 +7,10 @@
 #include "ActionRequest.h"
 #include "tank.h"
 
+
+namespace GameManager_322573304_322647603
+{
+
 class OutputLogger
 {
 public:
@@ -29,3 +33,5 @@ private:
     size_t total_tanks_ = 0;
     bool valid_ = false;
 };
+
+} // namespace GameManager_322573304_322647603

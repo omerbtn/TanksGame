@@ -3,6 +3,11 @@
 #include "global_config.h"
 #include "utils.h"
 
+using namespace UserCommon_322573304_322647603;
+
+
+namespace Algorithm_322573304_322647603
+{
 
 PlayerBase::PlayerBase(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells)
     : player_index_(player_index), width_(x), height_(y), max_steps_(max_steps), num_shells_(num_shells) {}
@@ -159,3 +164,5 @@ SmartBattleInfo PlayerBase::createBattleInfo(const SatelliteView& satellite_view
 
     return SmartBattleInfo(satellite_view, height_, width_, max_steps_, num_shells_, shell_possible_directions_, shell_pos_offset_);
 }
+
+} // namespace Algorithm_322573304_322647603

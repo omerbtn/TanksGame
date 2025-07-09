@@ -5,6 +5,9 @@
 #include "utils.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
 SimplePlayer::SimplePlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells)
     : PlayerBase(player_index, x, y, max_steps, num_shells) {}
 
@@ -16,3 +19,5 @@ void SimplePlayer::updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& 
     // Update the shell position offset
     shell_pos_offset_ = info.getShellPosOffset();
 }
+
+} // namespace Algorithm_322573304_322647603

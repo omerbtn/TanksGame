@@ -6,6 +6,11 @@
 #include "smart_battle_info.h"
 #include "utils.h"
 
+using namespace UserCommon_322573304_322647603;
+
+
+namespace Algorithm_322573304_322647603
+{
 
 AlgorithmBase::AlgorithmBase(int player_index, int tank_index) : player_index_(player_index), tank_index_(tank_index) {}
 
@@ -430,3 +435,5 @@ ActionRequest AlgorithmBase::getAction()
 
     return action;
 }
+
+} // namespace Algorithm_322573304_322647603

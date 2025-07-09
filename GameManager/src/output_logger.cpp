@@ -2,6 +2,11 @@
 
 #include "utils.h"
 
+using namespace UserCommon_322573304_322647603;
+
+
+namespace GameManager_322573304_322647603
+{
 
 OutputLogger::OutputLogger(const std::string& filename, const size_t total_tanks) : out_(filename), total_tanks_(total_tanks)
 {
@@ -78,3 +83,5 @@ void OutputLogger::logResult(std::string&& result)
 
     out_ << std::move(result) << std::endl;
 }
+
+} // namespace GameManager_322573304_322647603

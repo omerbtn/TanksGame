@@ -6,15 +6,22 @@
 
 #include "ActionRequest.h"
 #include "Player.h"
-// #include "PlayerFactory.h"
-// #include "TankAlgorithmFactory.h"
-
 #include "cell.h"
 #include "game_info.h"
+#include "shell.h"
 #include "tank.h"
 #include "types/direction.h"
 #include "types/position.h"
 
+
+namespace GameManager_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Cell;
+using UserCommon_322573304_322647603::Position;
+using UserCommon_322573304_322647603::Shell;
+using UserCommon_322573304_322647603::Tank;
 
 class Board
 {
@@ -69,3 +76,5 @@ private:
     std::map<std::pair<size_t, size_t>, std::unique_ptr<TankAlgorithm>> algorithms_;
     std::map<int, std::pair<std::reference_wrapper<Player>, std::vector<std::shared_ptr<Tank>>>> player_tanks_;
 };
+
+} // namespace GameManager_322573304_322647603

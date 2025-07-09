@@ -12,6 +12,14 @@
 #include "smart_battle_info.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Cell;
+using UserCommon_322573304_322647603::Direction;
+using UserCommon_322573304_322647603::Position;
+
 class PlayerBase : public Player
 {
 public:
@@ -59,3 +67,5 @@ protected:
                                                        // May be different according to GameManagers implementation.
                                                        // 0 means unknown.
 };
+
+} // namespace Algorithm_322573304_322647603

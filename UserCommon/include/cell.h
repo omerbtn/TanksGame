@@ -5,11 +5,11 @@
 #include <vector>
 
 #include "game_object_interface.h"
-#include "mine.h"
-#include "shell.h"
-#include "tank.h"
 #include "types/position.h"
-#include "wall.h"
+
+
+namespace UserCommon_322573304_322647603
+{
 
 class Cell
 {
@@ -37,3 +37,5 @@ private:
     Position position_;
     std::unordered_map<ObjectType, std::vector<std::shared_ptr<GameObjectInterface>>> objects_;
 };
+
+} // namespace UserCommon_322573304_322647603

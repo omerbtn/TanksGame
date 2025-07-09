@@ -3,6 +3,9 @@
 #include "global_config.h"
 
 
+namespace UserCommon_322573304_322647603
+{
+
 Tank::Tank() : MovableObject(Direction::R) {}
 
 Tank::Tank(int player_id, int tank_id, Position position, Direction direction, size_t num_shells)
@@ -117,3 +120,5 @@ void Tank::setLastAction(ActionRequest action)
 {
     last_action_ = action;
 }
+
+} // namespace UserCommon_322573304_322647603

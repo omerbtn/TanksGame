@@ -27,6 +27,15 @@ set_target_properties(Algorithm_${SUBMITTER_IDS} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_ROOT}
 )
 
+# Copy .so to resources/algorithms after build
+add_custom_command(TARGET Algorithm_${SUBMITTER_IDS} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_SOURCE_DIR}/resources/algorithms
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:Algorithm_${SUBMITTER_IDS}>
+        ${CMAKE_SOURCE_DIR}/resources/algorithms/
+)
+
 # Ignore unresolved symbols only on non-Windows compilers
 if(WIN32)
     message(FATAL_ERROR

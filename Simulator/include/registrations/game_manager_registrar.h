@@ -9,12 +9,13 @@
 
 class GameManagerRegistrar
 {
-    class GameManagerFactoryEntry
+    class GameManagerEntry
     {
         std::string name_;
         GameManagerFactory game_manager_factory_;
+
     public:
-        GameManagerFactoryEntry(const std::string& name) : name_(name) {}
+        GameManagerEntry(const std::string& name) : name_(name) {}
 
         // Setter
         void setGameManagerFactory(GameManagerFactory&& factory)
@@ -38,7 +39,7 @@ class GameManagerRegistrar
         }
     };
 
-    std::vector<GameManagerFactoryEntry> managers_;
+    std::vector<GameManagerEntry> managers_;
     static GameManagerRegistrar registrar;
 
 public:
@@ -69,8 +70,7 @@ public:
             throw BadRegistrationException{
                 .name = last.name(),
                 .has_name = has_name,
-                .has_game_manager_factory = has_game_manager_factory
-            };
+                .has_game_manager_factory = has_game_manager_factory};
         }
     }
     void removeLast()

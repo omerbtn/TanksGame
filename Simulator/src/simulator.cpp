@@ -14,6 +14,7 @@
 #include "utils.h"
 
 namespace fs = std::filesystem;
+using namespace UserCommon_322573304_322647603;
 
 
 Simulator::Simulator(SimulatorConfig config) : config_(std::move(config)) {}
@@ -39,27 +40,16 @@ void Simulator::run()
     else if (config_.mode == RunMode::COMPETITION)
     {
         std::cout << "Running in competition mode..." << std::endl;
-        // runCompetition();
+        runCompetition();
     }
 }
 
+/*======================================================================================*/
+
 void Simulator::runComparative()
 {
-    // 1. Load .so files
-    loadSharedObjectsFromFolder<GameManagerRegistrar>(config_.game_managers_folder);
-
-    // Handle algorithm1
-    if (!loadSharedObject<AlgorithmRegistrar>(config_.algorithm1_so))
-    {
-        throw SimulatorException("Failed to load algorithm1: " + config_.algorithm1_so);
-    }
-
-    // Handle algorithm2, unless it's the same path as algorithm1
-    if (config_.algorithm2_so != config_.algorithm1_so &&
-        !loadSharedObject<AlgorithmRegistrar>(config_.algorithm2_so))
-    {
-        throw SimulatorException("Failed to load algorithm2: " + config_.algorithm2_so);
-    }
+    // 1. Load game managers and algorithms .so files
+    loadComparativeSharedObjects();
 
     // 2. Prepare output stream
     std::ofstream file_out;
@@ -67,7 +57,7 @@ void Simulator::runComparative()
                                          std::string(config::get<std::string_view>("comparative_output_prefix")));
 
     // 3. Print the header
-    printComparativeHeader(out);
+    printOutputHeader(out, config_.mode);
 
     // 4. Run the game managers
     std::vector<GameManagerExecutionResult> results;
@@ -76,6 +66,25 @@ void Simulator::runComparative()
 
     // 5. Group and print results
     printGroupedComparativeResults(out, std::move(results), map_width, map_height);
+}
+
+void Simulator::loadComparativeSharedObjects()
+{
+    // Load game managers from the specified folder
+    loadSharedObjectsFromFolder<GameManagerRegistrar>(config_.game_managers_folder);
+
+    // Load algorithm1
+    if (!loadSharedObject<AlgorithmRegistrar>(config_.algorithm1_so))
+    {
+        throw SimulatorException("Failed to load algorithm1: " + config_.algorithm1_so);
+    }
+
+    // Load algorithm2, unless it's the same as algorithm1
+    if (config_.algorithm2_so != config_.algorithm1_so &&
+        !loadSharedObject<AlgorithmRegistrar>(config_.algorithm2_so))
+    {
+        throw SimulatorException("Failed to load algorithm2: " + config_.algorithm2_so);
+    }
 }
 
 void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResult>& results,
@@ -100,7 +109,7 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
                             { return entry.name() == fs::path(config_.algorithm2_so).stem().string(); });
 
     if (it1 == algo_registrar.end() || it2 == algo_registrar.end())
-        throw SimulatorException("Algorithm entries not found in registrar");
+        throw SimulatorException("Algorithms were not registered properly");
 
 
     // Get tank algorithm factories
@@ -111,28 +120,23 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
     auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
     for (const auto& gm_entry : gm_registrar)
     {
-        // Create game manager
+        // Create GameManager and Players instances
         std::unique_ptr<AbstractGameManager> game_manager = gm_entry.createGameManager(config_.verbose);
-
-        // Create players
         std::unique_ptr<Player> player1 = it1->createPlayer(1, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
         std::unique_ptr<Player> player2 = it2->createPlayer(2, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
 
         // Run the game
-        GameResult result = game_manager->run(
-            map_info.width, map_info.height, *map_info.satellite_view,
-            map_info.max_steps, map_info.num_shells,
-            *player1, *player2,
-            tank_factory1, tank_factory2);
+        GameResult result = runSingleGame(*game_manager, *player1, *player2,
+                                          tank_factory1, tank_factory2,
+                                          it1->name(), it2->name(), map_info);
 
         results.emplace_back(gm_entry.name(), std::move(result));
     }
 }
 
-void Simulator::printGroupedComparativeResults(
-    std::ostream& out,
-    std::vector<GameManagerExecutionResult>&& results,
-    size_t map_width, size_t map_height)
+void Simulator::printGroupedComparativeResults(std::ostream& out,
+                                               std::vector<GameManagerExecutionResult> results,
+                                               size_t map_width, size_t map_height)
 {
     // Group results by ComparableGameResult
     auto grouped = groupComparativeResults(std::move(results), map_width, map_height);
@@ -169,7 +173,7 @@ void Simulator::printGroupedComparativeResults(
 }
 
 std::unordered_map<ComparableGameResult, std::vector<std::string>>
-Simulator::groupComparativeResults(std::vector<GameManagerExecutionResult>&& results,
+Simulator::groupComparativeResults(std::vector<GameManagerExecutionResult> results,
                                    size_t map_width, size_t map_height)
 {
     std::unordered_map<ComparableGameResult, std::vector<std::string>> grouped;
@@ -184,8 +188,7 @@ Simulator::groupComparativeResults(std::vector<GameManagerExecutionResult>&& res
 }
 
 std::vector<std::pair<ComparableGameResult, std::vector<std::string>>>
-Simulator::sortComparativeGroups(
-    std::unordered_map<ComparableGameResult, std::vector<std::string>>&& grouped)
+Simulator::sortComparativeGroups(std::unordered_map<ComparableGameResult, std::vector<std::string>> grouped)
 {
     std::vector<std::pair<ComparableGameResult, std::vector<std::string>>> sorted{
         std::make_move_iterator(grouped.begin()),
@@ -201,9 +204,217 @@ Simulator::sortComparativeGroups(
     return sorted;
 }
 
-template <typename Registrar>
-void Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
+/*======================================================================================*/
+
+void Simulator::runCompetition()
 {
+    // 1. Load game managers and algorithms .so files
+    loadCompetitionSharedObjects();
+
+    // 2. Load all game maps from the specified folder
+    std::vector<GameMapInfo> maps = loadGameMapsFromFolder(config_.game_maps_folder);
+
+    // 3. Validate competition requirements
+    validateCompetitionRequirements(maps);
+
+    // 4. Prepare output stream
+    std::ofstream file_out;
+    std::ostream& out = initOutputStream(file_out, config_.algorithms_folder,
+                                         std::string(config::get<std::string_view>("competition_output_prefix")));
+
+    // 5. Print the header
+    printOutputHeader(out, config_.mode);
+
+    // 6. Run all competition games
+    auto scores = runCompetitionGames(maps);
+
+    // 7. Print the competition results
+    printCompetitionResults(out, std::move(scores));
+}
+
+void Simulator::loadCompetitionSharedObjects()
+{
+    // Load GameManager .so
+    if (!loadSharedObject<GameManagerRegistrar>(config_.game_manager_so))
+    {
+        throw SimulatorException("Failed to load game manager: " + config_.game_manager_so);
+    }
+
+    // Load all algorithms from the specified folder
+    if (size_t count = loadSharedObjectsFromFolder<AlgorithmRegistrar>(config_.algorithms_folder); count < 2)
+    {
+        std::ostringstream oss;
+        ArgumentsParser::printUsage(oss, "At least two algorithms must be registered for competition mode, "
+                                         "found: " +
+                                             std::to_string(count) + " in " + config_.algorithms_folder);
+        throw SimulatorException(oss.str());
+    }
+}
+
+std::vector<GameMapInfo> Simulator::loadGameMapsFromFolder(const std::string& folder_path)
+{
+    // Check if the folder exists and is a directory
+    if (!fs::exists(folder_path) || !fs::is_directory(folder_path))
+    {
+        std::ostringstream oss;
+        ArgumentsParser::printUsage(oss, "Folder does not exist or is not a directory: " + folder_path);
+        throw SimulatorException(oss.str());
+    }
+
+    std::vector<GameMapInfo> maps;
+
+    // Iterate through all files in the folder and load valid game maps
+    for (const auto& entry : fs::directory_iterator(folder_path))
+    {
+        if (!entry.is_regular_file())
+            continue;
+
+        GameMapInfo map_info = loadGameMap(entry.path().string());
+        if (map_info.is_valid)
+        {
+            maps.push_back(std::move(map_info));
+        }
+    }
+
+    return maps;
+}
+
+void Simulator::validateCompetitionRequirements(const std::vector<GameMapInfo>& maps)
+{
+    if (maps.empty())
+    {
+        std::ostringstream oss;
+        ArgumentsParser::printUsage(oss, "No valid maps found in folder: " + config_.game_maps_folder);
+        throw SimulatorException(oss.str());
+    }
+
+    const auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+
+    if (gm_registrar.count() < 1)
+    {
+        throw SimulatorException("Game Manager was not registered properly.");
+    }
+
+    const auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+
+    if (algo_registrar.count() < 2)
+    {
+        throw SimulatorException("Algorithms were not registered properly.");
+    }
+}
+
+std::unordered_map<std::string, size_t>
+Simulator::runCompetitionGames(const std::vector<GameMapInfo>& maps)
+{
+    std::unordered_map<std::string, size_t> scores;
+
+    // Initialize scores to zero for each algorithm
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    for (const auto& entry : algo_registrar)
+    {
+        scores[entry.name()] = 0;
+    }
+
+    // Run all competition games for each map
+    for (size_t k = 0; k < maps.size(); ++k)
+    {
+        runCompetitionGamesForMap(maps[k], k, scores);
+    }
+
+    return scores;
+}
+
+void Simulator::runCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
+                                          std::unordered_map<std::string, size_t>& scores)
+{
+    auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+
+    const auto& game_manager_entry = *gm_registrar.begin();
+    size_t N = algo_registrar.count();
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        // Get opponent index
+        size_t j = (i + 1 + (map_index % (N - 1))) % N;
+
+        // Get Algorithms entries
+        const auto& algo1_entry = algo_registrar.getEntry(i);
+        const auto& algo2_entry = algo_registrar.getEntry(j);
+
+        // Create GameManager and Player instances
+        std::unique_ptr<AbstractGameManager> game_manager = game_manager_entry.createGameManager(config_.verbose);
+        std::unique_ptr<Player> player1 = algo1_entry.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
+        std::unique_ptr<Player> player2 = algo2_entry.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+
+        // Run the game
+        GameResult result = runSingleGame(*game_manager, *player1, *player2,
+                                          algo1_entry.getTankAlgorithmFactory(),
+                                          algo2_entry.getTankAlgorithmFactory(),
+                                          algo1_entry.name(), algo2_entry.name(),
+                                          map);
+
+        // Update scores based on the result
+        updateScores(result, algo1_entry.name(), algo2_entry.name(), scores);
+    }
+}
+
+void Simulator::updateScores(const GameResult& result,
+                             const std::string& player1_name,
+                             const std::string& player2_name,
+                             std::unordered_map<std::string, size_t>& scores)
+{
+    // Score by 3 points for a win, 1 point for tie, 0 points for loss
+    if (result.winner == 1)
+    {
+        scores[player1_name] += 3; // Player 1 wins
+    }
+    else if (result.winner == 2)
+    {
+        scores[player2_name] += 3; // Player 2 wins
+    }
+    else
+    {
+        scores[player1_name] += 1; // Tie
+        scores[player2_name] += 1;
+    }
+}
+
+void Simulator::printCompetitionResults(std::ostream& out,
+                                        std::unordered_map<std::string, size_t> scores)
+{
+    // Sort scores in descending order
+    auto sorted_scores = sortCompetitionScores(std::move(scores));
+
+    for (const auto& [name, score] : sorted_scores)
+    {
+        out << name << " " << score << '\n';
+    }
+}
+
+std::vector<std::pair<std::string, size_t>>
+Simulator::sortCompetitionScores(std::unordered_map<std::string, size_t> scores)
+{
+    std::vector<std::pair<std::string, size_t>> sorted{
+        std::make_move_iterator(scores.begin()),
+        std::make_move_iterator(scores.end())};
+
+    // Sort by score (descending)
+    std::sort(sorted.begin(), sorted.end(),
+              [](const auto& a, const auto& b)
+              {
+                  return a.second > b.second;
+              });
+
+    return sorted;
+}
+
+/*======================================================================================*/
+
+template <typename Registrar>
+size_t Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
+{
+    // Check if the folder exists and is a directory
     if (!fs::exists(folder_path) || !fs::is_directory(folder_path))
     {
         std::ostringstream oss;
@@ -216,6 +427,7 @@ void Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
         std::cout << "Loading shared objects from folder: " << folder_path << std::endl;
     }
 
+    // Iterate through all files in the folder and load valid shared objects
     size_t loaded_count = 0;
     for (const auto& entry : fs::directory_iterator(folder_path))
     {
@@ -235,6 +447,8 @@ void Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
         ArgumentsParser::printUsage(oss, "No valid .so files found in: " + folder_path);
         throw SimulatorException(oss.str());
     }
+
+    return loaded_count;
 }
 
 template <typename Registrar>
@@ -290,17 +504,26 @@ std::ostream& Simulator::initOutputStream(std::ofstream& file_out, const std::st
     return file_out;
 }
 
-void Simulator::printComparativeHeader(std::ostream& out)
+void Simulator::printOutputHeader(std::ostream& out, RunMode mode)
 {
-    out << "game_map=" << config_.game_map_filename << '\n'
-        << "algorithm1=" << config_.algorithm1_so << '\n'
-        << "algorithm2=" << config_.algorithm2_so << '\n'
-        << '\n';
+    if (mode == RunMode::COMPARATIVE)
+    {
+        out << "game_map=" << fs::path(config_.game_map_filename).stem().string() << '\n'
+            << "algorithm1=" << fs::path(config_.algorithm1_so).stem().string() << '\n'
+            << "algorithm2=" << fs::path(config_.algorithm2_so).stem().string() << '\n'
+            << '\n';
+    }
+    else if (mode == RunMode::COMPETITION)
+    {
+        out << "game_maps_folder=" << config_.game_maps_folder << '\n'
+            << "game_manager=" << fs::path(config_.game_manager_so).stem().string() << '\n'
+            << '\n';
+    }
 }
 
 GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
 {
-    InputErrorLogger error_logger;
+    InputErrorsLogger error_logger;
     std::ifstream file(map_filename);
 
     if (!file)
@@ -321,7 +544,15 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
             error_logger.log("Missing or invalid line for ", expected_key);
             return false;
         }
-        target = std::stoi(line.substr(pos + 1));
+        try
+        {
+            target = std::stoi(line.substr(pos + 1));
+        }
+        catch (const std::exception&)
+        {
+            error_logger.log("Invalid value for ", expected_key, ": ", line.substr(pos + 1));
+            return false;
+        }
         return true;
     };
 
@@ -368,6 +599,22 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
     }
 
     return GameMapInfo(
+        fs::path(map_filename).stem().string(),
         std::make_unique<BoardSatelliteView>(std::move(chars_grid)),
         height, width, max_steps, num_shells);
+}
+
+GameResult Simulator::runSingleGame(AbstractGameManager& game_manager,
+                                    Player& player1, Player& player2,
+                                    const TankAlgorithmFactory& tank_factory1,
+                                    const TankAlgorithmFactory& tank_factory2,
+                                    const std::string& name1, const std::string& name2,
+                                    const GameMapInfo& map_info)
+{
+    return game_manager.run(
+        map_info.width, map_info.height,
+        *map_info.satellite_view, map_info.name,
+        map_info.max_steps, map_info.num_shells,
+        player1, name1, player2, name2,
+        tank_factory1, tank_factory2);
 }

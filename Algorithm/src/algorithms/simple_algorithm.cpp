@@ -6,6 +6,11 @@
 #include "global_config.h"
 #include "utils.h"
 
+using namespace UserCommon_322573304_322647603;
+
+
+namespace Algorithm_322573304_322647603
+{
 
 SimpleAlgorithm::SimpleAlgorithm(int player_index, int tank_index)
     : AlgorithmBase(player_index, tank_index) {}
@@ -42,3 +47,5 @@ ActionRequest SimpleAlgorithm::getActionImpl()
     }
     return ActionRequest::GetBattleInfo;
 }
+
+} // namespace Algorithm_322573304_322647603

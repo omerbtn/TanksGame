@@ -7,8 +7,15 @@
 #include "Player.h"
 #include "board_satellite_view.h"
 #include "global_config.h"
+#include "mine.h"
 #include "utils.h"
+#include "wall.h"
 
+using namespace UserCommon_322573304_322647603;
+
+
+namespace GameManager_322573304_322647603
+{
 
 Board::Board() {}
 
@@ -624,3 +631,5 @@ size_t Board::getWidth() const
 {
     return width_;
 }
+
+} // namespace GameManager_322573304_322647603

@@ -3,6 +3,9 @@
 #include "algorithms/algorithm_base.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
 class SimpleAlgorithm : public AlgorithmBase
 {
 public:
@@ -17,3 +20,5 @@ public:
 
     virtual ActionRequest getActionImpl() override;
 };
+
+} // namespace Algorithm_322573304_322647603

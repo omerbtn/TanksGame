@@ -3,19 +3,25 @@
 #include <iostream>
 
 #include "printer.h"
+#include "shell.h"
+#include "tank.h"
 #include "utils.h"
 
-#define RESET "\033[0m"
-#define RED "\033[31m"
-#define GREEN "\033[32m"
-#define YELLOW "\033[33m"
-#define BLUE "\033[34m"
-#define MAGENTA "\033[35m"
-#define CYAN "\033[36m"
-#define WHITE "\033[37m"
-#define GRAY "\033[90m"
-#define ORANGE "\033[38;5;208m"
-#define PINK "\033[38;5;13m"
+
+namespace UserCommon_322573304_322647603
+{
+
+constexpr const char* RESET = "\033[0m";
+constexpr const char* RED = "\033[31m";
+constexpr const char* GREEN = "\033[32m";
+constexpr const char* YELLOW = "\033[33m";
+constexpr const char* BLUE = "\033[34m";
+constexpr const char* MAGENTA = "\033[35m";
+constexpr const char* CYAN = "\033[36m";
+constexpr const char* WHITE = "\033[37m";
+constexpr const char* GRAY = "\033[90m";
+constexpr const char* ORANGE = "\033[38;5;208m";
+constexpr const char* PINK = "\033[38;5;13m";
 
 class AnsiPrinter : public Printer<AnsiPrinter>
 {
@@ -44,24 +50,18 @@ public:
                 // Tanks
                 if (cell.has(ObjectType::Tank))
                 {
-                    const auto& tanks = cell.getObjectsByType(ObjectType::Tank);
-                    if (!tanks.empty())
-                    {
-                        auto tank = std::static_pointer_cast<Tank>(tanks.front()); // Printing just one tank, couldn't be more
-                        to_print += std::string(playerColor(tank->playerId())) + std::to_string(tank->playerId()) +
-                                    directionToArrow(tank->direction()) + RESET;
-                    }
+                    auto tank_obj = cell.getObjectByType(ObjectType::Tank); // Printing just one tank, couldn't be more
+                    auto tank = std::static_pointer_cast<Tank>(tank_obj);
+                    to_print += std::string(playerColor(tank->playerId())) + std::to_string(tank->playerId()) +
+                                directionToArrow(tank->direction()) + RESET;
                 }
 
                 // Shells
                 if (cell.has(ObjectType::Shell))
                 {
-                    const auto& shells = cell.getObjectsByType(ObjectType::Shell);
-                    if (!shells.empty())
-                    {
-                        auto shell = std::static_pointer_cast<Shell>(shells.front()); // Printing just one shell, couldn't be more
-                        to_print += std::string(YELLOW) + "*" + directionToArrow(shell->direction()) + RESET;
-                    }
+                    auto shell_obj = cell.getObjectByType(ObjectType::Shell); // Printing just one shell, couldn't be more
+                    auto shell = std::static_pointer_cast<Shell>(shell_obj);
+                    to_print += std::string(YELLOW) + "*" + directionToArrow(shell->direction()) + RESET;
                 }
 
                 while (to_print.size() < 3)
@@ -103,3 +103,5 @@ private:
         }
     }
 };
+
+} // namespace UserCommon_322573304_322647603

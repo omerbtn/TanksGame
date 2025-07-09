@@ -1,5 +1,9 @@
 #pragma once
 
+
+namespace UserCommon_322573304_322647603
+{
+
 enum class Direction
 {
     U = 0,
@@ -11,3 +15,5 @@ enum class Direction
     L = 6,
     UL = 7
 };
+
+} // namespace UserCommon_322573304_322647603

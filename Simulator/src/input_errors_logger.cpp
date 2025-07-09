@@ -5,12 +5,15 @@
 
 #include "global_config.h"
 
-InputErrorLogger::~InputErrorLogger()
+using namespace UserCommon_322573304_322647603;
+
+
+InputErrorsLogger::~InputErrorsLogger()
 {
     save_to_file(std::string(config::get<std::string_view>("input_error_file")));
 }
 
-void InputErrorLogger::save_to_file(const std::string& filename) const
+void InputErrorsLogger::save_to_file(const std::string& filename) const
 {
     if (errors_.empty())
     {

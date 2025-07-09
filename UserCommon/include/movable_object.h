@@ -3,6 +3,10 @@
 #include "game_object_interface.h"
 #include "types/direction.h"
 
+
+namespace UserCommon_322573304_322647603
+{
+
 class MovableObject : public GameObjectInterface
 {
 public:
@@ -17,3 +21,5 @@ private:
 protected:
     Direction direction_;
 };
+
+} // namespace UserCommon_322573304_322647603

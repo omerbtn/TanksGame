@@ -3,17 +3,25 @@
 #include "player_base.h"
 
 
-class SmartPlayer : public PlayerBase
+namespace Algorithm_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Direction;
+using UserCommon_322573304_322647603::Position;
+
+// Used to be SmartPlayer
+class Player_322573304_322647603 : public PlayerBase
 {
 public:
-    virtual ~SmartPlayer() override = default;
-    SmartPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells);
+    virtual ~Player_322573304_322647603() override = default;
+    Player_322573304_322647603(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells);
 
-    SmartPlayer(const SmartPlayer&) = delete;
-    SmartPlayer& operator=(const SmartPlayer&) = delete;
+    Player_322573304_322647603(const Player_322573304_322647603&) = delete;
+    Player_322573304_322647603& operator=(const Player_322573304_322647603&) = delete;
 
-    SmartPlayer(SmartPlayer&&) = delete;
-    SmartPlayer& operator=(SmartPlayer&&) = delete;
+    Player_322573304_322647603(Player_322573304_322647603&&) = delete;
+    Player_322573304_322647603& operator=(Player_322573304_322647603&&) = delete;
 
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override;
 
@@ -26,3 +34,5 @@ private:
     std::unordered_map<Position, size_t> walls_damage_;                              // Wall's position -> number of hits it has taken
     std::unordered_set<std::pair<Position, Position>> reported_shell_wall_hits_;     // (shell_pos, wall_pos)
 };
+
+} // namespace Algorithm_322573304_322647603

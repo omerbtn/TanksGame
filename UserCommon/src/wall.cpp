@@ -1,6 +1,9 @@
 #include "wall.h"
 
 
+namespace UserCommon_322573304_322647603
+{
+
 void Wall::weaken()
 {
     hit_count++;
@@ -15,3 +18,5 @@ ObjectType Wall::type() const
 {
     return ObjectType::Wall;
 }
+
+} // namespace UserCommon_322573304_322647603

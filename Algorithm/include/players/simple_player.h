@@ -3,6 +3,9 @@
 #include "player_base.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
 class SimplePlayer : public PlayerBase
 {
 public:
@@ -17,3 +20,5 @@ public:
 
     virtual void updateTankWithBattleInfo(TankAlgorithm& tank, SatelliteView& satellite_view) override;
 };
+
+} // namespace Algorithm_322573304_322647603

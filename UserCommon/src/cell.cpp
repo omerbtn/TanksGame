@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+#include "tank.h"
+
+
+namespace UserCommon_322573304_322647603
+{
 
 Cell::Cell(Position position, std::shared_ptr<GameObjectInterface> object) : position_(position)
 {
@@ -115,6 +120,8 @@ char Cell::toChar() const
         auto tank_ptr = std::static_pointer_cast<Tank>(tank_obj);
         return '0' + tank_ptr->playerId();
     }
-    
+
     return ' '; // Empty cell
 }
+
+} // namespace UserCommon_322573304_322647603

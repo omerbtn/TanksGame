@@ -4,7 +4,13 @@
 #include <string>
 
 #include "printer.h"
+#include "shell.h"
+#include "tank.h"
 #include "utils.h"
+
+
+namespace UserCommon_322573304_322647603
+{
 
 class DefaultPrinter : public Printer<DefaultPrinter>
 {
@@ -65,3 +71,5 @@ public:
         }
     }
 };
+
+} // namespace UserCommon_322573304_322647603

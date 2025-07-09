@@ -7,7 +7,15 @@
 #include "BattleInfo.h"
 #include "SatelliteView.h"
 #include "cell.h"
+#include "types/direction.h"
 
+
+namespace Algorithm_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Direction;
+using UserCommon_322573304_322647603::Position;
 
 class SmartBattleInfo : public BattleInfo
 {
@@ -83,3 +91,5 @@ private:
     std::unordered_map<Position, size_t> walls_damage_; // Wall's position -> number of hits it has taken
     size_t shell_pos_offset_ = 0;
 };
+
+} // namespace Algorithm_322573304_322647603

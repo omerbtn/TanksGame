@@ -14,21 +14,28 @@
 #include "tank.h"
 
 
-class GameManager : public AbstractGameManager
+namespace GameManager_322573304_322647603
+{
+
+// Bring necessary types from UserCommon
+using UserCommon_322573304_322647603::Tank;
+
+class MyGameManager_322573304_322647603 : public AbstractGameManager
 {
 public:
-    GameManager(bool verbose = false);
+    MyGameManager_322573304_322647603(bool verbose = false);
 
-    GameManager(const GameManager&) = delete;
-    GameManager& operator=(const GameManager&) = delete;
-    GameManager(GameManager&&) = delete;
-    GameManager& operator=(GameManager&&) = delete;
+    MyGameManager_322573304_322647603(const MyGameManager_322573304_322647603&) = delete;
+    MyGameManager_322573304_322647603& operator=(const MyGameManager_322573304_322647603&) = delete;
+    MyGameManager_322573304_322647603(MyGameManager_322573304_322647603&&) = delete;
+    MyGameManager_322573304_322647603& operator=(MyGameManager_322573304_322647603&&) = delete;
 
 
     GameResult run(size_t map_width, size_t map_height,
                    const SatelliteView& map,
+                   std::string map_name,
                    size_t max_steps, size_t num_shells,
-                   Player& player1, Player& player2,
+                   Player& player1, std::string name1, Player& player2, std::string name2,
                    TankAlgorithmFactory player1_tank_algo_factory,
                    TankAlgorithmFactory player2_tank_algo_factory) override;
 
@@ -61,3 +68,5 @@ private:
     OutputLogger logger_;
     bool verbose_;
 };
+
+} // namespace GameManager_322573304_322647603

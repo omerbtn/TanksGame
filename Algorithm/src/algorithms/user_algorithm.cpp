@@ -6,14 +6,17 @@
 #include <unordered_map>
 
 
-static std::string trim(const std::string& s)
+namespace Algorithm_322573304_322647603
+{
+
+std::string UserAlgorithm::trim(const std::string& s)
 {
     auto start = s.find_first_not_of(" \t\n\r");
     auto end = s.find_last_not_of(" \t\n\r");
     return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
 }
 
-static void print_help()
+void UserAlgorithm::print_help()
 {
     std::cout << "\n[Command Help] Available Actions:\n"
               << "  f / forward        = Move Forward\n"
@@ -76,3 +79,5 @@ void UserAlgorithm::updateBattleInfo(BattleInfo&)
     // This function is just a placeholder to satisfy the interface
     std::cout << "You see the map all the time! Don't waste turns on this ;)\n";
 }
+
+} // namespace Algorithm_322573304_322647603

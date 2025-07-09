@@ -5,12 +5,22 @@
 #include <array>
 #include <string_view>
 
+
+namespace UserCommon_322573304_322647603
+{
+
 namespace config
 {
 
-struct ConfigNotFoundError {};
-struct ConfigInvalidIntError {};
-struct ConfigInvalidBoolError {};
+struct ConfigNotFoundError
+{
+};
+struct ConfigInvalidIntError
+{
+};
+struct ConfigInvalidBoolError
+{
+};
 
 constexpr std::string_view get_config_value(std::string_view key)
 {
@@ -92,3 +102,5 @@ constexpr std::string_view get<std::string_view>(std::string_view key)
 }
 
 } // namespace config
+
+} // namespace UserCommon_322573304_322647603

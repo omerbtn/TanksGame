@@ -11,13 +11,18 @@
 #include "global_config.h"
 #include "utils.h"
 
-REGISTER_TANK_ALGORITHM(SmartAlgorithm)
+using namespace UserCommon_322573304_322647603;
 
 
-SmartAlgorithm::SmartAlgorithm(int player_index, int tank_index)
+namespace Algorithm_322573304_322647603
+{
+
+REGISTER_TANK_ALGORITHM(TankAlgorithm_322573304_322647603)
+
+TankAlgorithm_322573304_322647603::TankAlgorithm_322573304_322647603(int player_index, int tank_index)
     : AlgorithmBase(player_index, tank_index) {}
 
-void SmartAlgorithm::extendBattleInfoProcessing(SmartBattleInfo& info)
+void TankAlgorithm_322573304_322647603::extendBattleInfoProcessing(SmartBattleInfo& info)
 {
     // Merge all other tanks' reserved positions into one set
     other_tanks_reserved_positions_.clear();
@@ -86,7 +91,7 @@ void SmartAlgorithm::extendBattleInfoProcessing(SmartBattleInfo& info)
     info.setTankReservedPositions(tank_index_, computeReservedPositions(true));
 }
 
-std::unordered_set<Position> SmartAlgorithm::computeReservedPositions(bool include_shooting_lane)
+std::unordered_set<Position> TankAlgorithm_322573304_322647603::computeReservedPositions(bool include_shooting_lane)
 {
     if (cached_path_.empty())
         return {}; // No cached path, nothing to reserve
@@ -136,7 +141,7 @@ std::unordered_set<Position> SmartAlgorithm::computeReservedPositions(bool inclu
     return reserved_positions;
 }
 
-void SmartAlgorithm::extendPrintTankInfo() const
+void TankAlgorithm_322573304_322647603::extendPrintTankInfo() const
 {
     // Print other tanks' reserved positions
     std::cout << "[SmartAlgorithm] Player " << player_index_
@@ -192,7 +197,7 @@ void SmartAlgorithm::extendPrintTankInfo() const
     }
 }
 
-void SmartAlgorithm::extendShootActionHandling(const Cell& next_cell)
+void TankAlgorithm_322573304_322647603::extendShootActionHandling(const Cell& next_cell)
 {
     // If we shoot a wall, we need to update the walls damage map
     if (next_cell.has(ObjectType::Wall))
@@ -203,7 +208,7 @@ void SmartAlgorithm::extendShootActionHandling(const Cell& next_cell)
     }
 }
 
-bool SmartAlgorithm::isCellEmptyInState(const BFSState& state, const Position& pos) const
+bool TankAlgorithm_322573304_322647603::isCellEmptyInState(const BFSState& state, const Position& pos) const
 {
     const Cell& cell = grid_[pos.first][pos.second];
 
@@ -224,10 +229,10 @@ bool SmartAlgorithm::isCellEmptyInState(const BFSState& state, const Position& p
     return false; // Cell is not empty
 }
 
-void SmartAlgorithm::tryRotations(std::queue<BFSState>& q,
-                                  std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
-                                  std::unordered_set<BFSState>& visited,
-                                  const BFSState& current)
+void TankAlgorithm_322573304_322647603::tryRotations(std::queue<BFSState>& q,
+                                                     std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                                     std::unordered_set<BFSState>& visited,
+                                                     const BFSState& current)
 {
     static constexpr std::array<ActionRequest, 4> rotations = {
         ActionRequest::RotateLeft90, ActionRequest::RotateLeft45,
@@ -252,10 +257,10 @@ void SmartAlgorithm::tryRotations(std::queue<BFSState>& q,
     }
 }
 
-void SmartAlgorithm::tryForwardMove(std::queue<BFSState>& q,
-                                    std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
-                                    std::unordered_set<BFSState>& visited,
-                                    const BFSState& current)
+void TankAlgorithm_322573304_322647603::tryForwardMove(std::queue<BFSState>& q,
+                                                       std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                                       std::unordered_set<BFSState>& visited,
+                                                       const BFSState& current)
 {
     Position next_pos = forwardPosition(current.pos, current.dir, width_, height_);
 
@@ -279,10 +284,10 @@ void SmartAlgorithm::tryForwardMove(std::queue<BFSState>& q,
     }
 }
 
-void SmartAlgorithm::tryGetBattleInfo(std::queue<BFSState>& q,
-                                      std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
-                                      std::unordered_set<BFSState>& visited,
-                                      const BFSState& current)
+void TankAlgorithm_322573304_322647603::tryGetBattleInfo(std::queue<BFSState>& q,
+                                                         std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                                         std::unordered_set<BFSState>& visited,
+                                                         const BFSState& current)
 {
     BFSState next_state = current;
 
@@ -298,10 +303,10 @@ void SmartAlgorithm::tryGetBattleInfo(std::queue<BFSState>& q,
     }
 }
 
-void SmartAlgorithm::tryShootingAWall(std::queue<BFSState>& q,
-                                      std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
-                                      std::unordered_set<BFSState>& visited,
-                                      const BFSState& current)
+void TankAlgorithm_322573304_322647603::tryShootingAWall(std::queue<BFSState>& q,
+                                                         std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                                         std::unordered_set<BFSState>& visited,
+                                                         const BFSState& current)
 {
     if (current.shells_left <= 1 || current.cooldown > 0)
     {
@@ -338,10 +343,10 @@ void SmartAlgorithm::tryShootingAWall(std::queue<BFSState>& q,
     }
 }
 
-ActionRequest SmartAlgorithm::handleLineOfSightToOpponent(BFSState& current,
-                                                          std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
-                                                          const BFSState& start_state,
-                                                          const Position& opponent_pos)
+ActionRequest TankAlgorithm_322573304_322647603::handleLineOfSightToOpponent(BFSState& current,
+                                                                             std::unordered_map<BFSState, std::pair<BFSState, ActionRequest>>& parent,
+                                                                             const BFSState& start_state,
+                                                                             const Position& opponent_pos)
 {
     // Found line of sight to target, reconstruct the first move.
     if constexpr (config::get<bool>("verbose_debug"))
@@ -392,7 +397,7 @@ ActionRequest SmartAlgorithm::handleLineOfSightToOpponent(BFSState& current,
 }
 
 // Finds the shortest path to shoot the opponent using BFS, then breaks ties by choosing the path whose end is closest to the opponent.
-std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
+std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeActionToOpponent()
 {
     if constexpr (config::get<bool>("verbose_debug"))
     {
@@ -487,7 +492,7 @@ std::optional<ActionRequest> SmartAlgorithm::findFirstSafeActionToOpponent()
     return std::nullopt; // No path found
 }
 
-ActionRequest SmartAlgorithm::getActionImpl()
+ActionRequest TankAlgorithm_322573304_322647603::getActionImpl()
 {
     // First, check if there's an incoming shell we must evade
     if (auto evade = getEvadeActionIfShellIncoming())
@@ -549,3 +554,5 @@ ActionRequest SmartAlgorithm::getActionImpl()
     // Always prefer requesting BattleInfo if we don't have something better to do
     return ActionRequest::GetBattleInfo;
 }
+
+} // namespace Algorithm_322573304_322647603

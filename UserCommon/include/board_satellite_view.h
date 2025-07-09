@@ -6,6 +6,9 @@
 #include "cell.h"
 
 
+namespace UserCommon_322573304_322647603
+{
+
 class BoardSatelliteView : public SatelliteView
 {
 public:
@@ -68,3 +71,5 @@ private:
     const Position tank_position_;
     bool for_tank_;
 };
+
+} // namespace UserCommon_322573304_322647603

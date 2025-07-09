@@ -5,6 +5,9 @@
 #include "utils.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
 // Used for testing purposes.
 class SeedAlgorithm : public TankAlgorithm
 {
@@ -37,3 +40,5 @@ private:
     const std::vector<ActionRequest> seed_;
     size_t current_step_ = 0;
 };
+
+} // namespace Algorithm_322573304_322647603

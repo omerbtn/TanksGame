@@ -5,6 +5,10 @@
 #include "types/direction.h"
 #include "types/position.h"
 
+
+namespace UserCommon_322573304_322647603
+{
+
 class Tank : public MovableObject
 {
 public:
@@ -51,3 +55,5 @@ private:
     bool waiting_back_move_ = false;
     ActionRequest last_action_ = ActionRequest::DoNothing;
 };
+
+} // namespace UserCommon_322573304_322647603

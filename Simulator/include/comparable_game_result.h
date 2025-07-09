@@ -15,7 +15,7 @@ struct ComparableGameResult
 
     ComparableGameResult(GameResult&& res, size_t width, size_t height)
         : result(std::make_shared<GameResult>(std::move(res))),
-          final_state_str(satelliteViewToString(*result->game_state, width, height)) {}
+          final_state_str(UserCommon_322573304_322647603::satelliteViewToString(*result->game_state, width, height)) {}
 
     bool operator==(const ComparableGameResult& other) const
     {

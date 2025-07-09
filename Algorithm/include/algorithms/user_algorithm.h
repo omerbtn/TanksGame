@@ -3,6 +3,9 @@
 #include "TankAlgorithm.h"
 
 
+namespace Algorithm_322573304_322647603
+{
+
 // Algorithm that allows the user to control his tanks manually.
 // Used for testing purposes.
 class UserAlgorithm : public TankAlgorithm
@@ -22,6 +25,12 @@ public:
     void updateBattleInfo(BattleInfo&) override;
 
 private:
+    static std::string trim(const std::string& s);
+    static void print_help();
+
+private:
     int player_index_;
     int tank_index_;
 };
+
+} // namespace Algorithm_322573304_322647603

@@ -2,6 +2,10 @@
 
 #include "cell.h"
 
+
+namespace UserCommon_322573304_322647603
+{
+
 template <typename Derived>
 class Printer
 {
@@ -31,3 +35,5 @@ public:
 protected:
     const std::vector<std::vector<Cell>>& grid_;
 };
+
+} // namespace UserCommon_322573304_322647603

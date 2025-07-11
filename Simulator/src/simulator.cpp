@@ -7,8 +7,8 @@
 
 #include "arguments_parser.h"
 #include "board_satellite_view.h"
+#include "errors_logger.h"
 #include "global_config.h"
-#include "input_errors_logger.h"
 #include "registrations/registrar_adapter.h"
 #include "simulator_exception.h"
 #include "utils.h"
@@ -34,12 +34,10 @@ void Simulator::run()
 {
     if (config_.mode == RunMode::COMPARATIVE)
     {
-        std::cout << "Running in comparative mode..." << std::endl;
         runComparative();
     }
     else if (config_.mode == RunMode::COMPETITION)
     {
-        std::cout << "Running in competition mode..." << std::endl;
         runCompetition();
     }
 }
@@ -71,7 +69,15 @@ void Simulator::runComparative()
 void Simulator::loadComparativeSharedObjects()
 {
     // Load game managers from the specified folder
-    loadSharedObjectsFromFolder<GameManagerRegistrar>(config_.game_managers_folder);
+    size_t count = loadSharedObjectsFromFolder<GameManagerRegistrar>(config_.game_managers_folder);
+    if (count < 1)
+    {
+        std::ostringstream oss;
+        ArgumentsParser::printUsage(oss, "At least one game manager must be registered for competition mode, "
+                                         "didn't found any in " +
+                                             config_.algorithms_folder);
+        throw SimulatorException(oss.str());
+    }
 
     // Load algorithm1
     if (!loadSharedObject<AlgorithmRegistrar>(config_.algorithm1_so))
@@ -108,6 +114,7 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
                             [this](const auto& entry)
                             { return entry.name() == fs::path(config_.algorithm2_so).stem().string(); });
 
+    // Shouldn't happen, we validate registrations in loading
     if (it1 == algo_registrar.end() || it2 == algo_registrar.end())
         throw SimulatorException("Algorithms were not registered properly");
 
@@ -214,8 +221,13 @@ void Simulator::runCompetition()
     // 2. Load all game maps from the specified folder
     std::vector<GameMapInfo> maps = loadGameMapsFromFolder(config_.game_maps_folder);
 
-    // 3. Validate competition requirements
-    validateCompetitionRequirements(maps);
+    // 3. Validate maps
+    if (maps.empty())
+    {
+        std::ostringstream oss;
+        ArgumentsParser::printUsage(oss, "No valid game maps found in folder: " + config_.game_maps_folder);
+        throw SimulatorException(oss.str());
+    }
 
     // 4. Prepare output stream
     std::ofstream file_out;
@@ -241,12 +253,13 @@ void Simulator::loadCompetitionSharedObjects()
     }
 
     // Load all algorithms from the specified folder
-    if (size_t count = loadSharedObjectsFromFolder<AlgorithmRegistrar>(config_.algorithms_folder); count < 2)
+    size_t count = loadSharedObjectsFromFolder<AlgorithmRegistrar>(config_.algorithms_folder);
+    if (count < 2)
     {
         std::ostringstream oss;
         ArgumentsParser::printUsage(oss, "At least two algorithms must be registered for competition mode, "
-                                         "found: " +
-                                             std::to_string(count) + " in " + config_.algorithms_folder);
+                                         "found " +
+                                             std::to_string(count) + " valid in " + config_.algorithms_folder);
         throw SimulatorException(oss.str());
     }
 }
@@ -266,7 +279,7 @@ std::vector<GameMapInfo> Simulator::loadGameMapsFromFolder(const std::string& fo
     // Iterate through all files in the folder and load valid game maps
     for (const auto& entry : fs::directory_iterator(folder_path))
     {
-        if (!entry.is_regular_file())
+        if (!entry.is_regular_file() || entry.path().extension() != ".txt")
             continue;
 
         GameMapInfo map_info = loadGameMap(entry.path().string());
@@ -277,30 +290,6 @@ std::vector<GameMapInfo> Simulator::loadGameMapsFromFolder(const std::string& fo
     }
 
     return maps;
-}
-
-void Simulator::validateCompetitionRequirements(const std::vector<GameMapInfo>& maps)
-{
-    if (maps.empty())
-    {
-        std::ostringstream oss;
-        ArgumentsParser::printUsage(oss, "No valid maps found in folder: " + config_.game_maps_folder);
-        throw SimulatorException(oss.str());
-    }
-
-    const auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
-
-    if (gm_registrar.count() < 1)
-    {
-        throw SimulatorException("Game Manager was not registered properly.");
-    }
-
-    const auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-
-    if (algo_registrar.count() < 2)
-    {
-        throw SimulatorException("Algorithms were not registered properly.");
-    }
 }
 
 std::unordered_map<std::string, size_t>
@@ -422,11 +411,6 @@ size_t Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
         throw SimulatorException(oss.str());
     }
 
-    if constexpr (config::get<bool>("verbose_debug"))
-    {
-        std::cout << "Loading shared objects from folder: " << folder_path << std::endl;
-    }
-
     // Iterate through all files in the folder and load valid shared objects
     size_t loaded_count = 0;
     for (const auto& entry : fs::directory_iterator(folder_path))
@@ -441,31 +425,19 @@ size_t Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
         }
     }
 
-    if (loaded_count == 0)
-    {
-        std::ostringstream oss;
-        ArgumentsParser::printUsage(oss, "No valid .so files found in: " + folder_path);
-        throw SimulatorException(oss.str());
-    }
-
     return loaded_count;
 }
 
 template <typename Registrar>
 bool Simulator::loadSharedObject(const std::string& path)
 {
-    if constexpr (config::get<bool>("verbose_debug"))
-    {
-        std::cout << "Loading shared object: " << path << std::endl;
-    }
-
     std::string name = fs::path(path).stem().string();
     RegistrarAdapter<Registrar>::createEntry(name);
 
     void* handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if (!handle)
     {
-        std::cerr << "dlopen failed: " << dlerror() << std::endl;
+        errors_logger_.logGeneral("dlopen failed for ", path, ": ", dlerror());
         RegistrarAdapter<Registrar>::removeLast();
         return false;
     }
@@ -476,7 +448,7 @@ bool Simulator::loadSharedObject(const std::string& path)
     }
     catch (const typename RegistrarAdapter<Registrar>::BadRegistrationException& e)
     {
-        RegistrarAdapter<Registrar>::printBadRegistrationDetails(e);
+        errors_logger_.logGeneral(RegistrarAdapter<Registrar>::getBadRegistrationDetails(e));
         RegistrarAdapter<Registrar>::removeLast();
         dlclose(handle);
         return false;
@@ -523,25 +495,24 @@ void Simulator::printOutputHeader(std::ostream& out, RunMode mode)
 
 GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
 {
-    InputErrorsLogger error_logger;
     std::ifstream file(map_filename);
 
     if (!file)
     {
-        error_logger.log("Couldn't open map file: ", map_filename);
+        errors_logger_.logGeneral("Couldn't open map file: ", map_filename);
         return GameMapInfo();
     }
 
     std::string line;
     std::getline(file, line); // Skip the first line (map name/description)
 
-    auto parse_metadata = [&file, &line, &error_logger](const std::string& expected_key, size_t& target) -> bool
+    auto parse_metadata = [&file, &line, &map_filename, this](const std::string& expected_key, size_t& target) -> bool
     {
         std::getline(file, line);
         auto pos = line.find("=");
         if (pos == std::string::npos || line.find(expected_key) == std::string::npos)
         {
-            error_logger.log("Missing or invalid line for ", expected_key);
+            errors_logger_.logFile(map_filename, "Missing or invalid line for ", expected_key);
             return false;
         }
         try
@@ -550,7 +521,7 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
         }
         catch (const std::exception&)
         {
-            error_logger.log("Invalid value for ", expected_key, ": ", line.substr(pos + 1));
+            errors_logger_.logFile(map_filename, "Invalid value for ", expected_key, ": ", line.substr(pos + 1), ".");
             return false;
         }
         return true;
@@ -563,39 +534,49 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
         !parse_metadata("Rows", height) ||
         !parse_metadata("Cols", width))
     {
-        error_logger.log("File structure is invalid: ", map_filename);
+        errors_logger_.logFile(map_filename, "File structure is invalid, ignoring this file.");
         return GameMapInfo();
     }
 
     std::vector<std::vector<char>> chars_grid(width, std::vector<char>(height, ' '));
+    size_t actual_row_count = 0;
 
-    for (size_t y = 0; y < height; ++y)
+    for (; actual_row_count < height && std::getline(file, line); ++actual_row_count)
     {
-        std::getline(file, line);
         if (line.size() > width)
         {
-            error_logger.log("Warning: The row ", y, " is too long. Ignoring extra cells.");
+            errors_logger_.logFile(map_filename, "Row ", actual_row_count, " is too long. Ignoring extra cells.");
         }
         else if (line.size() < width)
         {
-            line += std::string(width - line.size(), ' ');
-            error_logger.log("Warning: The row ", y, " is too short. Treating missing cells as empty.");
+            errors_logger_.logFile(map_filename, "Row ", actual_row_count, " is too short. Treating missing cells as empty.");
         }
+        line.resize(width, ' ');
 
-        for (size_t x = 0; x < width && x < line.size(); ++x)
+        for (size_t x = 0; x < width; ++x)
         {
             char ch = line[x];
 
-            if (ch == '#' || ch == '@' || ch == ' ' || ch == '.' || (ch >= '1' && ch <= '9'))
+            if (ch == '#' || ch == '@' || ch == ' ' || ch == '.' || ch == '1' || ch == '2')
             {
-                chars_grid[x][y] = ch; // Valid characters
+                chars_grid[x][actual_row_count] = ch; // Valid characters
             }
             else
             {
-                error_logger.log("Warning: Invalid character '", ch, "' at (", x, ",", y, "). Treating as empty.");
-                chars_grid[x][y] = ' '; // Treat invalid characters as empty
+                errors_logger_.logFile(map_filename, "Invalid character '", ch, "' at (", x, ",", actual_row_count, "). Treating as empty.");
+                // Treat invalid characters as empty, grid is already initialized to spaces
             }
         }
+    }
+
+    if (actual_row_count < height)
+    {
+        errors_logger_.logFile(map_filename, "The map has only ", actual_row_count, " rows, expected ", height,
+                               ". Treating missing rows as empty.");
+    }
+    else if (std::getline(file, line))
+    {
+        errors_logger_.logFile(map_filename, "The map has more rows than expected (", height, "). Ignoring extra rows.");
     }
 
     return GameMapInfo(

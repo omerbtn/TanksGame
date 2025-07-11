@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -32,14 +33,15 @@ struct RegistrarAdapter<GameManagerRegistrar>
 
     using BadRegistrationException = GameManagerRegistrar::BadRegistrationException;
 
-    static void printBadRegistrationDetails(const BadRegistrationException& e)
+    static std::string getBadRegistrationDetails(const BadRegistrationException& e)
     {
-        std::cerr << "---------------------------------" << std::endl;
-        std::cerr << "Bad GameManager registration:" << std::endl;
-        std::cerr << "  Name: " << e.name << std::endl;
-        std::cerr << "  Has name? " << std::boolalpha << e.has_name << std::endl;
-        std::cerr << "  Has game manager factory? " << std::boolalpha << e.has_game_manager_factory << std::endl;
-        std::cerr << "---------------------------------" << std::endl;
+        std::ostringstream oss;
+        oss << "Bad GameManager registration:" << '\n'
+            << "  Name: " << e.name << '\n'
+            << "  Has name? " << std::boolalpha << e.has_name << '\n'
+            << "  Has game manager factory? " << std::boolalpha << e.has_game_manager_factory << '\n';
+
+        return oss.str();
     }
 };
 
@@ -64,14 +66,15 @@ struct RegistrarAdapter<AlgorithmRegistrar>
 
     using BadRegistrationException = AlgorithmRegistrar::BadRegistrationException;
 
-    static void printBadRegistrationDetails(const BadRegistrationException& e)
+    static std::string getBadRegistrationDetails(const BadRegistrationException& e)
     {
-        std::cerr << "---------------------------------" << std::endl;
-        std::cerr << "Bad Algorithm registration:" << std::endl;
-        std::cerr << "  Name: " << e.name << std::endl;
-        std::cerr << "  Has name? " << std::boolalpha << e.has_name << std::endl;
-        std::cerr << "  Has tank algorithm factory? " << std::boolalpha << e.has_tank_algorithm_factory << std::endl;
-        std::cerr << "  Has player factory? " << std::boolalpha << e.has_player_factory << std::endl;
-        std::cerr << "---------------------------------" << std::endl;
+        std::ostringstream oss;
+        oss << "Bad Algorithm registration:" << '\n'
+            << "  Name: " << e.name << '\n'
+            << "  Has name? " << std::boolalpha << e.has_name << '\n'
+            << "  Has tank algorithm factory? " << std::boolalpha << e.has_tank_algorithm_factory << '\n'
+            << "  Has player factory? " << std::boolalpha << e.has_player_factory << '\n';
+
+        return oss.str();
     }
 };

@@ -8,6 +8,7 @@
 #include "GameResult.h"
 #include "arguments_parser.h"
 #include "comparable_game_result.h"
+#include "errors_logger.h"
 #include "game_map_info.h"
 
 
@@ -44,7 +45,6 @@ private:
     void runCompetition();
     void loadCompetitionSharedObjects();
     std::vector<GameMapInfo> loadGameMapsFromFolder(const std::string& folder_path);
-    void validateCompetitionRequirements(const std::vector<GameMapInfo>& maps);
     std::unordered_map<std::string, size_t>
     runCompetitionGames(const std::vector<GameMapInfo>& maps);
     void runCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
@@ -78,4 +78,5 @@ private:
     // ============ Data members ============
     SimulatorConfig config_;
     std::vector<void*> so_handles_; // To keep track of loaded shared objects, to be closed at destruction
+    ErrorsLogger errors_logger_;
 };

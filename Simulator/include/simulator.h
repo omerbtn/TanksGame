@@ -75,6 +75,10 @@ private:
                              const std::string& name1, const std::string& name2,
                              const GameMapInfo& map_info);
 
+    // ========== Single mode (for testing) ==========
+    void runSingle();
+    void loadSingleSharedObjects();
+
     // ============ Data members ============
     SimulatorConfig config_;
     std::vector<void*> so_handles_; // To keep track of loaded shared objects, to be closed at destruction

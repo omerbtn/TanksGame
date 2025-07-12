@@ -6,7 +6,10 @@
 #include <set>
 #include <sstream>
 
+#include "global_config.h"
 #include "simulator_exception.h"
+
+using namespace UserCommon_322573304_322647603;
 
 
 const std::vector<std::string> ArgumentsParser::comparative_required_keys = {
@@ -14,6 +17,9 @@ const std::vector<std::string> ArgumentsParser::comparative_required_keys = {
 
 const std::vector<std::string> ArgumentsParser::competition_required_keys = {
     "game_maps_folder", "game_manager", "algorithms_folder"};
+
+const std::vector<std::string> ArgumentsParser::single_required_keys = {
+    "game_manager", "game_map", "algorithm1", "algorithm2"};
 
 const std::vector<std::string> ArgumentsParser::optional_keys = {
     "num_threads"};
@@ -26,6 +32,8 @@ ArgumentsParser::ArgumentsParser(int argc, char* argv[])
 
 void ArgumentsParser::parse(int argc, char* argv[])
 {
+    constexpr const bool allow_single = config::get<bool>("allow_simulator_single_mode");
+
     if (argc < 2)
     {
         std::ostringstream oss;
@@ -42,10 +50,16 @@ void ArgumentsParser::parse(int argc, char* argv[])
     {
         mode_ = RunMode::COMPETITION;
     }
+    else if (allow_single && mode_arg == "-single")
+    {
+        mode_ = RunMode::SINGLE;
+    }
     else
     {
         std::ostringstream oss;
-        printUsage(oss, "First argument must be -comparative or -competition");
+        std::string allowed_modes = allow_single ? "-comparative ,-competition or -single"
+                                                 : "-comparative or -competition";
+        printUsage(oss, "First argument must be " + allowed_modes);
         throw SimulatorException(oss.str());
     }
 
@@ -147,7 +161,9 @@ int ArgumentsParser::parseKeyValueTokens(const std::vector<std::string>& tokens,
 
 void ArgumentsParser::validate()
 {
-    const auto& required = (mode_ == RunMode::COMPARATIVE) ? comparative_required_keys : competition_required_keys;
+    const auto& required = (mode_ == RunMode::COMPARATIVE)   ? comparative_required_keys
+                           : (mode_ == RunMode::COMPETITION) ? competition_required_keys
+                                                             : single_required_keys;
 
     auto missing = getMissingKeys(required);
     auto unrecognized = getUnrecognizedKeys(required);
@@ -229,11 +245,18 @@ SimulatorConfig ArgumentsParser::getConfig() const
         config.algorithm1_so = args_.at("algorithm1");
         config.algorithm2_so = args_.at("algorithm2");
     }
-    else
+    else if (mode_ == RunMode::COMPETITION)
     {
         config.game_maps_folder = args_.at("game_maps_folder");
         config.game_manager_so = args_.at("game_manager");
         config.algorithms_folder = args_.at("algorithms_folder");
+    }
+    else if (mode_ == RunMode::SINGLE)
+    {
+        config.game_manager_so = args_.at("game_manager");
+        config.game_map_filename = args_.at("game_map");
+        config.algorithm1_so = args_.at("algorithm1");
+        config.algorithm2_so = args_.at("algorithm2");
     }
 
     return config;
@@ -249,4 +272,10 @@ void ArgumentsParser::printUsage(std::ostream& os, const std::string& error_msg)
        << "    algorithm1=<file> algorithm2=<file> [num_threads=<n>] [-verbose]\n\n"
        << "  ./simulator_<ids> -competition game_maps_folder=<folder> game_manager=<file> \\\n"
        << "    algorithms_folder=<folder> [num_threads=<n>] [-verbose]\n\n";
+
+    if constexpr (config::get<bool>("allow_simulator_single_mode"))
+    {
+        os << "  ./simulator_<ids> -single game_manager=<file> game_map=<file> \\\n"
+           << "    algorithm1=<file> algorithm2=<file> [num_threads=<n>] [-verbose]\n\n";
+    }
 }

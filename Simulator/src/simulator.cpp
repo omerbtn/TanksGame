@@ -40,6 +40,10 @@ void Simulator::run()
     {
         runCompetition();
     }
+    else if (config_.mode == RunMode::SINGLE)
+    {
+        runSingle();
+    }
 }
 
 /*======================================================================================*/
@@ -117,7 +121,6 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
     // Shouldn't happen, we validate registrations in loading
     if (it1 == algo_registrar.end() || it2 == algo_registrar.end())
         throw SimulatorException("Algorithms were not registered properly");
-
 
     // Get tank algorithm factories
     TankAlgorithmFactory tank_factory1 = it1->getTankAlgorithmFactory();
@@ -400,6 +403,69 @@ Simulator::sortCompetitionScores(std::unordered_map<std::string, size_t> scores)
 
 /*======================================================================================*/
 
+void Simulator::runSingle()
+{
+    // Load .so files
+    loadSingleSharedObjects();
+
+    // Load game map
+    GameMapInfo map_info = loadGameMap(config_.game_map_filename);
+    if (!map_info.is_valid)
+    {
+        throw SimulatorException("Invalid game map: " + config_.game_map_filename);
+    }
+
+    // Get GameManager entry
+    const auto& game_manager_entry = *GameManagerRegistrar::getGameManagerRegistrar().begin();
+
+    // Get algorithm entries from the registrar
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    auto it1 = std::find_if(algo_registrar.begin(), algo_registrar.end(),
+                            [this](const auto& entry)
+                            { return entry.name() == fs::path(config_.algorithm1_so).stem().string(); });
+    auto it2 = std::find_if(algo_registrar.begin(), algo_registrar.end(),
+                            [this](const auto& entry)
+                            { return entry.name() == fs::path(config_.algorithm2_so).stem().string(); });
+
+    // Get tank algorithm factories
+    TankAlgorithmFactory tank_factory1 = it1->getTankAlgorithmFactory();
+    TankAlgorithmFactory tank_factory2 = it2->getTankAlgorithmFactory();
+
+    // Create GameManager and Players instances
+    std::unique_ptr<AbstractGameManager> game_manager = game_manager_entry.createGameManager(config_.verbose);
+    std::unique_ptr<Player> player1 = it1->createPlayer(1, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
+    std::unique_ptr<Player> player2 = it2->createPlayer(2, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
+
+    // Run the game
+    runSingleGame(*game_manager, *player1, *player2,
+                  tank_factory1, tank_factory2,
+                  it1->name(), it2->name(), map_info);
+}
+
+void Simulator::loadSingleSharedObjects()
+{
+    // Load GameManager .so
+    if (!loadSharedObject<GameManagerRegistrar>(config_.game_manager_so))
+    {
+        throw SimulatorException("Failed to load game manager: " + config_.game_manager_so);
+    }
+
+    // Load algorithm1
+    if (!loadSharedObject<AlgorithmRegistrar>(config_.algorithm1_so))
+    {
+        throw SimulatorException("Failed to load algorithm1: " + config_.algorithm1_so);
+    }
+
+    // Load algorithm2, unless it's the same as algorithm1
+    if (config_.algorithm2_so != config_.algorithm1_so &&
+        !loadSharedObject<AlgorithmRegistrar>(config_.algorithm2_so))
+    {
+        throw SimulatorException("Failed to load algorithm2: " + config_.algorithm2_so);
+    }
+}
+
+/*======================================================================================*/
+
 template <typename Registrar>
 size_t Simulator::loadSharedObjectsFromFolder(const std::string& folder_path)
 {
@@ -543,6 +609,12 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
 
     for (; actual_row_count < height && std::getline(file, line); ++actual_row_count)
     {
+        // Remove '\r' at end if present (common in Windows CRLF files, causes problems with parsing)
+        if (!line.empty() && line.back() == '\r')
+        {
+            line.pop_back();
+        }
+
         if (line.size() > width)
         {
             errors_logger_.logFile(map_filename, "Row ", actual_row_count, " is too long. Ignoring extra cells.");

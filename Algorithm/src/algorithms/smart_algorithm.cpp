@@ -417,13 +417,16 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
     std::vector<std::pair<BFSState, Position>> candidates; // (state, opponent position)
 
     size_t iterations = 0;
-    size_t iterations_limit = config::get<size_t>("bfs_iterations_limit");
+    constexpr const size_t iterations_limit = config::get<size_t>("bfs_iterations_limit");
 
     while (!q.empty() && !found)
     {
         if (iterations > iterations_limit)
         {
-            std::cout << "[SmartAlgorithm] BFS aborted after too many iterations!" << std::endl;
+            if constexpr (config::get<bool>("verbose_debug"))
+            {
+                std::cout << "[SmartAlgorithm] BFS aborted after too many iterations!" << std::endl;
+            }
             break;
         }
 
@@ -435,11 +438,13 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
             BFSState current = q.front();
             q.pop();
 
+            ++iterations;
             if constexpr (config::get<bool>("verbose_debug"))
             {
-                // For debugging purposes
-                if (++iterations % 5000 == 0)
+                if (iterations % 5000 == 0)
+                {
                     std::cout << "Visited: " << visited.size() << ", Queue: " << q.size() << std::endl;
+                }
             }
 
             // If we have line of sight to the opponent, we found a shortest path, can add it to candidates

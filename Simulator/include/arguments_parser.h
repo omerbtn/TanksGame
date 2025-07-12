@@ -9,7 +9,8 @@
 enum class RunMode
 {
     COMPARATIVE,
-    COMPETITION
+    COMPETITION,
+    SINGLE
 };
 
 struct SimulatorConfig
@@ -44,6 +45,7 @@ private:
 
     static const std::vector<std::string> comparative_required_keys;
     static const std::vector<std::string> competition_required_keys;
+    static const std::vector<std::string> single_required_keys;
     static const std::vector<std::string> optional_keys;
 
     std::unordered_map<std::string, std::string> args_;

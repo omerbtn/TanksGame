@@ -27,6 +27,7 @@ set_target_properties(Algorithm_${SUBMITTER_IDS} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_ROOT}
 )
 
+# TODO: Remove on submission!
 # Copy .so to resources/algorithms after build
 add_custom_command(TARGET Algorithm_${SUBMITTER_IDS} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory

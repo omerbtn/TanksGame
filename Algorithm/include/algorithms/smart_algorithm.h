@@ -71,6 +71,7 @@ private:
     Position cached_target_;
     std::unordered_map<Position, size_t> total_walls_damage_; // Wall's position -> number of hits it has taken
     std::unordered_map<Position, size_t> local_walls_damage_; // Wall's position -> number of hits we made to it since last GetBattleInfo
+    bool aborted_last_time = false;
 };
 
 } // namespace Algorithm_322573304_322647603

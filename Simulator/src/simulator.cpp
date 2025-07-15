@@ -585,7 +585,7 @@ GameMapInfo Simulator::loadGameMap(const std::string& map_filename)
         {
             target = std::stoi(line.substr(pos + 1));
         }
-        catch (const std::exception&)
+        catch (...)
         {
             errors_logger_.logFile(map_filename, "Invalid value for ", expected_key, ": ", line.substr(pos + 1), ".");
             return false;

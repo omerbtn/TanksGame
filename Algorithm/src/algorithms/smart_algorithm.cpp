@@ -417,7 +417,8 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
     std::vector<std::pair<BFSState, Position>> candidates; // (state, opponent position)
 
     size_t iterations = 0;
-    constexpr const size_t iterations_limit = config::get<size_t>("bfs_iterations_limit");
+    const size_t iterations_limit = !aborted_last_time ? config::get<size_t>("bfs_iterations_limit")
+                                                       : config::get<size_t>("bfs_iterations_limit") * 2;
 
     while (!q.empty() && !found)
     {
@@ -427,6 +428,7 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
             {
                 std::cout << "[SmartAlgorithm] BFS aborted after too many iterations!" << std::endl;
             }
+            aborted_last_time = true;
             break;
         }
 
@@ -458,17 +460,21 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
                 continue;                                       // Still process the rest of the layer
             }
 
-            // Try GetBattleInfo for reducing cooldown
-            tryGetBattleInfo(q, parent, visited, current);
+            // Try breaking through walls just if not aborted last time, to reduce search time
+            if (!aborted_last_time)
+            {
+                // Try GetBattleInfo for reducing cooldown
+                tryGetBattleInfo(q, parent, visited, current);
+
+                // Try shooting a wall
+                tryShootingAWall(q, parent, visited, current);
+            }
 
             // Try moving forward if safe
             tryForwardMove(q, parent, visited, current);
 
             // Try rotating in all directions
             tryRotations(q, parent, visited, current);
-
-            // Try shooting a wall
-            tryShootingAWall(q, parent, visited, current);
         }
 
         // If we found a shortest path, we exit after finishing this layer
@@ -477,6 +483,8 @@ std::optional<ActionRequest> TankAlgorithm_322573304_322647603::findFirstSafeAct
     // Pick the best candidate from the found shortest paths
     if (!candidates.empty())
     {
+        aborted_last_time = false;
+
         // Choose the candidate closest to the opponent
         auto best = std::min_element(candidates.begin(), candidates.end(),
                                      [this](const auto& a, const auto& b)

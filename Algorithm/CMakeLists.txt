@@ -1,40 +1,61 @@
+cmake_minimum_required(VERSION 3.13)
 project(Algorithm)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# Include common functionality
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/../cmake")
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../cmake/Common.cmake")
+    include(${CMAKE_CURRENT_LIST_DIR}/../cmake/Common.cmake)
+else()
+    # Fallback for when building from root
+    include(${CMAKE_SOURCE_DIR}/cmake/Common.cmake)
+endif()
 
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+# Setup common project settings
+setup_project_common()
 
+# Ensure config generation and UserCommon are available
+ensure_config_generation()
+ensure_usercommon()
+
+# Get project root for consistent paths
+find_project_root(PROJECT_ROOT)
+
+# Collect source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
+# Create the shared library
 add_library(Algorithm_${SUBMITTER_IDS} SHARED ${SOURCES})
 
-add_dependencies(Algorithm_${SUBMITTER_IDS} generate_config)
+# Remove prefix for .so files
+set_target_properties(Algorithm_${SUBMITTER_IDS} PROPERTIES PREFIX "")
 
 # Include headers
 target_include_directories(Algorithm_${SUBMITTER_IDS}
     PUBLIC 
-        ${PROJECT_ROOT}/include 
-        ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include 
+        ${PROJECT_ROOT}/build  # Consistent config location
 )
 
 # Link against UserCommon
 target_link_libraries(Algorithm_${SUBMITTER_IDS} PRIVATE UserCommon)
 
-# Output to this project root directory
-set_target_properties(Algorithm_${SUBMITTER_IDS} PROPERTIES
-    PREFIX ""
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_ROOT}
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_ROOT}
+# Copy output to project root
+add_custom_command(TARGET Algorithm_${SUBMITTER_IDS} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:Algorithm_${SUBMITTER_IDS}>
+        ${CMAKE_CURRENT_SOURCE_DIR}/
+    COMMENT "Copying Algorithm library to project directory"
 )
 
 # TODO: Remove on submission!
 # Copy .so to resources/algorithms after build
 add_custom_command(TARGET Algorithm_${SUBMITTER_IDS} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${CMAKE_SOURCE_DIR}/resources/algorithms
+        ${PROJECT_ROOT}/resources/algorithms
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:Algorithm_${SUBMITTER_IDS}>
-        ${CMAKE_SOURCE_DIR}/resources/algorithms/
+        ${PROJECT_ROOT}/resources/algorithms/
+    COMMENT "Copying Algorithm library to resources directory"
 )
 
 # Ignore unresolved symbols only on non-Windows compilers
@@ -48,5 +69,4 @@ else()
     target_link_options(Algorithm_${SUBMITTER_IDS} PRIVATE 
         "-Wl,-undefined,dynamic_lookup"
     )
-
 endif()

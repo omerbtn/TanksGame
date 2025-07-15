@@ -1,40 +1,61 @@
+cmake_minimum_required(VERSION 3.13)
 project(GameManager)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# Include common functionality
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/../cmake")
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../cmake/Common.cmake")
+    include(${CMAKE_CURRENT_LIST_DIR}/../cmake/Common.cmake)
+else()
+    # Fallback for when building from root
+    include(${CMAKE_SOURCE_DIR}/cmake/Common.cmake)
+endif()
 
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+# Setup common project settings
+setup_project_common()
 
+# Ensure config generation and UserCommon are available
+ensure_config_generation()
+ensure_usercommon()
+
+# Get project root for consistent paths
+find_project_root(PROJECT_ROOT)
+
+# Collect source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
+# Create the shared library
 add_library(GameManager_${SUBMITTER_IDS} SHARED ${SOURCES})
 
-add_dependencies(GameManager_${SUBMITTER_IDS} generate_config)
+# Remove prefix for .so files
+set_target_properties(GameManager_${SUBMITTER_IDS} PROPERTIES PREFIX "")
 
 # Include headers
 target_include_directories(GameManager_${SUBMITTER_IDS}
     PUBLIC 
-        ${PROJECT_ROOT}/include 
-        ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${PROJECT_ROOT}/build  # Consistent config location
 )
 
 # Link against UserCommon
 target_link_libraries(GameManager_${SUBMITTER_IDS} PRIVATE UserCommon)
 
-# Output to this project root directory
-set_target_properties(GameManager_${SUBMITTER_IDS} PROPERTIES
-    PREFIX ""
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_ROOT}
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_ROOT}
+# Copy output to project root
+add_custom_command(TARGET GameManager_${SUBMITTER_IDS} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:GameManager_${SUBMITTER_IDS}>
+        ${CMAKE_CURRENT_SOURCE_DIR}/
+    COMMENT "Copying GameManager library to project directory"
 )
 
 # TODO: Remove on submission!
 # Copy .so to resources/game_managers after build
 add_custom_command(TARGET GameManager_${SUBMITTER_IDS} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${CMAKE_SOURCE_DIR}/resources/game_managers
+        ${PROJECT_ROOT}/resources/game_managers
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:GameManager_${SUBMITTER_IDS}>
-        ${CMAKE_SOURCE_DIR}/resources/game_managers/
+        ${PROJECT_ROOT}/resources/game_managers/
+    COMMENT "Copying GameManager library to resources directory"
 )
 
 # Ignore unresolved symbols only on non-Windows compilers

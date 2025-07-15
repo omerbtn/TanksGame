@@ -27,12 +27,19 @@ void ErrorsLogger::save_to_file(const std::string& filename) const
         return;
     }
 
+    bool first = true;
     for (const auto& entry : log_entries_)
     {
+        if (!first)
+        {
+            out << '\n';
+        }
+        first = false;
+
         if (std::holds_alternative<GeneralError>(entry))
         {
             const auto& err = std::get<GeneralError>(entry);
-            out << err.message << "\n\n";
+            out << err.message << '\n';
         }
         else if (std::holds_alternative<FileErrors>(entry))
         {
@@ -42,7 +49,6 @@ void ErrorsLogger::save_to_file(const std::string& filename) const
             {
                 out << "  - " << msg << '\n';
             }
-            out << '\n';
         }
     }
 }

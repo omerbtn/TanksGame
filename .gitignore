@@ -367,7 +367,7 @@ FodyWeavers.xsd
 .vscode/settings.json
 
 # Ignore the build output folder for the project
-build/
+**/build/
 
 # Ignore the CMakeFiles folder for the project
 CMakeFiles/
@@ -375,7 +375,6 @@ CMakeFiles/
 CMakeCache.txt
 .ninja_log
 build.ninja
-*.cmake
 
 _deps/
 lib

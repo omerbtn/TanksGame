@@ -276,6 +276,6 @@ void ArgumentsParser::printUsage(std::ostream& os, const std::string& error_msg)
     if constexpr (config::get<bool>("allow_simulator_single_mode"))
     {
         os << "  ./simulator_<ids> -single game_manager=<file> game_map=<file> \\\n"
-           << "    algorithm1=<file> algorithm2=<file> [num_threads=<n>] [-verbose]\n\n";
+           << "    algorithm1=<file> algorithm2=<file> [-verbose]\n\n";
     }
 }

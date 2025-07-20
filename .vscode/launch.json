@@ -8,10 +8,11 @@
       "program": "${workspaceFolder}/Simulator/simulator_322573304_322647603",
       "args": [
         "-comparative",
-        "game_map=resources/input_c.txt",
+        "game_map=resources/game_maps/input_c.txt",
         "game_managers_folder=GameManager/",
         "algorithm1=Algorithm/Algorithm_322573304_322647603.so",
         "algorithm2=Algorithm/Algorithm_322573304_322647603.so",
+        "num_threads=4",
         "-verbose"
       ],
       "stopAtEntry": false,

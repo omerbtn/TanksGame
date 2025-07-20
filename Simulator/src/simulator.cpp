@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 
 #include "arguments_parser.h"
 #include "board_satellite_view.h"
@@ -12,6 +13,7 @@
 #include "registrations/registrar_adapter.h"
 #include "simulator_exception.h"
 #include "utils.h"
+#include "thread_pool.h"
 
 namespace fs = std::filesystem;
 using namespace UserCommon_322573304_322647603;
@@ -101,7 +103,7 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
                                            size_t& map_width, size_t& map_height)
 {
     // Load the map info
-    GameMapInfo map_info = loadGameMap(config_.game_map_filename);
+    const GameMapInfo map_info = loadGameMap(config_.game_map_filename);
     if (!map_info.is_valid)
     {
         throw SimulatorException("Invalid game map: " + config_.game_map_filename);
@@ -125,22 +127,42 @@ void Simulator::runComparativeGameManagers(std::vector<GameManagerExecutionResul
     // Get tank algorithm factories
     TankAlgorithmFactory tank_factory1 = it1->getTankAlgorithmFactory();
     TankAlgorithmFactory tank_factory2 = it2->getTankAlgorithmFactory();
+    
+    bool verbose = config_.verbose;
+    std::string algo1_name = it1->name();
+    std::string algo2_name = it2->name();
 
-    // Iterate over all game managers and run the game
+    ThreadPool thread_pool(std::thread::hardware_concurrency());
+    
+    std::vector<std::future<GameManagerExecutionResult>> futures;
+    
+    // Iterate over all game managers and submit tasks to thread pool
     auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
     for (const auto& gm_entry : gm_registrar)
     {
-        // Create GameManager and Players instances
-        std::unique_ptr<AbstractGameManager> game_manager = gm_entry.createGameManager(config_.verbose);
-        std::unique_ptr<Player> player1 = it1->createPlayer(1, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
-        std::unique_ptr<Player> player2 = it2->createPlayer(2, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
+        auto future = thread_pool.enqueue([this, &gm_entry, &it1, &it2, &map_info, &tank_factory1, &tank_factory2, 
+                                           verbose, algo1_name, algo2_name]() -> GameManagerExecutionResult {
 
-        // Run the game
-        GameResult result = runSingleGame(*game_manager, *player1, *player2,
-                                          tank_factory1, tank_factory2,
-                                          it1->name(), it2->name(), map_info);
+            // Create GameManager and Players instances
+            std::unique_ptr<AbstractGameManager> game_manager = gm_entry.createGameManager(verbose);
+            std::unique_ptr<Player> player1 = it1->createPlayer(1, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
+            std::unique_ptr<Player> player2 = it2->createPlayer(2, map_info.width, map_info.height, map_info.max_steps, map_info.num_shells);
 
-        results.emplace_back(gm_entry.name(), std::move(result));
+            // Run the game
+            GameResult result = runSingleGame(*game_manager, *player1, *player2,
+                                              tank_factory1, tank_factory2,
+                                              algo1_name, algo2_name, map_info);
+
+            return GameManagerExecutionResult{gm_entry.name(), std::move(result)};
+        });
+        
+        futures.push_back(std::move(future));
+    }
+    
+    // Collect all results
+    for (auto& future : futures)
+    {
+        results.push_back(future.get());
     }
 }
 
@@ -307,17 +329,92 @@ Simulator::runCompetitionGames(const std::vector<GameMapInfo>& maps)
         scores[entry.name()] = 0;
     }
 
-    // Run all competition games for each map
+    // Create thread pool for parallel execution
+    ThreadPool thread_pool(config_.num_threads);
+    
+    // Collect all futures and player pairs from all maps
+    std::vector<std::future<GameResult>> all_futures;
+    std::vector<std::pair<std::string, std::string>> all_player_pairs;
+
+    // Submit all games from all maps to the thread pool
     for (size_t k = 0; k < maps.size(); ++k)
     {
-        runCompetitionGamesForMap(maps[k], k, scores);
+        submitCompetitionGamesForMap(maps[k], k, thread_pool, all_futures, all_player_pairs);
+    }
+
+    // Collect all results and update scores
+    for (size_t i = 0; i < all_futures.size(); ++i)
+    {
+        GameResult result = all_futures[i].get();
+        const auto& [player1_name, player2_name] = all_player_pairs[i];
+        updateScores(result, player1_name, player2_name, scores);
     }
 
     return scores;
 }
 
 void Simulator::runCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
-                                          std::unordered_map<std::string, size_t>& scores)
+                                          std::unordered_map<std::string, size_t>& scores,
+                                          ThreadPool& thread_pool)
+{
+    auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+
+    const auto& game_manager_entry = *gm_registrar.begin();
+    size_t N = algo_registrar.count();
+
+    // Create futures for parallel execution
+    std::vector<std::future<GameResult>> futures;
+    std::vector<std::pair<std::string, std::string>> player_pairs;
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        // Get opponent index
+        size_t j = (i + 1 + (map_index % (N - 1))) % N;
+
+        // Get Algorithms entries
+        const auto& algo1_entry = algo_registrar.getEntry(i);
+        const auto& algo2_entry = algo_registrar.getEntry(j);
+
+        // Capture necessary data by value for thread safety
+        bool verbose = config_.verbose;
+        std::string algo1_name = algo1_entry.name();
+        std::string algo2_name = algo2_entry.name();
+        TankAlgorithmFactory tank_factory1 = algo1_entry.getTankAlgorithmFactory();
+        TankAlgorithmFactory tank_factory2 = algo2_entry.getTankAlgorithmFactory();
+
+        // Store player pair for later score update
+        player_pairs.emplace_back(algo1_name, algo2_name);
+
+        auto future = thread_pool.enqueue([this, &game_manager_entry, &algo1_entry, &algo2_entry, &map,
+                                          verbose, algo1_name, algo2_name, tank_factory1, tank_factory2]() -> GameResult {
+            // Create GameManager and Player instances
+            std::unique_ptr<AbstractGameManager> game_manager = game_manager_entry.createGameManager(verbose);
+            std::unique_ptr<Player> player1 = algo1_entry.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
+            std::unique_ptr<Player> player2 = algo2_entry.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+
+            // Run the game and return the result
+            return runSingleGame(*game_manager, *player1, *player2,
+                                 tank_factory1, tank_factory2,
+                                 algo1_name, algo2_name, map);
+        });
+
+        futures.push_back(std::move(future));
+    }
+
+    // Collect results and update scores
+    for (size_t i = 0; i < futures.size(); ++i)
+    {
+        GameResult result = futures[i].get();
+        const auto& [player1_name, player2_name] = player_pairs[i];
+        updateScores(result, player1_name, player2_name, scores);
+    }
+}
+
+void Simulator::submitCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
+                                             ThreadPool& thread_pool,
+                                             std::vector<std::future<GameResult>>& all_futures,
+                                             std::vector<std::pair<std::string, std::string>>& all_player_pairs)
 {
     auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
     auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
@@ -334,20 +431,30 @@ void Simulator::runCompetitionGamesForMap(const GameMapInfo& map, size_t map_ind
         const auto& algo1_entry = algo_registrar.getEntry(i);
         const auto& algo2_entry = algo_registrar.getEntry(j);
 
-        // Create GameManager and Player instances
-        std::unique_ptr<AbstractGameManager> game_manager = game_manager_entry.createGameManager(config_.verbose);
-        std::unique_ptr<Player> player1 = algo1_entry.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
-        std::unique_ptr<Player> player2 = algo2_entry.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+        // Capture necessary data by value for thread safety
+        bool verbose = config_.verbose;
+        std::string algo1_name = algo1_entry.name();
+        std::string algo2_name = algo2_entry.name();
+        TankAlgorithmFactory tank_factory1 = algo1_entry.getTankAlgorithmFactory();
+        TankAlgorithmFactory tank_factory2 = algo2_entry.getTankAlgorithmFactory();
 
-        // Run the game
-        GameResult result = runSingleGame(*game_manager, *player1, *player2,
-                                          algo1_entry.getTankAlgorithmFactory(),
-                                          algo2_entry.getTankAlgorithmFactory(),
-                                          algo1_entry.name(), algo2_entry.name(),
-                                          map);
+        // Store player pair for later score update
+        all_player_pairs.emplace_back(algo1_name, algo2_name);
 
-        // Update scores based on the result
-        updateScores(result, algo1_entry.name(), algo2_entry.name(), scores);
+        auto future = thread_pool.enqueue([this, &game_manager_entry, &algo1_entry, &algo2_entry, &map,
+                                          verbose, algo1_name, algo2_name, tank_factory1, tank_factory2]() -> GameResult {
+            // Create GameManager and Player instances
+            std::unique_ptr<AbstractGameManager> game_manager = game_manager_entry.createGameManager(verbose);
+            std::unique_ptr<Player> player1 = algo1_entry.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
+            std::unique_ptr<Player> player2 = algo2_entry.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+
+            // Run the game and return the result
+            return runSingleGame(*game_manager, *player1, *player2,
+                                 tank_factory1, tank_factory2,
+                                 algo1_name, algo2_name, map);
+        });
+
+        all_futures.push_back(std::move(future));
     }
 }
 

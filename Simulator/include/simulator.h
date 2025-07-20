@@ -10,6 +10,7 @@
 #include "comparable_game_result.h"
 #include "errors_logger.h"
 #include "game_map_info.h"
+#include "thread_pool.h"
 
 
 class Simulator
@@ -48,7 +49,12 @@ private:
     std::unordered_map<std::string, size_t>
     runCompetitionGames(const std::vector<GameMapInfo>& maps);
     void runCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
-                                   std::unordered_map<std::string, size_t>& scores);
+                                   std::unordered_map<std::string, size_t>& scores,
+                                   ThreadPool& thread_pool);
+    void submitCompetitionGamesForMap(const GameMapInfo& map, size_t map_index,
+                                      ThreadPool& thread_pool,
+                                      std::vector<std::future<GameResult>>& all_futures,
+                                      std::vector<std::pair<std::string, std::string>>& all_player_pairs);
     void updateScores(const GameResult& result,
                       const std::string& player1_name,
                       const std::string& player2_name,

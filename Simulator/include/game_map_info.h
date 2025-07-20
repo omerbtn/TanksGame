@@ -22,5 +22,10 @@ struct GameMapInfo
           height(height), width(width),
           max_steps(max_steps), num_shells(num_shells), is_valid(true) {}
 
+    GameMapInfo(const GameMapInfo& other) = delete;
+    GameMapInfo& operator=(const GameMapInfo& other) = delete;
+    GameMapInfo(GameMapInfo&& other) = default;
+    GameMapInfo& operator=(GameMapInfo&& other) = default;
+
     GameMapInfo() : is_valid(false) {}
 };

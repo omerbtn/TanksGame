@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.13)
 project(GameManager)
 
+# Set C++ standard to C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable strict compiler warnings
+add_compile_options(-Wall -Wextra -Werror -pedantic)
+
 # Include common functionality
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../cmake/Common.cmake")

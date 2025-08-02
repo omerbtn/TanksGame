@@ -8,6 +8,11 @@
 #include "TankAlgorithm.h"
 
 
+namespace simulator
+{
+namespace registrations
+{
+
 class AlgorithmRegistrar
 {
     class AlgorithmEntry
@@ -60,6 +65,8 @@ class AlgorithmRegistrar
     static AlgorithmRegistrar registrar;
 
 public:
+    using value_type = AlgorithmEntry;
+    
     static AlgorithmRegistrar& getAlgorithmRegistrar();
 
     void createAlgorithmEntry(const std::string& name)
@@ -116,3 +123,6 @@ public:
     size_t count() const { return algorithms_.size(); }
     void clear() { algorithms_.clear(); }
 };
+
+} // namespace registrations
+} // namespace simulator

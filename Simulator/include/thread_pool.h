@@ -11,6 +11,9 @@
 #include <type_traits>
 #include <stdexcept>
 
+
+namespace simulator
+{
 class ThreadPool {
 public:
     ThreadPool(size_t);
@@ -50,3 +53,5 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<std::invoke_resul
     condition.notify_one();
     return res;
 }
+
+} // namespace simulator

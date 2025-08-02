@@ -5,12 +5,16 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <thread>
+#include <algorithm>
 
 #include "global_config.h"
 #include "simulator_exception.h"
 
-using namespace UserCommon_322573304_322647603;
+namespace simulator
+{
 
+using namespace UserCommon_322573304_322647603;
 
 const std::vector<std::string> ArgumentsParser::comparative_required_keys = {
     "game_map", "game_managers_folder", "algorithm1", "algorithm2"};
@@ -28,6 +32,20 @@ ArgumentsParser::ArgumentsParser(int argc, char* argv[])
 {
     parse(argc, argv);
     validate();
+}
+
+static std::string strip(const std::string& s) {
+    size_t start = 0;
+    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
+        ++start;
+    }
+
+    size_t end = s.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) {
+        --end;
+    }
+
+    return s.substr(start, end - start);
 }
 
 void ArgumentsParser::parse(int argc, char* argv[])
@@ -85,7 +103,7 @@ void ArgumentsParser::parse(int argc, char* argv[])
         int next_i = parseKeyValueTokens(tokens, i, key, value);
         if (next_i > 0)
         {
-            args_[key] = value;
+            args_[strip(key)] = value;
             i = static_cast<size_t>(next_i);
         }
         else
@@ -236,7 +254,7 @@ SimulatorConfig ArgumentsParser::getConfig() const
     config.mode = mode_;
     config.verbose = verbose_;
     if (args_.count("num_threads"))
-        config.num_threads = std::stoi(args_.at("num_threads"));
+        config.num_threads = std::min(std::stoi(args_.at("num_threads")), static_cast<int>(std::thread::hardware_concurrency()));
 
     if (mode_ == RunMode::COMPARATIVE)
     {
@@ -279,3 +297,5 @@ void ArgumentsParser::printUsage(std::ostream& os, const std::string& error_msg)
            << "    algorithm1=<file> algorithm2=<file> [-verbose]\n\n";
     }
 }
+
+} // namespace simulator

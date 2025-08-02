@@ -7,6 +7,8 @@
 #include "utils.h"
 
 
+namespace simulator
+{
 // Comparable GameResult, used for comparing GameManagers runs results
 struct ComparableGameResult
 {
@@ -26,13 +28,15 @@ struct ComparableGameResult
     }
 };
 
+} // namespace simulator
+
 // Required for unordered_map
 namespace std
 {
 template <>
-struct hash<ComparableGameResult>
+struct hash<simulator::ComparableGameResult>
 {
-    size_t operator()(const ComparableGameResult& result) const
+    size_t operator()(const simulator::ComparableGameResult& result) const
     {
         size_t h = 0;
         h ^= hash<int>()(result.result->winner);

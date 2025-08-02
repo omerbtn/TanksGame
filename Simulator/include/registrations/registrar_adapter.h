@@ -9,6 +9,11 @@
 #include "game_manager_registrar.h"
 
 
+namespace simulator
+{
+namespace registrations
+{
+
 template <typename Registrar>
 struct RegistrarAdapter; // Intentionally left undefined to enforce specialization
 
@@ -78,3 +83,6 @@ struct RegistrarAdapter<AlgorithmRegistrar>
         return oss.str();
     }
 };
+
+} // namespace registrations
+} // namespace simulator

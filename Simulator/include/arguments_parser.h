@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+namespace simulator
+{
+
 enum class RunMode
 {
     COMPARATIVE,
@@ -53,3 +56,5 @@ private:
     RunMode mode_;
     bool verbose_ = false;
 };
+
+} // namespace simulator

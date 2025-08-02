@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "SatelliteView.h"
 
 
+namespace simulator
+{
 struct GameMapInfo
 {
     std::string name;
@@ -29,3 +32,5 @@ struct GameMapInfo
 
     GameMapInfo() : is_valid(false) {}
 };
+
+} // namespace simulator

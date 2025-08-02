@@ -20,7 +20,7 @@ using UserCommon_322573304_322647603::Position;
 class SmartBattleInfo : public BattleInfo
 {
 public:
-    ~SmartBattleInfo() = default;
+    virtual ~SmartBattleInfo() = default;
     SmartBattleInfo(const SatelliteView& satellite_view, size_t height, size_t width,
                     size_t max_steps, size_t num_shells,
                     const std::unordered_map<Position, std::unordered_set<Direction>>& shell_possible_directions = {},

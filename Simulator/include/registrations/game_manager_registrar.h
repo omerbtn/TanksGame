@@ -7,6 +7,11 @@
 #include "AbstractGameManager.h"
 
 
+namespace simulator
+{
+namespace registrations
+{
+
 class GameManagerRegistrar
 {
     class GameManagerEntry
@@ -43,6 +48,8 @@ class GameManagerRegistrar
     static GameManagerRegistrar registrar;
 
 public:
+    using value_type = GameManagerEntry;
+
     static GameManagerRegistrar& getGameManagerRegistrar();
 
     void createGameManagerEntry(const std::string& name)
@@ -80,8 +87,12 @@ public:
 
     // Iterators
     auto begin() { return managers_.begin(); }
+    auto begin() const { return managers_.begin(); }
     auto end() { return managers_.end(); }
-
+    auto end() const { return managers_.end(); }
     size_t count() const { return managers_.size(); }
     void clear() { managers_.clear(); }
 };
+
+} // namespace registrations
+} // namespace simulator

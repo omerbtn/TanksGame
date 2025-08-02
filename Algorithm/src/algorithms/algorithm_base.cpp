@@ -8,7 +8,6 @@
 
 using namespace UserCommon_322573304_322647603;
 
-
 namespace Algorithm_322573304_322647603
 {
 

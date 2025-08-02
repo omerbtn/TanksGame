@@ -5,6 +5,8 @@
 #include <variant>
 #include <vector>
 
+namespace simulator
+{
 class ErrorsLogger
 {
 public:
@@ -61,3 +63,5 @@ private:
 
     std::vector<std::variant<GeneralError, FileErrors>> log_entries_;
 };
+
+} // namespace simulator

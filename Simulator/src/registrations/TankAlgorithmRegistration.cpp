@@ -5,6 +5,6 @@
 
 TankAlgorithmRegistration::TankAlgorithmRegistration(TankAlgorithmFactory factory)
 {
-    auto& registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    auto& registrar = simulator::registrations::AlgorithmRegistrar::getAlgorithmRegistrar();
     registrar.addTankAlgorithmFactoryToLastEntry(std::move(factory));
 }

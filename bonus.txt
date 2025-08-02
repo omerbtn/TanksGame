@@ -3,60 +3,33 @@ BONUSES
 
 This file documents the additional features implemented as part of the bonus section in the tank game assignment.
 
-1. Support for Multiple Players
-----------------------------------
-The system has been extended to support up to 9 players instead of just 2. This includes:
+1. Support for key = value CLI syntax
+We added support for arguments with spaces around the = sign, such as:
+num_threads = 40
+Our parser can handle flexible formats like:
+key=value
+key = value
+key= value
+key =value
 
-- Generalization of tank and player logic to work with any number of players.
-- As part of the task requirements, we added support for multiple tanks for each player.
-- Dynamic iteration over players and tanks using data structures like `std::map<int, std::pair<Player, std::vector<Tank>>>`.
+This makes the program more user-friendly and robust to common shell input mistakes.
+It required extra parsing logic to join and sanitize argument tokens.
 
-This improves the scalability and flexibility of the game engine and allows for advanced multi-player strategies and simulations.
+This is eligible for bonus credit based on: https://moodle.tau.ac.il/mod/forum/discuss.php?d=106427
 
-2. Printer Class Abstraction
--------------------------------
-We introduced a `Printer` base class using CRTP (Curiously Recurring Template Pattern) to standardize the way boards are printed. This will allow easy extension in the future to various output modes:
+2. Elegant Shared Library Loader with Reference Counting
+We implemented a SharedObjectManager singleton that handles dynamic .so loading with automatic memory management.
+Shared libraries are loaded on demand using dlopen.
+Internally tracked using std::shared_ptr<void>, ensuring the library remains open as long as it’s used.
+Once no references remain, dlclose is called automatically to release the library.
+Explicit unload(path) method is also available to force cleanup when safe.
+This design prevents memory leaks and redundant loads while ensuring safe concurrent usage.
 
-- Text-based CLI output
-- ANSI-colored CLI output
-- Planned: VisualPrinter in the next step.
-
-By separating the printing logic from the game logic, the code becomes easier to test, extend, and debug.
-
-3. Human Player / User Interaction Algorithm
------------------------------------------------
-We implemented a custom `UserAlgorithm` that allows a user to control a tank interactively from the command line.
-
-Features:
-- Supports intuitive command inputs like `f`, `forward`, `shoot`, `left45`, etc.
-- Includes an in-game help system (`help`) listing all available actions.
-- Input is normalized and validated to prevent crashes or invalid commands.
-
-This makes the game playable by a human, and demonstrates the flexibility of the algorithm interface.
-
-
-4. Support for Non-Consecutive and Sparse Player Maps
---------------------------------------------------------
-As part of the multi-player extension, the system now gracefully handles scenarios where some player IDs are unused. 
-For example, the game correctly operates even if only players 1 and 3 have tanks on the board.
-In a standard assignment setup, the appearance of player '3' without a corresponding player '2' would have been treated as invalid input, and the game would terminate immediately in favor of player 1.
-In this bonus version, such a configuration is fully supported and considered legal:
-
-The game initializes properly with only the specified players who have tanks.
-
-The game continues as long as more than one player remains active, regardless of player ID continuity.
-
-This behavior is consistent across the entire codebase and works generically with any subset of player IDs from 1 to 9.
-
-Reference for the forum stating it is a bonus: https://moodle.tau.ac.il/mod/forum/discuss.php?d=90396
-
-----
-Note:
-Previous bonus features were also adjusted accordingly: although the static configuration system remained unchanged, it continued to facilitate flexible parameter management, 
-and the existing Google Tests were updated to support interfaces and the required code changes.
-
-Summary
--------
-These additions enhance the flexibility, reliability, and maintainability of the project.  
-The modular design approach provides scalable support for multiple players and visualization strategies, while the human interaction layer enables deeper testing and engagement.  
-All features are implemented in a fully automatic and seamless manner and are ready for future extensions in upcoming assignments.
+3. Efficient Thread Pool for Parallel Execution
+Instead of manually creating and joining threads for each game, we implemented a thread pool.
+Benefits over raw thread spawning:
+- Resource reuse: Threads are reused, reducing system overhead and startup latency.
+- Cleaner API: Tasks are submitted using enqueue, and results are returned via std::future.
+- Scalable: Allows us to control concurrency level via a single num_threads setting.
+- Safe and clean: Automatic thread management prevents leaks and reduces race condition risk.
+This makes the simulation engine both faster and cleaner, especially for running large numbers of games in parallel.

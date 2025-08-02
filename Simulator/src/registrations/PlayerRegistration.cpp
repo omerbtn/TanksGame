@@ -5,6 +5,6 @@
 
 PlayerRegistration::PlayerRegistration(PlayerFactory factory)
 {
-    auto& registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    auto& registrar = simulator::registrations::AlgorithmRegistrar::getAlgorithmRegistrar();
     registrar.addPlayerFactoryToLastEntry(std::move(factory));
 }

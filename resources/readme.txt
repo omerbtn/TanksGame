@@ -24,3 +24,12 @@ Note:
 Our `.so` files are automatically copied into the relevant folders during build.
 This directory is meant to be shared or committed (with exceptions) so the simulator
 can access all required assets in one place.
+
+Pairing Policy:
+==============
+As permitted in the official forum clarification: https://moodle.tau.ac.il/mod/forum/discuss.php?d=108678, 
+our implementation runs all valid player pairings, including reversed matchups. 
+Specifically, for each unique pair of algorithms A and B, we execute two matches: one where A plays as Player 1 and B as Player 2, 
+and one where B plays as Player 1 and A as Player 2. We ensure that each directional pairing is executed only once, 
+and we avoid repeating any pairing with the same player order. This design complies with the allowed alternative pairing approach, 
+provided proper documentation—which is hereby included.

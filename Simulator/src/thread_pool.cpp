@@ -1,5 +1,8 @@
 #include "thread_pool.h"
 
+namespace simulator
+{
+
 ThreadPool::ThreadPool(size_t threads)
     :   stop(false)
 {
@@ -40,3 +43,5 @@ ThreadPool::~ThreadPool()
         worker.join();
     }
 }
+
+} // namespace simulator

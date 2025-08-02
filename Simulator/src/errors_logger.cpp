@@ -5,8 +5,10 @@
 
 #include "global_config.h"
 
-using namespace UserCommon_322573304_322647603;
+namespace simulator
+{
 
+using namespace UserCommon_322573304_322647603;
 
 ErrorsLogger::~ErrorsLogger()
 {
@@ -52,3 +54,5 @@ void ErrorsLogger::save_to_file(const std::string& filename) const
         }
     }
 }
+
+} // namespace simulator

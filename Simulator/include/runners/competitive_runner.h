@@ -21,10 +21,8 @@ public:
     CompetitiveRunner(CompetitiveRunner&&) = delete;
     CompetitiveRunner& operator=(CompetitiveRunner&&) = delete;
 
-    void loadSharedObjects() override;
-    void prepare() override;
-    void run() override;
-    void printResults() override;
+    virtual void loadSharedObjects() override;
+    virtual void run() override;
 
     std::vector<GameMapInfo> loadGameMapsFromFolder(const std::string& folder_path);
     void runCompetition();
@@ -45,12 +43,11 @@ public:
     void updateScores(const GameResult& result,
                       const std::string& player1_name,
                       const std::string& player2_name);
-    void printCompetitionResults();
+    void printCompetitionResults(std::ostream& out);
     std::vector<std::pair<std::string, size_t>> sortCompetitionScores();
 
 private:
     std::vector<GameManagerExecutionResult> results_;
-    std::ofstream file_;
     size_t map_width_;
     size_t map_height_;
     std::vector<GameMapInfo> maps_;

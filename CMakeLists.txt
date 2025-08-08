@@ -19,7 +19,15 @@ set(SUBMITTER_IDS 322573304_322647603)
 # Include common functionality
 include(${CMAKE_SOURCE_DIR}/cmake/Common.cmake)
 
+# Enable CTest
+enable_testing()
+
 # Add subprojects
 add_subdirectory(GameManager)
 add_subdirectory(Algorithm)
 add_subdirectory(Simulator)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Integration tests
+    add_subdirectory(integration_tests)
+endif()

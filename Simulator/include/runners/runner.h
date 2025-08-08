@@ -27,7 +27,7 @@ public:
     void execute();
 
 protected:
-    void initOutputStream(std::ofstream& file_out, const std::string& folder, const std::string& prefix);
+    std::ostream& initOutputStream(std::ofstream& file_out, const std::string& folder, const std::string& prefix);
 
     void printOutputHeader(std::ostream& out, RunMode mode);
 
@@ -46,9 +46,7 @@ protected:
 
 private:
     virtual void loadSharedObjects() = 0;
-    virtual void prepare() = 0;
     virtual void run() = 0;
-    virtual void printResults() = 0;
 
     bool parseMetadataFields(std::ifstream& file, const std::string& map_filename,
                              size_t& max_steps, size_t& num_shells, size_t& height, size_t& width);

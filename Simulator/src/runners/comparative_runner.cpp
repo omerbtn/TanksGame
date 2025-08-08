@@ -49,19 +49,16 @@ void ComparativeRunner::loadSharedObjects() {
     }
 }
 
-void ComparativeRunner::prepare() {
-    initOutputStream(file_, config_.game_managers_folder,
+void ComparativeRunner::run() {
+    std::ofstream file_out;
+    std::ostream& out = initOutputStream(file_out, config_.game_managers_folder,
         std::string(config::get<std::string_view>("comparative_output_prefix")));
 
-    printOutputHeader(file_, config_.mode);
-}
+    printOutputHeader(out, config_.mode);
 
-void ComparativeRunner::run() {
     runComparativeGameManagers();
-}
 
-void ComparativeRunner::printResults() {
-    printGroupedComparativeResults();
+    printGroupedComparativeResults(out);
 }
 
 GameMapInfo ComparativeRunner::loadAndValidateMap() {
@@ -154,7 +151,7 @@ void ComparativeRunner::runComparativeGameManagers() {
     }
 }
 
-void ComparativeRunner::printGroupedComparativeResults()
+void ComparativeRunner::printGroupedComparativeResults(std::ostream& out)
 {
     // Group results by ComparableGameResult
     auto grouped = groupComparativeResults();
@@ -167,26 +164,26 @@ void ComparativeRunner::printGroupedComparativeResults()
     for (const auto& [key, managers] : sorted_groups)
     {
         if (!first)
-            file_ << '\n'; // Spacing between groups
+            out << '\n'; // Spacing between groups
         first = false;
 
         // Comma-separated GameManager names
         for (size_t i = 0; i < managers.size(); ++i)
         {
             if (i > 0)
-                file_ << ", ";
-            file_ << managers[i];
+                out << ", ";
+            out << managers[i];
         }
-        file_ << '\n';
+        out << '\n';
 
         // Game result message
-        file_ << resultToString(*key.result) << '\n';
+        out << resultToString(*key.result) << '\n';
 
         // Round number
-        file_ << key.result->rounds << "\n";
+        out << key.result->rounds << "\n";
 
         // Final board map
-        file_ << key.final_state_str;
+        out << key.final_state_str;
     }
 }
 

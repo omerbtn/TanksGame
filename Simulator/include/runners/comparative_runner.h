@@ -20,12 +20,11 @@ public:
     ComparativeRunner(ComparativeRunner&&) = delete;
     ComparativeRunner& operator=(ComparativeRunner&&) = delete;
 
-    void loadSharedObjects() override;
-    void prepare() override;
-    void run() override;
-    void printResults() override;
+    virtual void loadSharedObjects() override;
+    virtual void run() override;
+
     void runComparativeGameManagers();
-    void printGroupedComparativeResults();
+    void printGroupedComparativeResults(std::ostream& out);
 
     std::unordered_map<ComparableGameResult, std::vector<std::string>> groupComparativeResults();
     std::vector<std::pair<ComparableGameResult, std::vector<std::string>>> sortComparativeGroups(std::unordered_map<ComparableGameResult, std::vector<std::string>>&& grouped);
@@ -43,7 +42,6 @@ private:
     auto resolveAlgorithmFactories() -> std::pair<registrations::AlgorithmRegistrar::value_type, registrations::AlgorithmRegistrar::value_type>;
 
     std::vector<GameManagerExecutionResult> results_;
-    std::ofstream file_;
     size_t map_width_;
     size_t map_height_;
 };

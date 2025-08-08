@@ -1,0 +1,12 @@
+name=small3
+MaxSteps=40
+NumShells=4
+Rows=7
+Cols=7
+#######
+#1  @ #
+# ### #
+#     #
+# ### #
+#   2 #
+#######

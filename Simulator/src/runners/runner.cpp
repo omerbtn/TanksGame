@@ -20,12 +20,10 @@ Runner::Runner(SimulatorConfig config) : config_(std::move(config)), shared_obje
 
 void Runner::execute() {
     loadSharedObjects();
-    prepare();
     run();
-    printResults();
 }
 
-void Runner::initOutputStream(std::ofstream& file_out, const std::string& folder, const std::string& prefix)
+std::ostream& Runner::initOutputStream(std::ofstream& file_out, const std::string& folder, const std::string& prefix)
 {
     std::string time_suffix = getUniqueTimeString();
     std::string filename = prefix + time_suffix + ".txt";
@@ -36,7 +34,10 @@ void Runner::initOutputStream(std::ofstream& file_out, const std::string& folder
     {
         std::cerr << "Error: Could not create output file at " << filepath << std::endl
                   << "Falling back to standard output." << std::endl;
+        return std::cout;
     }
+
+    return file_out;
 }
 
 void Runner::printOutputHeader(std::ostream& out, RunMode mode)

@@ -22,7 +22,6 @@ We implemented a SharedObjectManager singleton that handles dynamic .so loading 
 Shared libraries are loaded on demand using dlopen.
 Internally tracked using std::shared_ptr<void>, ensuring the library remains open as long as it’s used.
 Once no references remain, dlclose is called automatically to release the library.
-Explicit unload(path) method is also available to force cleanup when safe.
 This design prevents memory leaks and redundant loads while ensuring safe concurrent usage.
 
 3. Efficient Thread Pool for Parallel Execution
@@ -33,3 +32,25 @@ Benefits over raw thread spawning:
 - Scalable: Allows us to control concurrency level via a single num_threads setting.
 - Safe and clean: Automatic thread management prevents leaks and reduces race condition risk.
 This makes the simulation engine both faster and cleaner, especially for running large numbers of games in parallel.
+
+4. Comprehensive Integration Tests with GoogleTest (gtest)
+We added an `integration_tests/` suite that runs the Simulator end-to-end in different modes and verifies outputs.
+
+Highlights:
+- Comparative mode tests validate headers and full body (final results and map state)
+- Competition mode tests validate headers and score table body
+- CLI validation tests cover missing/unsupported args, invalid num_threads, and whitespace around '='
+- Determinism and threading tests compare full outputs between single-thread and multi-thread runs
+- Utility base class centralizes project paths, binary discovery, file IO, output cleanup, and library extension from `config.ini`
+
+How to build and run the integration tests:
+- From project root:
+  - Configure and build (Debug recommended to auto-include tests):
+    - cmake -S . -B build
+    - cmake --build build -j
+  - Run all tests:
+    - ctest --test-dir build --output-on-failure
+
+Notes:
+- Tests auto-fetch `googletest` if not installed system-wide.
+- The tests exercise the actual simulator executable `simulator_<ids>`; artifacts are discovered under `resources/` and temporary build directories.

@@ -1,6 +1,5 @@
 #include "loader/shared_library_loader.h"
 
-#include <sstream>
 #include "arguments_parser.h"
 
 namespace simulator
@@ -18,9 +17,7 @@ std::shared_ptr<void> SharedLibraryLoader::load(const std::string& path) {
 
     void* handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if (!handle) {
-        std::ostringstream oss;
-        simulator::ArgumentsParser::printUsage(oss, "Failed to load shared object: " + path + "\n" + dlerror());
-        throw SimulatorException(oss.str());
+        return nullptr;
     }
 
     auto deleter = [](void* h) {

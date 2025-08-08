@@ -42,10 +42,10 @@ void CompetitiveRunner::loadSharedObjects() {
     }
 }
 
-void CompetitiveRunner::prepare() {
+void CompetitiveRunner::run() {
     maps_ = loadGameMapsFromFolder(config_.game_maps_folder);
 
-    // 3. Validate maps
+    // Validate maps
     if (maps_.empty())
     {
         std::ostringstream oss;
@@ -53,20 +53,15 @@ void CompetitiveRunner::prepare() {
         throw SimulatorException(oss.str());
     }
 
-    // 4. Prepare output stream
-    initOutputStream(file_, config_.algorithms_folder,
-                     std::string(config::get<std::string_view>("competition_output_prefix")));
+    std::ofstream file_out;
+    std::ostream& out = initOutputStream(file_out, config_.algorithms_folder,
+        std::string(config::get<std::string_view>("competition_output_prefix")));
 
-    // 5. Print the header
-    printOutputHeader(file_, config_.mode);
-}
+    printOutputHeader(out, config_.mode);
 
-void CompetitiveRunner::run() {
     runCompetitionGames();
-}
 
-void CompetitiveRunner::printResults() {
-    printCompetitionResults();
+    printCompetitionResults(out);
 }
 
 std::vector<GameMapInfo> CompetitiveRunner::loadGameMapsFromFolder(const std::string& folder_path)
@@ -243,14 +238,14 @@ void CompetitiveRunner::updateScores(const GameResult& result,
     }
 }
 
-void CompetitiveRunner::printCompetitionResults()
+void CompetitiveRunner::printCompetitionResults(std::ostream& out)
 {
     // Sort scores in descending order
     auto sorted_scores = sortCompetitionScores();
 
     for (const auto& [name, score] : sorted_scores)
     {
-        file_ << name << " " << score << '\n';
+        out << name << " " << score << '\n';
     }
 }
 

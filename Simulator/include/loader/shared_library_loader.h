@@ -25,7 +25,6 @@ public:
     SharedLibraryLoader& operator=(SharedLibraryLoader&&) = delete;
 
     std::shared_ptr<void> load(const std::string& path);
-    void unload(const std::string& path);
 
 private:
     std::mutex mutex_;

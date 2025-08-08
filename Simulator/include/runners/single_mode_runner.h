@@ -17,10 +17,8 @@ public:
     SingleModeRunner(SingleModeRunner&&) = delete;
     SingleModeRunner& operator=(SingleModeRunner&&) = delete;
 
-    void loadSharedObjects() override;
-    void prepare() override;
-    void run() override;
-    void printResults() override;
+    virtual void loadSharedObjects() override;
+    virtual void run() override;
 };
 
 } // namespace runners

@@ -41,9 +41,6 @@ void SingleModeRunner::loadSharedObjects() {
     }
 }
 
-void SingleModeRunner::prepare() {
-}
-
 void SingleModeRunner::run() {
     GameMapInfo map_info = loadGameMap(config_.game_map_filename);
     if (!map_info.is_valid)
@@ -75,9 +72,6 @@ void SingleModeRunner::run() {
     runSingleGame(*game_manager, *player1, *player2,
         tank_factory1, tank_factory2,
         it1->name(), it2->name(), map_info);
-}
-
-void SingleModeRunner::printResults() {
 }
 
 } // namespace runners

@@ -54,3 +54,97 @@ How to build and run the integration tests:
 Notes:
 - Tests auto-fetch `googletest` if not installed system-wide.
 - The tests exercise the actual simulator executable `simulator_<ids>`; artifacts are discovered under `resources/` and temporary build directories.
+
+5. Complete Tank Game Visualization System with GUI
+We implemented a comprehensive Python-based GUI system for running simulations and visualizing tank battles in real-time.
+
+Features:
+- Full GUI Interface: Modern Tkinter-based application with tabbed interface for running simulations and viewing replays
+- Real-time Tank Visualization: Watch tanks move, rotate, shoot, and get destroyed with proper directional indicators
+- Shell Physics: Shells persist and move across rounds until hitting walls/tanks, with collision detection between shells
+- Visual Effects: Explosion animations when shells collide, distinct colors for different players and tank indices
+- Replay System: Automatic collection and organization of game traces with clickable replay selection
+- Multi-mode Support: Handles comparative, competition, and single-player modes seamlessly
+- Auto-algorithm Management: Automatically creates algorithm copies for competition mode if needed
+
+Technical Implementation:
+- Modular Architecture: 6 Python files working together (app.py, replay_embed.py, replay_ascii.py, trace_parser.py, verbose_parser.py, pygame_view.py)
+- Advanced Game State Tracking: Parses both columnar action logs and verbose board states from simulator output
+- Tank Object System: Full Tank class with position, direction, alive status, and player assignment
+- Shell Management: Proper shell lifecycle with TTL, direction vectors, wrap-around movement, and collision detection
+- File Processing: Automatic log collection, normalization to JSONL format, and manifest generation
+- Error Handling: Robust error handling for missing files, invalid logs, and simulator failures
+
+How to Install and Run:
+
+Prerequisites:
+- Python 3.7+ (tested with Python 3.13)
+- Required Python packages (install via pip):
+  ```bash
+  python3 -m venv .venv && source .venv/bin/activate && pip install pygame
+  ```
+  Note: On some systems, tkinter may need to be installed separately:
+  - Ubuntu/Debian: `sudo apt-get install python3-tk`
+  - macOS: Usually included with Python, but may require `brew install python-tk`
+  - Windows: Usually included with Python installation
+
+Installation:
+1. Install required Python packages as listed above
+2. All visualization files are located in the `visualizer/` directory
+3. No compilation or additional setup required
+
+Running the Visualization:
+1. From project root directory:
+   ```bash
+   python3 visualizer/app.py
+   ```
+
+2. The GUI will open with two tabs:
+   - **Run Tab**: Configure and execute simulator runs
+   - **Replays Tab**: View previously executed simulations
+
+Using the Run Tab:
+1. Select simulation mode (Comparative/Competition)
+2. Choose map file from `resources/game_maps/`
+3. Set number of threads (default: 4)
+4. For Comparative mode: Select two algorithm files
+5. For Competition mode: Algorithms auto-discovered from `resources/algorithms/`
+6. Click "Run" to execute simulation
+7. Results automatically appear in Replays tab
+
+Using the Replays Tab:
+1. Select a run from the left panel (auto-refreshes when tab is opened)
+2. Select a specific game from the game list
+3. Replay automatically loads and begins playing
+4. Controls: Play/Pause buttons and speed adjustment
+5. Visual features: Tank movements, shell trajectories, explosions, player colors
+
+How It Works:
+1. **Simulation Execution**: GUI runs the C++ simulator with specified parameters
+2. **Output Collection**: Automatically finds and collects output files (comparative_results_*.txt, competition_*.txt)
+3. **Log Processing**: Parses columnar action logs from simulator output files
+4. **Trace Generation**: Converts raw logs to normalized JSONL format for consistent replay
+5. **Manifest Creation**: Generates metadata files linking runs to games and maps
+6. **Replay Engine**: Reconstructs game state frame-by-frame using Tank objects and shell physics
+7. **Visualization**: Renders tanks, shells, mines, walls with proper colors and animations
+
+File Structure Generated:
+```
+.vis/runs/YYYYMMDD_HHMMSS/
+├── manifest.json          # Run metadata and game list
+└── traces/
+    ├── game1_actions.txt   # Raw action log
+    ├── game1_actions.jsonl # Normalized trace
+    ├── game2_actions.txt
+    └── game2_actions.jsonl
+```
+
+Advanced Features:
+- **Shell Collision Physics**: When shells meet at the same position, both explode with visual effects
+- **Wrap-around Movement**: Tanks and shells properly wrap around map boundaries
+- **Tank Direction Rules**: Player 1 tanks start facing LEFT, Player 2 tanks start facing RIGHT (per assignment)
+- **Killed Tank Visualization**: Dead tanks show as 'X' and stop moving
+- **Player Identification**: Tanks numbered and colored by player (blue vs red)
+- **Adjustable Interface**: Resizable panels and auto-refresh functionality
+
+This visualization system provides complete insight into tank battle dynamics, making it easy to understand algorithm behavior, debug issues, and demonstrate simulation results.

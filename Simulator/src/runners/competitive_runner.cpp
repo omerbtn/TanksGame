@@ -112,7 +112,7 @@ void CompetitiveRunner::runCompetitionGames()
     else
     {
         // Multi-threaded execution - use thread pool
-        ThreadPool thread_pool(config_.num_threads);
+        ThreadPool thread_pool(std::min(config_.num_threads, static_cast<int>(maps_.size() * algo_registrar.count())));
         
         // Collect all futures and player pairs from all maps
         std::vector<std::future<GameResult>> all_futures;

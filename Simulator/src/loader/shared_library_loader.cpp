@@ -22,7 +22,9 @@ std::shared_ptr<void> SharedLibraryLoader::load(const std::string& path) {
 
     auto deleter = [](void* h) {
         if (h) {
-            dlclose(h);
+            if (dlclose(h) != 0) {
+                std::cerr << "Failed to close shared library: " << dlerror() << std::endl;
+            }
         }
     };
 

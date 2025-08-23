@@ -254,7 +254,7 @@ SimulatorConfig ArgumentsParser::getConfig() const
     config.mode = mode_;
     config.verbose = verbose_;
     if (args_.count("num_threads"))
-        config.num_threads = std::min(std::stoi(args_.at("num_threads")), static_cast<int>(std::thread::hardware_concurrency()));
+        config.num_threads = std::max(std::stoi(args_.at("num_threads")), 1);
 
     if (mode_ == RunMode::COMPARATIVE)
     {

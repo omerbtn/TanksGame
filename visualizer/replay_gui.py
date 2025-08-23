@@ -39,8 +39,9 @@ class ReplayGUI(tk.Tk):
         self.round_index: int = 0
         self.tanks_state: List[Tank] = []
         self._updating_timeline: bool = False
-        self.shells: List[dict] = []  # {x,y,dx,dy,ttl}
+        self.shells: List[dict] = []  # {x,y,dx,dy,ttl,round_created}
         self.beams: List[dict] = []   # {cells: [(x,y),...], ttl}
+        self.shell_trajectories: List[dict] = []  # {cells: [(x,y),...], ttl, color}
 
         self._build_ui()
         self._schedule_tick()
@@ -74,10 +75,12 @@ class ReplayGUI(tk.Tk):
         self.pause_btn = ttk.Button(bottom, text="Pause", command=self._on_pause)
         self.step_back_btn = ttk.Button(bottom, text="⟨", command=self._on_step_back)
         self.step_fwd_btn = ttk.Button(bottom, text="⟩", command=self._on_step_forward)
+        self.restart_btn = ttk.Button(bottom, text="Restart", command=self._on_restart)
         self.play_btn.pack(side=tk.LEFT)
         self.pause_btn.pack(side=tk.LEFT, padx=(5, 10))
         self.step_back_btn.pack(side=tk.LEFT)
         self.step_fwd_btn.pack(side=tk.LEFT)
+        self.restart_btn.pack(side=tk.LEFT, padx=(10, 0))
 
         ttk.Label(bottom, text="  Speed").pack(side=tk.LEFT, padx=(15, 4))
         self.speed_scale = ttk.Scale(bottom, from_=0.5, to=12, orient=tk.HORIZONTAL, command=self._on_speed_change)
@@ -88,120 +91,129 @@ class ReplayGUI(tk.Tk):
         self.timeline = ttk.Scale(bottom, from_=0, to=1, orient=tk.HORIZONTAL, command=self._on_scrub)
         self.timeline.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        self.status_var = tk.StringVar(value="Load a map and actions to start. Keys: Space play/pause, ←/→ step, F fullscreen, Esc pause")
+        self.status_var = tk.StringVar(value="Load a map and actions to start. Keys: Space play/pause, ←/→ step, R restart, F fullscreen, Esc pause")
         ttk.Label(bottom, textvariable=self.status_var).pack(side=tk.RIGHT)
 
         self.bind("<space>", lambda e: self._toggle_play())
         self.bind("<Left>", lambda e: self._on_step_back())
         self.bind("<Right>", lambda e: self._on_step_forward())
         self.bind("<Escape>", lambda e: self._on_pause())
+        self.bind("r", lambda e: self._on_restart())
+        self.bind("R", lambda e: self._on_restart())
         self.bind("f", lambda e: self._toggle_fullscreen())
         self.bind("F", lambda e: self._toggle_fullscreen())
 
     def _pick_map(self):
-        p = filedialog.askopenfilename(title="Select map file", initialdir=str(Path.cwd()))
-        if p:
-            self.map_path_var.set(p)
+        path = filedialog.askopenfilename(
+            title="Select Map File",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        if path:
+            self.map_path_var.set(path)
 
     def _pick_actions(self):
-        p = filedialog.askopenfilename(title="Select actions log", initialdir=str(Path.cwd()))
-        if p:
-            self.actions_path_var.set(p)
+        path = filedialog.askopenfilename(
+            title="Select Actions/Verbose File",
+            filetypes=[("Text files", "*.txt"), ("JSONL files", "*.jsonl"), ("All files", "*.*")]
+        )
+        if path:
+            self.actions_path_var.set(path)
 
     def _load(self):
+        map_path = Path(self.map_path_var.get())
+        actions_path = Path(self.actions_path_var.get())
+        
+        if not map_path.exists():
+            messagebox.showerror("Error", f"Map file not found: {map_path}")
+            return
+        if not actions_path.exists():
+            messagebox.showerror("Error", f"Actions file not found: {actions_path}")
+            return
+
         try:
-            map_p = Path(self.map_path_var.get())
-            actions_p = Path(self.actions_path_var.get())
-            if not map_p.exists() or not actions_p.exists():
-                messagebox.showerror("Error", "Please choose valid map and actions files")
-                return
-            self.grid_lines, self.tanks_initial = parse_map(map_p)
-            self.verbose_states = []
-            if actions_p.suffix.lower() == '.log' or actions_p.name.lower().endswith('_verbose.txt'):
-                try:
-                    from .verbose_parser import parse_verbose_board_log  # type: ignore
-                except Exception:
-                    from verbose_parser import parse_verbose_board_log  # type: ignore
-                self.verbose_states = parse_verbose_board_log(actions_p)
-                self.rounds, self.winner_line = [], None
-            else:
-                self.rounds, self.winner_line = self._load_actions_any(actions_p, len(self.tanks_initial))
-            if not self.rounds and not self.verbose_states:
-                messagebox.showerror("Error", "No rounds found in actions/verbose file")
-                return
-            # Initialize state
+            # Parse map and actions
+            self.grid_lines, self.tanks_initial = parse_map(map_path)
+            self.rounds, self.winner_line = self._load_actions_any(actions_path, len(self.tanks_initial))
+            
+            # Reset state
             self.round_index = 0
             self.tanks_state = [Tank(t.player, t.x, t.y, t.alive, t.deg) for t in self.tanks_initial]
             self.shells = []
-            self.playing = True  # auto-start
-            self.timeline.configure(from_=0, to=len(self.rounds) if self.rounds else len(self.verbose_states))
-            # Avoid recursion when setting timeline programmatically
-            self._updating_timeline = True
-            try:
-                self.timeline.set(0)
-            finally:
-                self._updating_timeline = False
-            self.status_var.set(f"Loaded. Rounds: {len(self.rounds) if self.rounds else len(self.verbose_states)}. Tanks: {len(self.tanks_state)} | Space: pause, ←/→: step, F: fullscreen")
+            self.beams = []
+            self.shell_trajectories = []
+            
+            # Update timeline range
+            self.timeline.configure(from_=0, to=len(self.rounds))
+            self.timeline.set(0)
+            
+            # Start playing
+            self.playing = True
             self._render()
+            
         except Exception as e:
-            messagebox.showerror("Load error", str(e))
-
-    def _on_speed_change(self, _val):
-        try:
-            self.speed_fps = max(0.5, float(self.speed_scale.get()))
-        except Exception:
-            self.speed_fps = 3.0
-
-    def _on_scrub(self, _val):
-        if self._updating_timeline or not self.rounds:
-            return
-        target = int(float(self.timeline.get()))
-        self._seek_to_round(target)
+            messagebox.showerror("Error", f"Failed to load files: {e}")
+            print(f"Load error: {e}")
 
     def _on_play(self):
-        if not self.rounds:
-            return
-        # If we're at the end, restart
-        if self.round_index >= len(self.rounds):
-            self.round_index = 0
-            self.tanks_state = [Tank(t.player, t.x, t.y, t.alive, t.deg) for t in self.tanks_initial]
-            self._render()
+        # Always restart from the beginning when playing
+        self.round_index = 0
         self.playing = True
+        
+        # Reset tank state to initial positions
+        if hasattr(self, 'tanks_initial'):
+            self.tanks_state = [Tank(t.player, t.x, t.y, t.alive, t.deg) for t in self.tanks_initial]
+            self.shells = []
+            self.beams = []
+            self.shell_trajectories = []
+        
+        # Update timeline to show we're at the beginning
+        if hasattr(self, 'timeline'):
+            self.timeline.set(0)
 
     def _on_pause(self):
         self.playing = False
 
     def _toggle_play(self):
-        if not self.rounds:
-            return
         self.playing = not self.playing
 
-    def _on_step_forward(self):
-        if not self.rounds:
-            return
-        self.playing = False
-        self._advance_round(1)
-
     def _on_step_back(self):
-        if not self.rounds:
-            return
-        self.playing = False
-        self._advance_round(-1)
+        if self.round_index > 0:
+            self._scrub_to_round(self.round_index - 1)
 
-    def _advance_round(self, delta: int):
-        new_idx = self.round_index + delta
-        self._seek_to_round(new_idx)
+    def _on_step_forward(self):
+        if self.round_index < len(self.rounds):
+            self._scrub_to_round(self.round_index + 1)
 
-    def _seek_to_round(self, target_idx: int):
+    def _on_restart(self):
+        self._on_play() # Re-use _on_play to reset state and timeline
+
+    def _on_speed_change(self, _):
+        self.speed_fps = self.speed_scale.get()
+
+    def _on_scrub(self, _):
+        if not self._updating_timeline:
+            try:
+                target_idx = int(self.timeline.get())
+                self._scrub_to_round(target_idx)
+            except ValueError:
+                pass
+
+    def _scrub_to_round(self, target_idx: int):
         if not self.rounds:
             return
         w = len(self.grid_lines[0]) if self.grid_lines else 0
         h = len(self.grid_lines)
         new_idx = max(0, min(target_idx, len(self.rounds)))
         self.tanks_state = [Tank(t.player, t.x, t.y, t.alive, t.deg) for t in self.tanks_initial]
+        self.shells = []
+        self.beams = []
+        self.shell_trajectories = []
+        
+        # Replay all rounds up to target
         for i in range(new_idx):
             cols = self.rounds[i]
-            step_tanks(self.tanks_state, cols, w, h)
+            self._process_round(cols, w, h, i)
+            
         self.round_index = new_idx
         # Reflect position on the timeline without reentry
         self._updating_timeline = True
@@ -211,77 +223,113 @@ class ReplayGUI(tk.Tk):
             self._updating_timeline = False
         self._render()
 
+    def _process_round(self, cols: List[str], w: int, h: int, round_idx: int):
+        """Process a single round and update game state"""
+        # Track kills in this step from tokens
+        kills_in_step = [i for i, tok in enumerate(cols) if '(killed)' in tok]
+        
+        # Capture pre-step positions to compute beams
+        pre_pos = [(t.x, t.y, t.deg, t.alive) for t in self.tanks_state]
+        
+        # Build shooter indices and ignore flags
+        shooters: List[int] = []
+        for i, token in enumerate(cols):
+            base = token.replace('(ignored)', '').replace('(killed)', '').strip()
+            if base == 'Shoot' and '(ignored)' not in token:
+                shooters.append(i)
+        
+        # For each killed tank, try to match a shooter line-of-sight to explain kill
+        for victim in kills_in_step:
+            if victim < 0 or victim >= len(pre_pos):
+                continue
+            vx, vy, _, was_alive = pre_pos[victim]
+            if not was_alive:
+                continue
+            matched = False
+            for s in shooters:
+                if s < 0 or s >= len(pre_pos):
+                    continue
+                sx, sy, sdeg, salive = pre_pos[s]
+                if not salive:
+                    continue
+                dx, dy = _dir_vector_deg(sdeg)
+                cx, cy = sx, sy
+                path: List[tuple] = []
+                # Trace until wall or bounds
+                for _step in range(max(w, h)):
+                    cx = (cx + dx) % w
+                    cy = (cy + dy) % h
+                    if 0 <= cy < h and 0 <= cx < w:
+                        if self.grid_lines[cy][cx] == '#':
+                            break
+                        path.append((cx, cy))
+                        if cx == vx and cy == vy:
+                            self.beams.append({"cells": path, "ttl": 15})
+                            print(f"[replay] beam shooter={s} -> victim={victim} cells={len(path)}")
+                            matched = True
+                            break
+                    else:
+                        break
+                if matched:
+                    break
+        
+        # Apply tank actions
+        step_tanks(self.tanks_state, cols, w, h)
+        
+        # Spawn shells for any Shoot actions in this round
+        for i, token in enumerate(cols):
+            if i >= len(self.tanks_state):
+                break
+            base = token.replace('(ignored)', '').replace('(killed)', '').strip()
+            if base == 'Shoot' and '(ignored)' not in token:
+                t = self.tanks_state[i]
+                if t.alive:
+                    dx, dy = _dir_vector_deg(t.deg)
+                    sx = (t.x + dx) % w
+                    sy = (t.y + dy) % h
+                    # Create shell with longer TTL and round tracking
+                    shell = {
+                        "x": sx, "y": sy, 
+                        "dx": dx, "dy": dy, 
+                        "ttl": max(w, h) * 2,  # Longer TTL for better visibility
+                        "round_created": round_idx,
+                        "player": t.player
+                    }
+                    self.shells.append(shell)
+                    
+                    # Create shell trajectory
+                    trajectory = self._create_shell_trajectory(sx, sy, dx, dy, w, h, t.player)
+                    self.shell_trajectories.append(trajectory)
+
+    def _create_shell_trajectory(self, start_x: int, start_y: int, dx: int, dy: int, w: int, h: int, player: int) -> dict:
+        """Create a shell trajectory from start position in direction"""
+        trajectory = {"cells": [], "ttl": 20, "color": "#ffd24a" if player == 1 else "#ff6b4a"}
+        
+        cx, cy = start_x, start_y
+        for _step in range(max(w, h) * 2):  # Longer trajectory
+            cx = (cx + dx) % w
+            cy = (cy + dy) % h
+            if 0 <= cy < h and 0 <= cx < w:
+                if self.grid_lines[cy][cx] == '#':
+                    break  # Hit wall
+                trajectory["cells"].append((cx, cy))
+            else:
+                break
+                
+        return trajectory
+
     def _schedule_tick(self):
         # Called periodically to advance animation when playing
-        if self.playing and self.verbose_states and self.round_index < len(self.verbose_states):
-            self.round_index += 1
-            self._render()
-            if self.round_index >= len(self.verbose_states):
-                self.playing = False
-            delay_ms = max(20, int(1000 / max(0.5, self.speed_fps)))
-            self.after(delay_ms, self._schedule_tick)
-            return
         if self.playing and self.rounds and self.round_index < len(self.rounds):
             cols = self.rounds[self.round_index]
             w = len(self.grid_lines[0]) if self.grid_lines else 0
             h = len(self.grid_lines)
+            
             print(f"[replay] tick={self.round_index} actions={cols}")
-            # Track kills in this step from tokens
-            kills_in_step = [i for i, tok in enumerate(cols) if '(killed)' in tok]
-            # Capture pre-step positions to compute beams
-            pre_pos = [(t.x, t.y, t.deg, t.alive) for t in self.tanks_state]
-            # Build shooter indices and ignore flags
-            shooters: List[int] = []
-            for i, token in enumerate(cols):
-                base = token.replace('(ignored)', '').replace('(killed)', '').strip()
-                if base == 'Shoot' and '(ignored)' not in token:
-                    shooters.append(i)
-            # For each killed tank, try to match a shooter line-of-sight to explain kill
-            for victim in kills_in_step:
-                if victim < 0 or victim >= len(pre_pos):
-                    continue
-                vx, vy, _, was_alive = pre_pos[victim]
-                if not was_alive:
-                    continue
-                matched = False
-                for s in shooters:
-                    if s < 0 or s >= len(pre_pos):
-                        continue
-                    sx, sy, sdeg, salive = pre_pos[s]
-                    if not salive:
-                        continue
-                    dx, dy = _dir_vector_deg(sdeg)
-                    cx, cy = sx, sy
-                    path: List[tuple] = []
-                    # Trace until wall or bounds
-                    for _step in range(max(w, h)):
-                        cx = (cx + dx) % w
-                        cy = (cy + dy) % h
-                        if 0 <= cy < h and 0 <= cx < w:
-                            if self.grid_lines[cy][cx] == '#':
-                                break
-                            path.append((cx, cy))
-                            if cx == vx and cy == vy:
-                                self.beams.append({"cells": path, "ttl": 10})
-                                print(f"[replay] beam shooter={s} -> victim={victim} cells={len(path)}")
-                                matched = True
-                                break
-                        else:
-                            break
-                    if matched:
-                        break
-            step_tanks(self.tanks_state, cols, w, h)
-            # Spawn shells for any Shoot actions in this round
-            for i, token in enumerate(cols):
-                if i >= len(self.tanks_state):
-                    break
-                base = token.replace('(ignored)', '').replace('(killed)', '').strip()
-                if base == 'Shoot':
-                    t = self.tanks_state[i]
-                    dx, dy = _dir_vector_deg(t.deg)
-                    sx = (t.x + dx) % w
-                    sy = (t.y + dy) % h
-                    self.shells.append({"x": sx, "y": sy, "dx": dx, "dy": dy, "ttl": max(w, h)})
+            
+            # Process this round
+            self._process_round(cols, w, h, self.round_index)
+            
             # Advance all shells one cell; remove if hit wall or ttl over
             new_shells = []
             for s in self.shells:
@@ -296,22 +344,33 @@ class ReplayGUI(tk.Tk):
                 s["ttl"] -= 1
                 new_shells.append(s)
             self.shells = new_shells
-            # Decay beams
+            
+            # Decay beams and trajectories
             new_beams = []
             for b in self.beams:
                 b["ttl"] -= 1
                 if b["ttl"] > 0:
                     new_beams.append(b)
             self.beams = new_beams
+            
+            new_trajectories = []
+            for t in self.shell_trajectories:
+                t["ttl"] -= 1
+                if t["ttl"] > 0:
+                    new_trajectories.append(t)
+            self.shell_trajectories = new_trajectories
+            
             self.round_index += 1
             alive1 = sum(1 for t in self.tanks_state if t.player == 1 and t.alive)
             alive2 = sum(1 for t in self.tanks_state if t.player == 2 and t.alive)
-            if kills_in_step:
-                print(f"[replay] kills this tick: {kills_in_step}; alive P1={alive1} P2={alive2}")
+            print(f"[replay] alive P1={alive1} P2={alive2}")
+            
             self._render()
+            
             if self.round_index >= len(self.rounds):
                 self.playing = False
                 print("[replay] finished playback; holding final board")
+        
         delay_ms = max(20, int(1000 / max(0.5, self.speed_fps)))
         self.after(delay_ms, self._schedule_tick)
 
@@ -349,64 +408,67 @@ class ReplayGUI(tk.Tk):
             return parse_actions_log(actions_p)
 
     def _render(self):
-        self.canvas.delete("all")
         if not self.grid_lines:
             return
-        rows = len(self.grid_lines)
-        cols = len(self.grid_lines[0]) if rows else 0
-        pad = 10
-        cw = max(8, (self.canvas.winfo_width() - 2 * pad) // max(1, cols))
-        ch = max(8, (self.canvas.winfo_height() - 2 * pad) // max(1, rows))
-        cell = min(cw, ch)
-        ox = (self.canvas.winfo_width() - cols * cell) // 2
-        oy = (self.canvas.winfo_height() - rows * cell) // 2
-
-        # Draw grid (uniform wall color) and accent mines with a dot
-        for y in range(rows):
-            for x in range(cols):
-                chv = self.grid_lines[y][x]
-                if chv == '#':
-                    color = "#7a7a7a"  # walls uniform
-                elif chv == '@':
-                    color = "#c9a227"  # mines
-                else:
-                    color = "#2a2a2a"  # floor
-                self.canvas.create_rectangle(ox + x * cell, oy + y * cell, ox + (x + 1) * cell, oy + (y + 1) * cell,
-                                             fill=color, outline="#1c1c1c")
-                if chv == '@':
-                    cx = ox + x * cell + cell / 2
-                    cy = oy + y * cell + cell / 2
-                    r = max(2, cell * 0.15)
-                    self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r, fill="#ffdd55", outline="")
-        # If verbose states are loaded, overlay tokens directly from them (single-process, stable scrubbing)
-        if hasattr(self, 'verbose_states') and self.verbose_states:
-            idx = max(0, min(self.round_index, len(self.verbose_states) - 1))
-            state = self.verbose_states[idx]
-            for y in range(min(rows, len(state))):
-                for x in range(min(cols, len(state[y]))):
-                    token = state[y][x]
-                    if not token:
-                        continue
-                    cx = ox + x * cell + cell / 2
-                    cy = oy + y * cell + cell / 2
-                    if '*' in token:
-                        self.canvas.create_oval(cx - cell*0.15, cy - cell*0.15, cx + cell*0.15, cy + cell*0.15, fill="#ffd24a", outline="")
-                    elif '1' in token or '2' in token:
-                        player = 1 if '1' in token else 2
-                        color = _tank_color(player)
-                        r = max(6, cell * 0.35)
-                        self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r, fill=color, outline="#101010")
-                        arrow = None
-                        for a in ('↑','↓','←','→','↗','↘','↙','↖'):
-                            if a in token:
-                                arrow = a
-                                break
-                        if arrow:
-                            self.canvas.create_text(cx, cy, text=arrow, fill="#101010")
-            total = len(self.verbose_states)
-            self.status_var.set(f"Round {self.round_index}/{total}  |  Verbose playback")
+            
+        self.canvas.delete("all")
+        w = len(self.grid_lines[0])
+        h = len(self.grid_lines)
+        
+        # Calculate cell size and offset
+        canvas_w = self.canvas.winfo_width()
+        canvas_h = self.canvas.winfo_height()
+        if canvas_w <= 1 or canvas_h <= 1:
             return
-
+            
+        cell = min(canvas_w // w, canvas_h // h)
+        ox = (canvas_w - w * cell) // 2
+        oy = (canvas_h - h * cell) // 2
+        
+        # Draw grid
+        for y in range(h):
+            for x in range(w):
+                x0 = ox + x * cell
+                y0 = oy + y * cell
+                x1 = x0 + cell
+                y1 = y0 + cell
+                
+                ch = self.grid_lines[y][x]
+                if ch == '#':
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="#404040", outline="#202020")
+                elif ch == '@':
+                    self.canvas.create_oval(x0 + 2, y0 + 2, x1 - 2, y1 - 2, fill="#ff0000", outline="#800000")
+                elif ch == ' ':
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="#151515", outline="#202020")
+        
+        # Draw shell trajectories (faint lines showing where shells will go)
+        for t in self.shell_trajectories:
+            if len(t["cells"]) > 1:
+                points = []
+                for bx, by in t["cells"]:
+                    x0 = ox + bx * cell + cell // 2
+                    y0 = oy + by * cell + cell // 2
+                    points.extend([x0, y0])
+                if len(points) >= 4:
+                    self.canvas.create_line(points, fill=t["color"], width=1, dash=(2, 2))
+        
+        # Draw beams (shell trajectories explaining kills)
+        for b in self.beams:
+            for (bx, by) in b["cells"]:
+                x0 = ox + bx * cell
+                y0 = oy + by * cell
+                self.canvas.create_oval(x0 + cell*0.35, y0 + cell*0.35, x0 + cell*0.65, y0 + cell*0.65,
+                                        fill="#ffe37a", outline="")
+        
+        # Draw shells (moving projectiles)
+        for s in self.shells:
+            x0 = ox + s["x"] * cell
+            y0 = oy + s["y"] * cell
+            # Use player color for shells
+            shell_color = "#ffd24a" if s["player"] == 1 else "#ff6b4a"
+            self.canvas.create_oval(x0 + cell*0.3, y0 + cell*0.3, x0 + cell*0.7, y0 + cell*0.7,
+                                    fill=shell_color, outline="#ffffff", width=2)
+        
         # Draw tanks
         for idx, t in enumerate(self.tanks_state):
             if not t.alive:
@@ -430,28 +492,17 @@ class ReplayGUI(tk.Tk):
             dx, dy = _dir_vector(t.deg)
             self.canvas.create_line(cx, cy, cx + dx * r, cy + dy * r, fill="#101010", width=3)
             self.canvas.create_text(cx, cy, text=str(idx+1), fill="#111111")
-        # Draw beams (shell trajectories explaining kills)
-        for b in self.beams:
-            for (bx, by) in b["cells"]:
-                x0 = ox + bx * cell
-                y0 = oy + by * cell
-                self.canvas.create_oval(x0 + cell*0.35, y0 + cell*0.35, x0 + cell*0.65, y0 + cell*0.65,
-                                        fill="#ffe37a", outline="")
-        # Draw shells
-        for s in self.shells:
-            x0 = ox + s["x"] * cell
-            y0 = oy + s["y"] * cell
-            self.canvas.create_oval(x0 + cell*0.3, y0 + cell*0.3, x0 + cell*0.7, y0 + cell*0.7,
-                                    fill="#ffd24a", outline="")
 
         # Status
         total = len(self.rounds)
         winner = self.winner_line if self.round_index >= total else None
         self.status_var.set(f"Round {self.round_index}/{total}  |  Tanks: {len(self.tanks_state)}  " + (f"|  {winner}" if winner else ""))
+        
         # Help overlay
         help_lines = [
             "Space: Play/Pause",
             "Left/Right: Step",
+            "R: Restart",
             "F: Toggle Fullscreen",
             "Slider: Speed, Round",
         ]

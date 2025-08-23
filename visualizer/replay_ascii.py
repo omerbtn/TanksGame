@@ -14,6 +14,7 @@ Features:
   - Renders an ASCII animation of tank movement and rotation.
   - Respects killed state as indicated by the log ("(killed)" annotation).
   - If an action is annotated with "(ignored)", we do not apply its effect.
+  - Shows shell trajectories and moving shells.
 
 Notes:
   - We do not recompute legality of moves or hits. We trust the log file.
@@ -38,6 +39,8 @@ DIM = "\x1b[2m"
 RED = "\x1b[31m"
 BLUE = "\x1b[34m"
 YELLOW = "\x1b[33m"
+GREEN = "\x1b[32m"
+CYAN = "\x1b[36m"
 
 
 @dataclass
@@ -47,6 +50,16 @@ class Tank:
     y: int
     alive: bool = True
     deg: int = 0  # 0=N, 45=NE, 90=E, ... clockwise
+
+
+@dataclass
+class Shell:
+    x: int
+    y: int
+    dx: int
+    dy: int
+    ttl: int
+    player: int
 
 
 def clear():
@@ -147,11 +160,12 @@ def dir_to_arrow(deg: int) -> str:
     return mapping.get(deg, '^')
 
 
-def step_tanks(tanks: List[Tank], actions: List[str], width: int, height: int) -> List[Tuple[int, int]]:
+def step_tanks(tanks: List[Tank], actions: List[str], width: int, height: int) -> List[Shell]:
     # Apply actions as described by the tokens; trust ignored/killed flags
     # We compute shot flash positions using pre-move orientation and position
-    shots: List[Tuple[int, int]] = []
+    shells: List[Shell] = []
     to_kill: List[int] = []
+    
     # First pass: compute rotations/moves and record shots
     for i, token in enumerate(actions):
         if i >= len(tanks):
@@ -176,15 +190,19 @@ def step_tanks(tanks: List[Tank], actions: List[str], width: int, height: int) -
             dx, dy = direction_delta(tank.deg)
             sx = (tank.x + dx) % width
             sy = (tank.y + dy) % height
-            shots.append((sx, sy))
+            # Create shell with longer TTL for better visibility
+            shell = Shell(x=sx, y=sy, dx=dx, dy=dy, ttl=width * 2, player=tank.player)
+            shells.append(shell)
         # GetBattleInfo, DoNothing: no position change
         if killed:
             to_kill.append(i)
+    
     # Second pass: apply kills
     for i in to_kill:
         if 0 <= i < len(tanks):
             tanks[i].alive = False
-    return shots
+    
+    return shells
 
 
 def direction_delta(deg: int) -> Tuple[int, int]:
@@ -208,33 +226,79 @@ def direction_delta(deg: int) -> Tuple[int, int]:
     return (0, -1)
 
 
-def render(grid: List[str], tanks: List[Tank], shots: List[Tuple[int, int]], round_idx: int, winner: str | None):
+def update_shells(shells: List[Shell], width: int, height: int, grid_lines: List[str]) -> List[Shell]:
+    """Update shell positions and remove those that hit walls or expired"""
+    new_shells = []
+    for shell in shells:
+        if shell.ttl <= 0:
+            continue
+        # Move shell
+        nx = (shell.x + shell.dx) % width
+        ny = (shell.y + shell.dy) % height
+        # Stop on walls
+        if 0 <= ny < height and 0 <= nx < width and grid_lines[ny][nx] == '#':
+            continue
+        shell.x, shell.y = nx, ny
+        shell.ttl -= 1
+        new_shells.append(shell)
+    
+    # Check for shell collisions - if two shells are in the same cell, both explode
+    collision_positions = {}
+    for i, shell in enumerate(new_shells):
+        pos = (shell.x, shell.y)
+        if pos in collision_positions:
+            collision_positions[pos].append(i)
+        else:
+            collision_positions[pos] = [i]
+    
+    # Remove shells that collided (more than one shell in same position)
+    shells_to_remove = set()
+    for pos, shell_indices in collision_positions.items():
+        if len(shell_indices) > 1:
+            shells_to_remove.update(shell_indices)
+    
+    # Filter out collided shells
+    final_shells = [shell for i, shell in enumerate(new_shells) if i not in shells_to_remove]
+    return final_shells
+
+
+def render(grid: List[str], tanks: List[Tank], shells: List[Shell], round_idx: int, winner: str | None):
     clear()
     print(f"Round: {round_idx}")
     if winner:
         print(DIM + winner + RESET)
     print()
+    
     # Draw grid as list of chars we can overlay
     rows = len(grid)
     cols = len(grid[0]) if rows else 0
     canvas = [list(row) for row in grid]
+    
     # Overlay shells as '*'
-    for (sx, sy) in shots:
-        if 0 <= sy < rows and 0 <= sx < cols:
-            canvas[sy][sx] = YELLOW + '*' + RESET
+    for shell in shells:
+        if 0 <= shell.y < rows and 0 <= shell.x < cols:
+            # Use different colors for different players
+            if shell.player == 1:
+                canvas[shell.y][shell.x] = YELLOW + '*' + RESET
+            else:
+                canvas[shell.y][shell.x] = CYAN + '*' + RESET
+    
     # Overlay tanks
     for t in tanks:
         ch = 'x' if not t.alive else dir_to_arrow(t.deg)
         color = BLUE if t.player == 1 else RED
         if 0 <= t.y < rows and 0 <= t.x < cols:
             canvas[t.y][t.x] = color + ch + RESET
+    
     # Print
     for r in canvas:
         print(''.join(r))
     print()
+    
     alive1 = sum(1 for t in tanks if t.player == 1 and t.alive)
     alive2 = sum(1 for t in tanks if t.player == 2 and t.alive)
     print(f"P1 alive: {alive1}    P2 alive: {alive2}")
+    print(f"Shells in air: {len(shells)}")
     print("Controls: Ctrl+C to quit")
 
 
@@ -258,10 +322,20 @@ def main():
         if len(r) != num_tanks:
             print(f"Warning: round {idx} column count {len(r)} != num tanks {num_tanks}", file=sys.stderr)
 
+    # Initialize shells list
+    all_shells: List[Shell] = []
+    
     try:
         for i, cols in enumerate(rounds, start=1):
-            shots = step_tanks(tanks, cols, len(grid[0]), len(grid))
-            render(grid, tanks, shots, i, winner_line if i == len(rounds) else None)
+            # Get new shells from this round
+            new_shells = step_tanks(tanks, cols, len(grid[0]), len(grid))
+            all_shells.extend(new_shells)
+            
+            # Update existing shells
+            all_shells = update_shells(all_shells, len(grid[0]), len(grid), grid)
+            
+            render(grid, tanks, all_shells, i, winner_line if i == len(rounds) else None)
+            
             if args.step:
                 input()
             else:

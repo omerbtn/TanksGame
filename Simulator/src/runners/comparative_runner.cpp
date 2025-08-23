@@ -135,7 +135,7 @@ void ComparativeRunner::runComparativeGameManagers() {
                 gm_entry, algo1.getTankAlgorithmFactory(), algo2.getTankAlgorithmFactory(), algo1.name(), algo2.name(), map_info, verbose));
         }
     } else {
-        ThreadPool thread_pool(config_.num_threads);
+        ThreadPool thread_pool(std::min(config_.num_threads, static_cast<int>(gm_registrar.count())));
         std::vector<std::future<GameManagerExecutionResult>> futures;
 
         for (const auto& gm_entry : gm_registrar) {

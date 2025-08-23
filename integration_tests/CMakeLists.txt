@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
 project(integration_tests)
 
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Enable strict compiler warnings
+add_compile_options(-Wall -Wextra -Werror -pedantic)
+
 include(${CMAKE_SOURCE_DIR}/cmake/Common.cmake)
 setup_project_common()
 ensure_config_generation()
@@ -39,14 +47,12 @@ target_include_directories(integration_tests PRIVATE
   ${CMAKE_SOURCE_DIR}/build
 )
 
-if(TARGET GTest::gtest AND TARGET GTest::gtest_main)
-  target_link_libraries(integration_tests PRIVATE GTest::gtest GTest::gtest_main UserCommon)
+if(TARGET GTest::gtest_main)
+  target_link_libraries(integration_tests PRIVATE GTest::gtest_main UserCommon)
 else()
-  target_link_libraries(integration_tests PRIVATE gtest gtest_main UserCommon)
+  target_link_libraries(integration_tests PRIVATE gtest_main UserCommon)
 endif()
 
 add_dependencies(integration_tests simulator_${SUBMITTER_IDS})
 
 gtest_discover_tests(integration_tests)
-
-

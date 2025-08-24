@@ -71,7 +71,7 @@ GameResult MyGameManager_322573304_322647603::generateResult() const
         game_result.reason = GameResult::Reason::ALL_TANKS_DEAD;
     }
 
-    game_result.rounds = half_steps_count_ / 2;
+    game_result.rounds = steps_count_;
 
     game_result.game_state = std::make_unique<BoardSatelliteView>(board_->getGrid());
 
@@ -144,7 +144,7 @@ GameResult MyGameManager_322573304_322647603::run(size_t map_width, size_t map_h
 
         if (!logger_.is_valid())
         {
-            std::cerr << "Logger is invalid!" << std::endl;
+            std::cerr << "Warning: Logger initialization failed." << std::endl;
         }
     }
 
@@ -174,46 +174,41 @@ void MyGameManager_322573304_322647603::runGameLoop()
         was_alive_at_round_start_.push_back(tank->isAlive());
     }
 
-    while (true)
+    while (!isGameOver())
     {
-        if (half_steps_count_ % 2 == 0)
+        steps_count_++;
+
+        for (size_t i = 0; i < ordered_tanks_.size(); ++i)
         {
-            if constexpr (print)
-                std::cout << "[GameManager] Do tanks and shells step, half_steps_count = " << half_steps_count_ << std::endl;
-
-            for (size_t i = 0; i < ordered_tanks_.size(); ++i)
-            {
-                was_alive_at_round_start_[i] = ordered_tanks_[i]->isAlive();
-            }
-
-            doTanksStep();
-            
-            if constexpr (print)
-                board_->print();
-
-            board_->doShellsStep(false);
-    
-            if constexpr (print)
-                board_->print();
+            was_alive_at_round_start_[i] = ordered_tanks_[i]->isAlive();
         }
-        else
+
+        doTanksStep();
+        
+        if constexpr (print)
         {
-            if constexpr (print)
-                std::cout << "[GameManager] Do shells step, half_steps_count = " << half_steps_count_ << std::endl;
-
-            board_->doShellsStep(true);
-
-            logTankActions();
-
-            if constexpr (print)
-                board_->print();
-
-            if (isGameOver())
-            {
-                break;
-            }
+            std::cout << "[GameManager] Moving tanks, steps_count = " << steps_count_ << std::endl;
+            board_->print();
         }
-        half_steps_count_++;
+
+        board_->doShellsStep(false);
+
+        if constexpr (print)
+        {
+            std::cout << "[GameManager] Moving shells, steps_count = " << steps_count_ << std::endl;
+            board_->print();
+        }
+
+        board_->doShellsStep(true);
+
+        logTankActions();
+
+        if constexpr (print)
+        {
+            std::cout << "[GameManager] Moving shells again, steps_count = " << steps_count_ << std::endl;
+            board_->print();
+        }
+
     }
 }
 

@@ -20,10 +20,10 @@ std::shared_ptr<void> SharedLibraryLoader::load(const std::string& path) {
         return nullptr;
     }
 
-    auto deleter = [](void* h) {
+    auto deleter = [this](void* h) {
         if (h) {
             if (dlclose(h) != 0) {
-                std::cerr << "Failed to close shared library: " << dlerror() << std::endl;
+                errors_logger_.logGeneral("Failed to close shared library: ", dlerror());
             }
         }
     };

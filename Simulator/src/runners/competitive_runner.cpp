@@ -79,7 +79,7 @@ std::vector<GameMapInfo> CompetitiveRunner::loadGameMapsFromFolder(const std::st
     // Iterate through all files in the folder and load valid game maps
     for (const auto& entry : fs::directory_iterator(folder_path))
     {
-        if (!entry.is_regular_file() || entry.path().extension() != ".txt")
+        if (!entry.is_regular_file())
             continue;
 
         GameMapInfo map_info = loadGameMap(entry.path().string());

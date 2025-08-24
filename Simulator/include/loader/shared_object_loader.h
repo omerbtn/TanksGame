@@ -18,11 +18,11 @@ namespace loader
 
 class SharedObjectLoader {
 private:
-    SharedLibraryLoader shared_library_loader_;
     ErrorsLogger& errors_logger_;
+    SharedLibraryLoader shared_library_loader_;
 
 public:
-    explicit SharedObjectLoader(ErrorsLogger& errors_logger): errors_logger_(errors_logger) {}
+    explicit SharedObjectLoader(ErrorsLogger& errors_logger): errors_logger_(errors_logger), shared_library_loader_(errors_logger_) {}
     SharedObjectLoader(const SharedObjectLoader&) = delete;
     SharedObjectLoader& operator=(const SharedObjectLoader&) = delete;
     SharedObjectLoader(SharedObjectLoader&&) = delete;

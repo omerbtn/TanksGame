@@ -89,14 +89,14 @@ bool Runner::parseMetadataFields(std::ifstream& file, const std::string& map_fil
         if (!std::getline(file, line)) return false;
         auto pos = line.find('=');
         if (pos == std::string::npos || line.find(key) == std::string::npos) {
-            errors_logger_.logFile(map_filename, "Missing or invalid line for ", key);
+            errors_logger_.logFile(map_filename, "Missing or invalid line for ", key, ".");
             return false;
         }
         try {
             out = std::stoul(line.substr(pos + 1));
             return true;
         } catch (...) {
-            errors_logger_.logFile(map_filename, "Invalid value for ", key, ": ", line.substr(pos + 1));
+            errors_logger_.logFile(map_filename, "Invalid value for ", key, ": ", line.substr(pos + 1), ".");
             return false;
         }
     };

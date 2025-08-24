@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "simulator_exception.h"
+#include "errors_logger.h"
 
 namespace simulator
 {
@@ -16,7 +17,7 @@ namespace loader
 
 class SharedLibraryLoader {
 public:
-    SharedLibraryLoader() = default;
+    SharedLibraryLoader(ErrorsLogger& errors_logger) : errors_logger_(errors_logger) {};
     ~SharedLibraryLoader() = default;
 
     SharedLibraryLoader(const SharedLibraryLoader&) = delete;
@@ -29,6 +30,7 @@ public:
 private:
     std::mutex mutex_;
     std::unordered_map<std::string, std::shared_ptr<void>> shared_objects_;
+    ErrorsLogger& errors_logger_;
 };
 
 } // namespace loader

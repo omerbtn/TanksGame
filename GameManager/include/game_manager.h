@@ -61,7 +61,7 @@ private:
     std::vector<std::shared_ptr<Tank>> ordered_tanks_;
     size_t total_max_steps_;
     std::optional<std::size_t> tie_countdown_;
-    size_t half_steps_count_ = 0;
+    size_t steps_count_ = 0;
     std::vector<bool> was_alive_at_round_start_;
     std::vector<std::optional<ActionRequest>> actions_to_execute_;
     std::vector<bool> actions_validity_;
